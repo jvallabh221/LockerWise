@@ -1,22 +1,58 @@
-# LockerApp-Merged
+# LockerWise
 
-Both applications are now in one place:
+Full-stack locker management app:
 
 - `frontend` (React + Vite)
-- `backend` (Node + Express)
+- `backend` (Node + Express + MongoDB)
 
-## Setup
+In production, the backend serves the built frontend, so **it deploys as one service**.
 
-1. Install dependencies:
-   - `cd frontend && npm install`
-   - `cd ../backend && npm install`
+## Local development
+
+1. Install everything:
+
+   ```
+   npm run build
+   ```
+
+   (this installs `backend` and `frontend` deps, then builds the frontend)
+
 2. Create env files:
-   - `frontend/.env` from `frontend/.env.example`
    - `backend/.env` from `backend/.env.example`
-3. Update backend `.env` values (`DBURL`, `JWT_SECRET`, mail settings, etc.).
+   - `frontend/.env` from `frontend/.env.example` (only needed for local `vite dev`)
 
-## Run both
+3. Run both apps (separate dev servers):
 
-From this root folder:
+   ```
+   npm run dev
+   ```
 
-`powershell -ExecutionPolicy Bypass -File .\start-fullstack.ps1`
+   Frontend: http://localhost:5173  
+   Backend:  http://localhost:5000
+
+## Production (single service)
+
+Build, then start the backend which also serves `frontend/dist`:
+
+```
+npm run build
+npm start
+```
+
+Open: http://localhost:5000
+
+## Deploy on Railway (one service)
+
+1. Create a Railway project from this GitHub repo.
+2. In service **Settings**:
+   - **Build Command:** `npm run build`
+   - **Start Command:** `npm start`
+3. Add env vars under the **Variables** tab:
+   - `DBURL`
+   - `JWT_SECRET`
+   - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `FROM_EMAIL`
+   - `IMG_LINK` (optional)
+   - `CORS_ORIGINS` is optional (same-origin frontend needs no CORS)
+4. Deploy. Railway auto-assigns `PORT` and a public URL.
+
+That’s it — one URL serves both frontend and backend.

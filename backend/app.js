@@ -1,4 +1,6 @@
 const express = require('express')
+const path = require('path');
+const fs = require('fs');
 const dbConnect = require('./utils/databaseConnect.js')
 const cors = require('cors');
 const userroute = require('./routes/authRoutes.js')
@@ -38,15 +40,14 @@ app.use(cors({
 async function startServer() {
     try {
         await dbConnect();
-        app.listen(process.env.PORT, () => {
-            console.log(`server is running on port ${process.env.PORT}`);
+        const port = process.env.PORT || 5000;
+        app.listen(port, () => {
+            console.log(`server is running on port ${port}`);
         });
     } catch (error) {
         console.error(`Error Connecting To DB: ${error.message}`);
     }
 }
-
-startServer();
 
 app.use('/api/user', userroute);
 app.use('/api/admin', adminRoute);
@@ -56,9 +57,20 @@ app.use('/api/issue', issueRoute);
 app.use('/api/profile', profileRoute);
 app.use('/api/contact', contactRoute);
 
-app.get('/', (req, res) => {
-    res.send('Welcome to the backend!');
-});
+// Serve built frontend (single-service deploy)
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+        res.sendFile(path.join(frontendDist, 'index.html'));
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('Welcome to the backend! (frontend build not found)');
+    });
+}
+
+startServer();
 
 function formatdate(date) {
     const d = new Date(date);
