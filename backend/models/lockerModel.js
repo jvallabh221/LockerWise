@@ -1,0 +1,96 @@
+const mongoose = require('mongoose');
+
+const enumNormalizer = (map) => (value) => {
+    if (!value) return value;
+    const key = String(value).toLowerCase();
+    return map[key] || value;
+};
+
+const lockerSchema = new mongoose.Schema(
+    {
+        // LockerType,LockerStatus,LockerNumber,LockerCode,
+        LockerType: {
+            type: String,
+            // required: true,
+            enum: ['half', 'full'],
+            set: enumNormalizer({ half: 'half', full: 'full' }),
+        },
+        LockerStatus: {
+            type: String,
+            enum: ['occupied', 'available', 'expired'],
+            default: 'available',
+        },
+        LockerNumber: {
+            type: Number,
+            // required: true,
+            unique: true,
+        },
+        LockerCode: {
+            type: String,
+        },
+        LockerSerialNumber: {
+            type: String,
+        },
+        LockerCodeCombinations: {
+            type: [String],
+        },
+        LockerPrice3Month: {
+            type: Number,
+            // required: true,
+        },
+        LockerPrice6Month: {
+            type: Number,
+            // required: true,
+        },
+        LockerPrice12Month: {
+            type: Number,
+            // required: true,
+        },
+        availableForGender: {
+            type: String,
+            // required: true,
+            enum: ['Male', 'Female'],
+            set: enumNormalizer({ male: 'Male', female: 'Female' }),
+        },
+        employeeName: {
+            type: String,
+            default: 'N/A',
+        },
+        employeeId: {
+            type: String,
+        },
+        employeeEmail: {
+            type: String,
+        },
+        employeePhone: {
+            type: String,
+        },
+        employeeGender: {
+            type: String,
+            enum: ['Male', 'Female', 'None'],
+        },
+        CostToEmployee: {
+            type: Number,
+            default: 0,
+        },
+        Duration: {
+            type: String,
+        },
+        StartDate: {
+            type: Date,
+        },
+        EndDate: {
+            type: Date,
+        },
+        expiresOn: {
+            type: Date,
+        },
+        emailSent: { // New field to track email notification status
+            type: Boolean,
+            default: false,
+        },
+    },
+    { timestamps: true }
+);
+
+module.exports = mongoose.model('Locker', lockerSchema);
