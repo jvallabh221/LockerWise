@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import DashNav from "./DashNav";
 import Sidebar from "./Sidebar";
 import {
@@ -14,6 +14,7 @@ import { AuthContext } from "../context/AuthProvider";
 
 const Layout = ({ children }) => {
     const { loginDetails } = useContext(AuthContext);
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     const staff = [
         { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -43,11 +44,20 @@ const Layout = ({ children }) => {
 
     return (
         <div className="min-h-screen flex flex-col lw-page">
-            <DashNav />
-            <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden">
-                {showSidebar && <Sidebar items={menuItems} role={loginDetails.role} />}
+            <DashNav
+                onMenuClick={showSidebar ? () => setMobileOpen(true) : undefined}
+            />
+            <div className="flex flex-1 min-h-[calc(100vh-64px)]">
+                {showSidebar && (
+                    <Sidebar
+                        items={menuItems}
+                        role={loginDetails.role}
+                        mobileOpen={mobileOpen}
+                        onClose={() => setMobileOpen(false)}
+                    />
+                )}
                 <main
-                    className={`flex-1 overflow-y-auto ${showSidebar ? "lg:ml-[72px]" : ""}`}
+                    className={`flex-1 min-w-0 ${showSidebar ? "lg:ml-[72px]" : ""}`}
                 >
                     {children}
                 </main>

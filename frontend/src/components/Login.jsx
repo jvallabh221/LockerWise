@@ -29,8 +29,8 @@ const Login = () => {
     return (
         <div className="min-h-screen lw-page flex items-center justify-center py-10 px-4">
             <div className="w-full max-w-5xl grid lg:grid-cols-12 border border-ink-100 bg-white shadow-paper rounded-2xl overflow-hidden">
-                {/* Brand pane */}
-                <aside className="lg:col-span-5 bg-ink-900 text-white p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden">
+                {/* Brand pane (desktop only) */}
+                <aside className="hidden lg:flex lg:col-span-5 bg-ink-900 text-white p-10 lg:p-12 flex-col justify-between relative overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
                         style={{
                             backgroundImage: "radial-gradient(circle at 20% 20%, #0EA5E9 0, transparent 40%), radial-gradient(circle at 80% 80%, #BAE6FD 0, transparent 35%)",
@@ -55,7 +55,10 @@ const Login = () => {
                 </aside>
 
                 {/* Form pane */}
-                <div className="lg:col-span-7 p-8 sm:p-10 lg:p-14 flex flex-col justify-center bg-white">
+                <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-center bg-white">
+                    <Link to="/" className="lg:hidden mb-6 inline-flex text-ink-900 hover:text-brass-500 transition-colors">
+                        <Wordmark size="md" />
+                    </Link>
                     <div className="lw-eyebrow mb-2">Welcome back</div>
                     <h2 className="font-display text-2xl text-ink-900 font-semibold mb-1">Sign in to LockerWise</h2>
                     <p className="text-sm text-slate-500 mb-8">Use your institutional email and password to continue.</p>

@@ -1,10 +1,10 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
-import { LogOut, User, LogIn, KeyRound, ChevronDown } from "lucide-react";
+import { LogOut, User, LogIn, KeyRound, ChevronDown, Menu } from "lucide-react";
 import Wordmark from "./ui/Wordmark";
 
-const DashNav = () => {
+const DashNav = ({ onMenuClick }) => {
     const { logout, loginDetails } = useContext(AuthContext);
     const navigate = useNavigate();
 
@@ -45,13 +45,25 @@ const DashNav = () => {
 
     return (
         <nav className="sticky top-0 z-50 bg-white/85 backdrop-blur-md border-b border-ink-100 h-16">
-            <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-                <Link
-                    to={logoLink}
-                    className="text-ink-900 hover:text-brass-500 transition-colors"
-                >
-                    <Wordmark size="md" />
-                </Link>
+            <div className="h-full w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                    {onMenuClick ? (
+                        <button
+                            type="button"
+                            onClick={onMenuClick}
+                            aria-label="Open menu"
+                            className="lg:hidden -ml-1 p-2 rounded-md text-slate-600 hover:bg-cream-200 hover:text-ink-900 transition-colors"
+                        >
+                            <Menu className="w-5 h-5" />
+                        </button>
+                    ) : null}
+                    <Link
+                        to={logoLink}
+                        className="text-ink-900 hover:text-brass-500 transition-colors truncate"
+                    >
+                        <Wordmark size="md" />
+                    </Link>
+                </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
                     {loginDetails ? (
