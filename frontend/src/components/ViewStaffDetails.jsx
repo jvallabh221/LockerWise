@@ -74,7 +74,7 @@ const ViewStaffDetails = () => {
 
                 {showConfirm && (
                     <div className="fixed inset-0 bg-ink-900/70 flex items-center justify-center z-50 px-4">
-                        <div className="bg-white border border-ink-900/10 max-w-md w-full p-8">
+                        <div className="bg-white border border-ink-100 max-w-md w-full p-8">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-error-500 text-white rounded-full flex items-center justify-center">
                                     <AlertTriangle className="w-5 h-5" />

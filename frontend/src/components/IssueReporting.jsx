@@ -32,7 +32,7 @@ const IssueReporting = () => {
                     </FieldGrid>
 
                     {!issueType && (
-                        <div className="mt-6 border border-ink-900/10 bg-cream-50 p-4">
+                        <div className="mt-6 border border-ink-100 bg-cream-50 p-4">
                             <div className="lw-eyebrow mb-1">Awaiting selection</div>
                             <p className="text-sm text-slate-600">
                                 Choose an issue type above to reveal the report form.

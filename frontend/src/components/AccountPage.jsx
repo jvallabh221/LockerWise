@@ -14,7 +14,7 @@ const AccountField = ({
     placeholder,
     inputRef,
 }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-ink-900/10 first:border-t-0">
+    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-ink-100 first:border-t-0">
         <label htmlFor={id} className="sm:col-span-3 lw-label sm:pt-2">
             {label}
         </label>
@@ -99,7 +99,7 @@ const AccountPage = () => {
         <Layout>
             <section className="w-full max-w-4xl mx-auto px-6 py-10">
                 <div className="lw-section-num mb-2">Account / Profile</div>
-                <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
                     Your record, <span className="text-brass-500">on file.</span>
                 </h1>
                 <div className="lw-rule-brass w-16 mt-5 mb-2" />
@@ -107,7 +107,7 @@ const AccountPage = () => {
                     Review and update your account's personal information. Click the edit icon to change a field.
                 </p>
 
-                <form onSubmit={handleSubmit} className="mt-10 border border-ink-900/10 bg-white p-8">
+                <form onSubmit={handleSubmit} className="mt-10 border border-ink-100 bg-white p-8">
                     <div className="lw-eyebrow mb-2">01 / Personal details</div>
 
                     <AccountField

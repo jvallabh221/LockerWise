@@ -8,7 +8,7 @@ const UpdateLockerPrice = () => {
     const { isEditable, lockerPrices, toggleEditable, handleInputChange, saveLockerPrice } = useContext(LockerContext);
 
     const renderRow = (typeKey, label, genderLabel) => (
-        <tr className="border-b border-ink-900/10">
+        <tr className="border-b border-ink-100">
             <td className="px-4 py-3 font-mono text-xs text-ink-900">{genderLabel}</td>
             <td className="px-4 py-3 font-mono text-xs text-ink-900">{label}</td>
             {["threeMonths", "sixMonths", "twelveMonths"].map((d) => (
@@ -18,7 +18,7 @@ const UpdateLockerPrice = () => {
                         value={lockerPrices[typeKey][d]}
                         readOnly={!isEditable[typeKey]}
                         onChange={(e) => handleInputChange(e, typeKey, d)}
-                        className={`w-full bg-transparent border-b ${isEditable[typeKey] ? "border-brass-400" : "border-ink-900/15"} text-sm font-mono text-ink-900 py-1 focus:outline-none focus:border-brass-400 transition-colors`}
+                        className={`w-full bg-transparent border-b ${isEditable[typeKey] ? "border-brass-400" : "border-ink-200"} text-sm font-mono text-ink-900 py-1 focus:outline-none focus:border-brass-400 transition-colors`}
                     />
                 </td>
             ))}
@@ -48,11 +48,11 @@ const UpdateLockerPrice = () => {
                 italicTitle="locker pricing."
                 description="Adjust prices by gender, type, and duration. Changes apply to new assignments."
             >
-                <div className="mt-8 border border-ink-900/10 bg-white">
+                <div className="mt-8 border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse min-w-[700px]">
                             <thead>
-                                <tr className="border-b border-ink-900/15 bg-cream-50">
+                                <tr className="border-b border-ink-200 bg-cream-50">
                                     {["Gender", "Type", "3 mo", "6 mo", "12 mo", "Action"].map((h) => (
                                         <th key={h} className="px-4 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}

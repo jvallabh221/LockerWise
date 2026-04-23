@@ -5,7 +5,7 @@ import { AuthContext } from "../context/AuthProvider";
 import { useNavigate } from "react-router-dom";
 
 const PasswordField = ({ id, label, value, onChange, show, onToggleShow, placeholder, hint }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-ink-900/10 first:border-t-0">
+    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-ink-100 first:border-t-0">
         <label htmlFor={id} className="sm:col-span-3 lw-label sm:pt-2">{label}</label>
         <div className="sm:col-span-9">
             <div className="relative">
@@ -94,7 +94,7 @@ const AccountResetPass = () => {
         <Layout>
             <section className="w-full max-w-4xl mx-auto px-6 py-10">
                 <div className="lw-section-num mb-2">Account / Security</div>
-                <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
                     Change your <span className="text-brass-500">password.</span>
                 </h1>
                 <div className="lw-rule-brass w-16 mt-5 mb-2" />
@@ -102,7 +102,7 @@ const AccountResetPass = () => {
                     For security, provide your current password and set a new one. You'll be signed out after the change.
                 </p>
 
-                <form onSubmit={changePass} className="mt-10 border border-ink-900/10 bg-white p-8">
+                <form onSubmit={changePass} className="mt-10 border border-ink-100 bg-white p-8">
                     <div className="lw-eyebrow mb-2">01 / Credentials</div>
 
                     <PasswordField

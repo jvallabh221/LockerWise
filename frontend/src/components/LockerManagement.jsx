@@ -11,6 +11,7 @@ import {
     UserPlus,
     Search,
     FileEdit,
+    PackageOpen,
 } from "lucide-react";
 import Layout from "./Layout";
 import { Badge } from "./ui/Badge";
@@ -87,7 +88,7 @@ const LockerManagement = () => {
                 <div className="flex flex-col gap-3 mb-8">
                     <div className="lw-section-num">Ledger / Lockers</div>
                     <div className="flex items-end justify-between gap-6 flex-wrap">
-                        <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                        <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
                             Locker <span className="text-brass-500">management.</span>
                         </h1>
                         <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -97,10 +98,10 @@ const LockerManagement = () => {
                     <div className="lw-rule-brass w-16 mt-1" />
                 </div>
 
-                <div className="border border-ink-900/10 bg-white">
+                <div className="border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
                     {/* Toolbar — role actions */}
                     {loginDetails?.role === "Admin" && (
-                        <div className="flex flex-wrap gap-3 p-4 border-b border-ink-900/10">
+                        <div className="flex flex-wrap gap-3 p-4 border-b border-ink-100">
                             <Action to="/add_single_locker" Icon={Plus} tone="ink">Add locker</Action>
                             <Action to="/add_multiple_locker" Icon={FileEdit} tone="ink">Bulk upload</Action>
                             <Action to="/delete_locker" Icon={Trash2} tone="rust">Delete locker</Action>
@@ -108,7 +109,7 @@ const LockerManagement = () => {
                         </div>
                     )}
                     {loginDetails?.role === "Staff" && (
-                        <div className="flex flex-wrap gap-3 p-4 border-b border-ink-900/10">
+                        <div className="flex flex-wrap gap-3 p-4 border-b border-ink-100">
                             <Action to="/available_lockers" Icon={UserPlus} tone="ink">Assign locker</Action>
                             <Action to="/cancel_locker" Icon={Trash2} tone="rust">Cancel assignment</Action>
                             <Action to="/update_locker" Icon={Pencil} tone="brass">Update locker</Action>
@@ -116,7 +117,7 @@ const LockerManagement = () => {
                     )}
 
                     {/* Filter bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3 p-4 border-b border-ink-900/10">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-3 p-4 border-b border-ink-100">
                         <div className="flex items-center gap-2">
                             <span className="lw-eyebrow">Filter</span>
                             <select
@@ -138,7 +139,7 @@ const LockerManagement = () => {
                                 placeholder="Search by email or employee ID"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                                className="w-full pl-9 pr-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                             />
                         </div>
                     </div>
@@ -147,7 +148,7 @@ const LockerManagement = () => {
                     <div className="overflow-x-auto overflow-y-auto max-h-[60vh] no-scrollbar">
                         <table className="w-full border-collapse min-w-[900px]">
                             <thead className="sticky top-0 z-10 bg-cream-50">
-                                <tr className="border-b border-ink-900/15">
+                                <tr className="border-b border-ink-200">
                                     {["Locker", "Email", "Name", "Emp ID", "Phone", "Status", "Expires", "Action"].map((h) => (
                                         <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}
@@ -158,9 +159,18 @@ const LockerManagement = () => {
                             <tbody>
                                 {filteredLockers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="8" className="px-4 py-12 text-center">
-                                            <div className="lw-eyebrow mb-2">No matches</div>
-                                            <p className="text-slate-600 text-sm">No lockers found for this filter.</p>
+                                        <td colSpan="8" className="px-4 py-14 text-center">
+                                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-cream-200 text-slate-400">
+                                                <PackageOpen className="w-4 h-4" />
+                                            </div>
+                                            <div className="font-display text-sm font-semibold text-ink-900">
+                                                {searchTerm || locker ? "No matches" : "No lockers yet"}
+                                            </div>
+                                            <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">
+                                                {searchTerm || locker
+                                                    ? "Try adjusting your search or filter."
+                                                    : "Add lockers to start managing your inventory."}
+                                            </p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -168,7 +178,7 @@ const LockerManagement = () => {
                                         const isExpanded = expandedRows.has(item.LockerNumber);
                                         return (
                                             <React.Fragment key={index}>
-                                                <tr className="border-b border-ink-900/10 hover:bg-cream-50/60 transition-colors">
+                                                <tr className="border-b border-ink-100 hover:bg-cream-50/60 transition-colors">
                                                     <td className="px-3 py-3 font-mono text-sm text-ink-900">
                                                         #{item.LockerNumber}
                                                     </td>
@@ -225,7 +235,7 @@ const LockerManagement = () => {
                                                     </td>
                                                 </tr>
                                                 {isExpanded && (
-                                                    <tr className="bg-cream-50/60 border-b border-ink-900/10">
+                                                    <tr className="bg-cream-50/60 border-b border-ink-100">
                                                         <td colSpan="8" className="px-4 py-5">
                                                             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                                                                 <Detail label="Gender" value={item.availableForGender} />

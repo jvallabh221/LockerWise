@@ -2,7 +2,7 @@ import React from "react";
 import DashNav from "./DashNav";
 
 const Clause = ({ num, title, children }) => (
-    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-ink-900/10 first:border-t-0">
+    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-ink-100 first:border-t-0">
         <div className="md:col-span-3">
             <div className="lw-section-num mb-2">{num}</div>
             <h2 className="font-display text-2xl text-ink-900 leading-tight">{title}</h2>
@@ -41,7 +41,7 @@ const TermsOfService = () => {
                         .
                     </p>
 
-                    <div className="mt-12 border border-ink-900/10 bg-white p-8 md:p-12">
+                    <div className="mt-12 border border-ink-100 bg-white p-8 md:p-12">
                         <Clause num="01 / Agreement" title="Agreement to terms">
                             <p>
                                 By accessing and using LockerWise, you agree to these Terms of Service. If you do not

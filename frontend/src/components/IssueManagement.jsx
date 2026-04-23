@@ -88,7 +88,7 @@ const IssueManagement = () => {
             <section className="w-full px-6 lg:px-10 py-10">
                 <div className="lw-section-num mb-2">Operations / Issues</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
-                    <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                    <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
                         Issue <span className="text-brass-500">management.</span>
                     </h1>
                     <Link
@@ -100,8 +100,8 @@ const IssueManagement = () => {
                 </div>
                 <div className="lw-rule-brass w-16 mt-5 mb-8" />
 
-                <div className="border border-ink-900/10 bg-white">
-                    <div className="flex flex-col md:flex-row gap-3 justify-end p-4 border-b border-ink-900/10">
+                <div className="border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
+                    <div className="flex flex-col md:flex-row gap-3 justify-end p-4 border-b border-ink-100">
                         <div className="flex items-center gap-2">
                             <span className="lw-eyebrow">Type</span>
                             <select
@@ -118,7 +118,7 @@ const IssueManagement = () => {
                             onChange={(d) => setSelectedDate(d ? format(d, "dd-MM-yyyy") : "")}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Date"
-                            className="w-full md:w-44 px-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                            className="w-full md:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                         />
                         <button
                             onClick={() => setSelectedDate("")}
@@ -133,7 +133,7 @@ const IssueManagement = () => {
                                 placeholder="Search by email"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                                className="w-full pl-9 pr-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                             />
                         </div>
                     </div>
@@ -141,7 +141,7 @@ const IssueManagement = () => {
                     <div className="overflow-x-auto max-h-[60vh] overflow-y-auto no-scrollbar">
                         <table className="w-full border-collapse min-w-[900px]">
                             <thead className="sticky top-0 bg-cream-50">
-                                <tr className="border-b border-ink-900/15">
+                                <tr className="border-b border-ink-200">
                                     {["Issue", "Email", "Subject", "Status", "Created", "Action"].map((h) => (
                                         <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                     ))}
@@ -150,9 +150,12 @@ const IssueManagement = () => {
                             <tbody>
                                 {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="px-4 py-12 text-center">
-                                            <div className="lw-eyebrow mb-2">No reports</div>
-                                            <p className="text-slate-600 text-sm">No issues match these filters.</p>
+                                        <td colSpan="6" className="px-4 py-14 text-center">
+                                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-success-50 text-success-600">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </div>
+                                            <div className="font-display text-sm font-semibold text-ink-900">All clear</div>
+                                            <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">No issues match the current filters.</p>
                                         </td>
                                     </tr>
                                 ) : (
@@ -161,7 +164,7 @@ const IssueManagement = () => {
                                         const created = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-GB") : "—";
                                         return (
                                             <React.Fragment key={index}>
-                                                <tr className="border-b border-ink-900/10 hover:bg-cream-50/60 transition-colors">
+                                                <tr className="border-b border-ink-100 hover:bg-cream-50/60 transition-colors">
                                                     <td className="px-3 py-3 font-mono text-sm text-ink-900">
                                                         {item.type === "technical" ? "Technical" : `#${item.LockerNumber || "—"}`}
                                                     </td>
@@ -181,7 +184,7 @@ const IssueManagement = () => {
                                                     </td>
                                                 </tr>
                                                 {isOpen && (
-                                                    <tr className="bg-cream-50/60 border-b border-ink-900/10">
+                                                    <tr className="bg-cream-50/60 border-b border-ink-100">
                                                         <td colSpan="6" className="px-4 py-5">
                                                             <div className="space-y-5">
                                                                 <div>
@@ -219,7 +222,7 @@ const IssueManagement = () => {
                                                                     )}
                                                                 </div>
                                                                 {error && <p className="text-sm text-error-600">{error}</p>}
-                                                                <div className="flex gap-3 pt-2 border-t border-ink-900/10">
+                                                                <div className="flex gap-3 pt-2 border-t border-ink-100">
                                                                     <button
                                                                         onClick={() => handleUpdate(item._id)}
                                                                         disabled={loadingStates[item._id]?.proceed || loadingStates[item._id]?.resolve || item.status === "In Action" || item.status === "Resolved"}

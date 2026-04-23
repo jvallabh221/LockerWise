@@ -108,7 +108,7 @@ const CancelLocker = () => {
 
                 {showConfirm && (
                     <div className="fixed inset-0 bg-ink-900/70 flex items-center justify-center z-50 px-4">
-                        <div className="bg-white border border-ink-900/10 max-w-md w-full p-8">
+                        <div className="bg-white border border-ink-100 max-w-md w-full p-8">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-error-500 text-white rounded-full flex items-center justify-center">
                                     <AlertTriangle className="w-5 h-5" />
@@ -118,7 +118,7 @@ const CancelLocker = () => {
                             <p className="text-slate-600 mb-4">
                                 This will return the locker to the pool and generate a new combination. This cannot be undone.
                             </p>
-                            <div className="border border-ink-900/10 bg-cream-50 p-4 mb-6">
+                            <div className="border border-ink-100 bg-cream-50 p-4 mb-6">
                                 <dl className="space-y-1">
                                     <div className="flex justify-between text-sm">
                                         <dt className="lw-label !mb-0">Locker</dt>

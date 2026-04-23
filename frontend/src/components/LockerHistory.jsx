@@ -4,7 +4,7 @@ import ReactPaginate from "react-paginate";
 import Layout from "./Layout";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ChevronLeft, ChevronRight, Search, Calendar, Loader, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Calendar, Loader, Trash2, X, Clock } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { parse, format } from "date-fns";
@@ -88,7 +88,7 @@ const LockerHistory = () => {
             <section className="w-full px-6 lg:px-10 py-10">
                 <div className="lw-section-num mb-2">Archive / Ledger</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
-                    <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                    <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
                         Locker <span className="text-brass-500">history.</span>
                     </h1>
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -97,8 +97,8 @@ const LockerHistory = () => {
                 </div>
                 <div className="lw-rule-brass w-16 mt-5 mb-8" />
 
-                <div className="border border-ink-900/10 bg-white">
-                    <div className="flex flex-col md:flex-row justify-between gap-3 p-4 border-b border-ink-900/10">
+                <div className="border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
+                    <div className="flex flex-col md:flex-row justify-between gap-3 p-4 border-b border-ink-100">
                         <div className="relative w-full md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <input
@@ -106,7 +106,7 @@ const LockerHistory = () => {
                                 placeholder="Search by locker #"
                                 value={searchLocker}
                                 onChange={(e) => setSearchLocker(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                                className="w-full pl-9 pr-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                             />
                         </div>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -119,7 +119,7 @@ const LockerHistory = () => {
                                     endDate={parseDate(endDate)}
                                     dateFormat="dd-MM-yyyy"
                                     placeholderText="Start date"
-                                    className="w-full sm:w-44 px-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                                    className="w-full sm:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="relative">
@@ -132,7 +132,7 @@ const LockerHistory = () => {
                                     minDate={parseDate(startDate)}
                                     dateFormat="dd-MM-yyyy"
                                     placeholderText="End date"
-                                    className="w-full sm:w-44 px-3 py-2 bg-transparent border border-ink-900/20 text-sm focus:outline-none focus:border-brass-400"
+                                    className="w-full sm:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                                 />
                             </div>
                             <button
@@ -152,20 +152,23 @@ const LockerHistory = () => {
 
                     {isLoading ? (
                         <div className="py-16 flex flex-col items-center justify-center gap-3">
-                            <Loader className="w-6 h-6 text-slate-500 animate-spin" />
-                            <p className="text-slate-600 text-sm">Loading history…</p>
+                            <Loader className="w-5 h-5 text-brass-400 animate-spin" />
+                            <p className="text-slate-500 text-sm">Loading history…</p>
                         </div>
                     ) : history.length === 0 ? (
-                        <div className="py-12 text-center">
-                            <div className="lw-eyebrow mb-2">No records</div>
-                            <p className="text-slate-600 text-sm">No history matches these filters.</p>
+                        <div className="py-14 text-center">
+                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-cream-200 text-slate-400">
+                                <Clock className="w-4 h-4" />
+                            </div>
+                            <div className="font-display text-sm font-semibold text-ink-900">No history yet</div>
+                            <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">Transactions will show up here as lockers are assigned, renewed, or cancelled.</p>
                         </div>
                     ) : (
                         <>
                             <div className="overflow-x-auto max-h-[60vh] overflow-y-auto no-scrollbar">
                                 <table className="w-full border-collapse min-w-[900px]">
                                     <thead className="sticky top-0 bg-cream-50">
-                                        <tr className="border-b border-ink-900/15">
+                                        <tr className="border-b border-ink-200">
                                             {["Locker", "Event", "Holder", "By", "Cost", "Status", "When"].map((h) => (
                                                 <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                             ))}
@@ -173,7 +176,7 @@ const LockerHistory = () => {
                                     </thead>
                                     <tbody>
                                         {currentItems.map((item, index) => (
-                                            <tr key={index} className="border-b border-ink-900/10 hover:bg-cream-50/60 transition-colors">
+                                            <tr key={index} className="border-b border-ink-100 hover:bg-cream-50/60 transition-colors">
                                                 <td className="px-3 py-3 font-mono text-sm text-ink-900">#{item.LockerNumber}</td>
                                                 <td className="px-3 py-3 text-sm text-ink-900 max-w-[280px] truncate" title={item.comment}>{item.comment}</td>
                                                 <td className="px-3 py-3 text-sm text-ink-900 max-w-[160px] truncate">{item.LockerHolder}</td>
@@ -196,14 +199,14 @@ const LockerHistory = () => {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-ink-900/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="p-4 border-t border-ink-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {startRange}–{endRange} of {history.length}
                                 </div>
                                 <ReactPaginate
                                     breakLabel={<span className="mx-1">…</span>}
-                                    previousLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-900/15"><ChevronLeft className="w-3.5 h-3.5" /></span>}
-                                    nextLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-900/15"><ChevronRight className="w-3.5 h-3.5" /></span>}
+                                    previousLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-200"><ChevronLeft className="w-3.5 h-3.5" /></span>}
+                                    nextLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-200"><ChevronRight className="w-3.5 h-3.5" /></span>}
                                     pageCount={pageCount}
                                     onPageChange={({ selected }) => setCurrentPage(selected)}
                                     pageRangeDisplayed={3}
@@ -219,9 +222,10 @@ const LockerHistory = () => {
                 </div>
 
                 <div ref={clearRef} className={`mt-8 ${showClearSection ? "" : "hidden"}`}>
-                    <div className="border border-ink-900/10 bg-cream-50 p-6 md:p-8">
-                        <div className="lw-eyebrow mb-1">Danger zone</div>
-                        <h2 className="font-display text-2xl text-ink-900 mb-6">Clear history range</h2>
+                    <div className="border border-error-500/25 bg-error-50/40 rounded-xl p-6 md:p-8">
+                        <div className="lw-eyebrow mb-1 text-error-600">Danger zone</div>
+                        <h2 className="font-display text-xl text-ink-900 font-semibold mb-1.5">Clear history range</h2>
+                        <p className="text-sm text-slate-500 mb-6">This permanently removes locker transaction records within the selected dates. Use with care.</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
                             <div>
                                 <label className="lw-label">Start date</label>

@@ -78,7 +78,7 @@ const AddMultipleLocker = () => {
                 </FormCard>
 
                 <FormCard num="02 / Upload" title="Upload your file">
-                    <label className="block border border-dashed border-ink-900/25 bg-cream-50 p-8 text-center cursor-pointer hover:border-brass-400 transition-colors">
+                    <label className="block border border-dashed border-ink-200 bg-cream-50 p-8 text-center cursor-pointer hover:border-brass-400 transition-colors">
                         <FileSpreadsheet className="w-8 h-8 mx-auto text-slate-500 mb-3" />
                         <div className="lw-eyebrow mb-1">Excel file</div>
                         <p className="text-sm text-slate-600">

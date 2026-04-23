@@ -52,7 +52,7 @@ const ContactUs = () => {
                     <div className="grid md:grid-cols-12 gap-8 mt-12">
                         {/* Left column */}
                         <div className="md:col-span-5 space-y-6">
-                            <div className="border border-ink-900/10 bg-white p-8">
+                            <div className="border border-ink-100 bg-white p-8">
                                 <div className="lw-eyebrow mb-6">01 / Direct lines</div>
 
                                 <div className="space-y-6">
@@ -89,7 +89,7 @@ const ContactUs = () => {
                                 </div>
                             </div>
 
-                            <div className="border border-ink-900/10 bg-cream-50 p-8">
+                            <div className="border border-ink-100 bg-cream-50 p-8">
                                 <div className="lw-eyebrow mb-4">02 / Hours</div>
                                 <dl className="space-y-2 font-mono text-sm">
                                     <div className="flex justify-between">
@@ -109,7 +109,7 @@ const ContactUs = () => {
                         </div>
 
                         {/* Right column — form */}
-                        <div className="md:col-span-7 border border-ink-900/10 bg-white p-8 md:p-10">
+                        <div className="md:col-span-7 border border-ink-100 bg-white p-8 md:p-10">
                             <div className="lw-eyebrow mb-1">03 / Message</div>
                             <h2 className="font-display text-3xl text-ink-900 mb-8">Send us a note</h2>
 
@@ -207,7 +207,7 @@ const ContactUs = () => {
                     </div>
 
                     {/* FAQ */}
-                    <div className="mt-16 border border-ink-900/10 bg-cream-50 p-8 md:p-12">
+                    <div className="mt-16 border border-ink-100 bg-cream-50 p-8 md:p-12">
                         <div className="lw-eyebrow mb-2">04 / FAQ</div>
                         <h2 className="font-display text-3xl text-ink-900 mb-8">Frequently asked</h2>
                         <div className="grid md:grid-cols-2 gap-x-10 gap-y-6">
@@ -224,7 +224,7 @@ const ContactUs = () => {
 };
 
 const Faq = ({ q, a }) => (
-    <div className="border-t border-ink-900/10 pt-4">
+    <div className="border-t border-ink-100 pt-4">
         <h3 className="font-display text-lg text-ink-900">{q}</h3>
         <p className="text-slate-600 mt-1">{a}</p>
     </div>
