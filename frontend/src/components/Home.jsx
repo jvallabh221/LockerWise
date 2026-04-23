@@ -13,6 +13,7 @@ import {
     CheckCircle2,
 } from "lucide-react";
 import DashNav from "./DashNav";
+import { Wordmark } from "./ui/Wordmark";
 
 /* -------------------------------- Bits --------------------------------- */
 
