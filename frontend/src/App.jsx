@@ -52,45 +52,50 @@ const App = () => {
                     <Suspense fallback={<></>}>
                         <TokenChecker />
                         <Routes>
-                            {/* COMMON ROUTES */}
-                            <Route path="/unauthorized" element={<Unauthorize />} />
+                            {/* PUBLIC ROUTES */}
                             <Route path="/" element={<Home />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/forgot" element={<ForgotPassword />} />
                             <Route path="/reset" element={<ResetPassword />} />
-                            <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                             <Route path="/terms-of-service" element={<TermsOfService />} />
                             <Route path="/contact-us" element={<ContactUs />} />
-                            <Route path="/testing" element={<Testing />} />
-                            <Route path="/account_page" element={<AccountPage />} />
-                            <Route path="/account_reset_pass" element={<AccountResetPass />} />
-                            <Route path="/locker_management" element={<LockerManagement />} />
-                            <Route path="/editLockerDetails" element={<EditLockerDetails />} />
-                            <Route path="/issue_reporting" element={<IssueReporting />} />
-                            <Route path="/locker_issue" element={<LockerIssue />} />
-                            <Route path="/technical_issue" element={<TechnicalIssue />} />
+                            <Route path="/unauthorized" element={<Unauthorize />} />
+
+                            {/* AUTHENTICATED ROUTES (Admin + Staff) */}
+                            <Route path="/dashboard" element={<ProtectedRoutes><Dashboard /></ProtectedRoutes>} />
+                            <Route path="/account_page" element={<ProtectedRoutes><AccountPage /></ProtectedRoutes>} />
+                            <Route path="/account_reset_pass" element={<ProtectedRoutes><AccountResetPass /></ProtectedRoutes>} />
+                            <Route path="/locker_management" element={<ProtectedRoutes allowedRoles={["Admin", "Staff"]}><LockerManagement /></ProtectedRoutes>} />
+                            <Route path="/editLockerDetails" element={<ProtectedRoutes allowedRoles={["Admin", "Staff"]}><EditLockerDetails /></ProtectedRoutes>} />
+                            <Route path="/issue_reporting" element={<ProtectedRoutes allowedRoles={["Admin", "Staff"]}><IssueReporting /></ProtectedRoutes>} />
+                            <Route path="/locker_issue" element={<ProtectedRoutes allowedRoles={["Admin", "Staff"]}><LockerIssue /></ProtectedRoutes>} />
+                            <Route path="/technical_issue" element={<ProtectedRoutes allowedRoles={["Admin", "Staff"]}><TechnicalIssue /></ProtectedRoutes>} />
+
                             {/* ADMIN ROUTES */}
-                            <Route path="/add_single_locker" element={<ProtectedRoutes allowedRoles={"Admin"}><AddSingleLocker /></ProtectedRoutes>}/>
-                            <Route path="/locker_analysis" element={<ProtectedRoutes allowedRoles={"Admin"}><LockerAnalysis /></ProtectedRoutes>} />
-                            <Route path="/delete_locker" element={<ProtectedRoutes allowedRoles={"Admin"}><DeleteLocker /></ProtectedRoutes>} />
-                            <Route path="/update_locker_price" element={<ProtectedRoutes allowedRoles={"Admin"}><UpdateLockerPrice /></ProtectedRoutes>} />
-                            <Route path="/issue_management" element={<ProtectedRoutes allowedRoles={"Admin"}><IssueManagement /></ProtectedRoutes>} />
-                            <Route path="/add_multiple_locker" element={<ProtectedRoutes allowedRoles={"Admin"}><AddMultipleLocker /></ProtectedRoutes>} />
-                            <Route path="/view_staff_details" element={<ProtectedRoutes allowedRoles={"Admin"}><ViewStaffDetails /></ProtectedRoutes>} />
-                            <Route path="/edit_staff_details" element={<ProtectedRoutes allowedRoles={"Admin"}><EditStaffDetails /></ProtectedRoutes>} />
-                            <Route path="/staff_management" element={<ProtectedRoutes allowedRoles={"Admin"}><StaffManagement /></ProtectedRoutes>} />
-                            <Route path="/add_single_staff" element={<ProtectedRoutes allowedRoles={"Admin"}><AddSingleStaff /></ProtectedRoutes>} />
-                            <Route path="/locker_history" element={<ProtectedRoutes allowedRoles={"Admin"}><LockerHistory /></ProtectedRoutes>} />
+                            <Route path="/add_single_locker" element={<ProtectedRoutes allowedRoles="Admin"><AddSingleLocker /></ProtectedRoutes>} />
+                            <Route path="/add_multiple_locker" element={<ProtectedRoutes allowedRoles="Admin"><AddMultipleLocker /></ProtectedRoutes>} />
+                            <Route path="/delete_locker" element={<ProtectedRoutes allowedRoles="Admin"><DeleteLocker /></ProtectedRoutes>} />
+                            <Route path="/update_locker_price" element={<ProtectedRoutes allowedRoles="Admin"><UpdateLockerPrice /></ProtectedRoutes>} />
+                            <Route path="/locker_analysis" element={<ProtectedRoutes allowedRoles="Admin"><LockerAnalysis /></ProtectedRoutes>} />
+                            <Route path="/locker_history" element={<ProtectedRoutes allowedRoles="Admin"><LockerHistory /></ProtectedRoutes>} />
+                            <Route path="/issue_management" element={<ProtectedRoutes allowedRoles="Admin"><IssueManagement /></ProtectedRoutes>} />
+                            <Route path="/staff_management" element={<ProtectedRoutes allowedRoles="Admin"><StaffManagement /></ProtectedRoutes>} />
+                            <Route path="/add_single_staff" element={<ProtectedRoutes allowedRoles="Admin"><AddSingleStaff /></ProtectedRoutes>} />
+                            <Route path="/view_staff_details" element={<ProtectedRoutes allowedRoles="Admin"><ViewStaffDetails /></ProtectedRoutes>} />
+                            <Route path="/edit_staff_details" element={<ProtectedRoutes allowedRoles="Admin"><EditStaffDetails /></ProtectedRoutes>} />
+                            <Route path="/testing" element={<ProtectedRoutes allowedRoles="Admin"><Testing /></ProtectedRoutes>} />
+
                             {/* STAFF ROUTES */}
-                            <Route path="/available_lockers" element={<ProtectedRoutes allowedRoles={"Staff"}><AvailableLockers /></ProtectedRoutes>} />
-                            <Route path="/assign_locker" element={<ProtectedRoutes allowedRoles={"Staff"}><AssignLocker /></ProtectedRoutes>} />
-                            <Route path="/renew_locker" element={<ProtectedRoutes allowedRoles={"Staff"}><RenewLocker /></ProtectedRoutes>} />
-                            <Route path="/cancel_locker" element={<ProtectedRoutes allowedRoles={"Staff"}><CancelLocker /></ProtectedRoutes>} />
-                            <Route path="/update_locker" element={<ProtectedRoutes allowedRoles={"Staff"}><UpdateLocker /></ProtectedRoutes>} />
-                            <Route path="/update_locker_feature" element={<ProtectedRoutes allowedRoles={"Staff"}><UpdateLockerFeature /></ProtectedRoutes>} />
-                            <Route path="/view_report_status" element={<ProtectedRoutes allowedRoles={"Staff"}><ViewReportStatus /></ProtectedRoutes>} />
-                            {/*Any Other Route*/}
+                            <Route path="/available_lockers" element={<ProtectedRoutes allowedRoles="Staff"><AvailableLockers /></ProtectedRoutes>} />
+                            <Route path="/assign_locker" element={<ProtectedRoutes allowedRoles="Staff"><AssignLocker /></ProtectedRoutes>} />
+                            <Route path="/renew_locker" element={<ProtectedRoutes allowedRoles="Staff"><RenewLocker /></ProtectedRoutes>} />
+                            <Route path="/cancel_locker" element={<ProtectedRoutes allowedRoles="Staff"><CancelLocker /></ProtectedRoutes>} />
+                            <Route path="/update_locker" element={<ProtectedRoutes allowedRoles="Staff"><UpdateLocker /></ProtectedRoutes>} />
+                            <Route path="/update_locker_feature" element={<ProtectedRoutes allowedRoles="Staff"><UpdateLockerFeature /></ProtectedRoutes>} />
+                            <Route path="/view_report_status" element={<ProtectedRoutes allowedRoles="Staff"><ViewReportStatus /></ProtectedRoutes>} />
+
+                            {/* FALLBACK */}
                             <Route path="*" element={<Home />} />
                         </Routes>
                     </Suspense>
