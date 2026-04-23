@@ -1,43 +1,60 @@
 import React, { useContext, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthContext } from "../context/AuthProvider";
 import { LockerContext } from "../context/LockerProvider";
 import { AdminContext } from "../context/AdminProvider";
 import Layout from "./Layout";
-import { 
-    KeyRound, 
-    CheckCircle, 
-    Users, 
+import {
+    KeyRound,
+    CheckCircle,
+    Users,
     AlertTriangle,
     UserPlus,
     Wrench,
     Lock,
-    LockOpen
+    LockOpen,
 } from "lucide-react";
 
+const StatBlock = ({ num, label, value, Icon, accent = "ink", suffix }) => {
+    const accentMap = {
+        ink: "bg-ink-900 text-cream-50",
+        brass: "bg-brass-400 text-ink-900",
+        green: "bg-[#e6efe8] text-[#2f5c43]",
+        rust: "bg-[#f3d8cf] text-[#7a2a18]",
+    };
+    return (
+        <div className="border border-ink-900/10 bg-white flex flex-col justify-between">
+            <div className="flex items-start justify-between p-5 pb-3">
+                <div>
+                    <div className="lw-eyebrow mb-2">{num} / {label}</div>
+                    <div className="font-display text-5xl text-ink-900 leading-none">{value}</div>
+                    {suffix ? (
+                        <div className="lw-eyebrow text-slate-500 mt-2">{suffix}</div>
+                    ) : null}
+                </div>
+                <div className={`w-10 h-10 flex items-center justify-center ${accentMap[accent]}`}>
+                    <Icon className="w-5 h-5" />
+                </div>
+            </div>
+            <div className="h-1 bg-ink-900/5">
+                <div
+                    className={`h-1 ${accent === "brass" ? "bg-brass-400" : accent === "green" ? "bg-[#3e7b5a]" : accent === "rust" ? "bg-[#b5452c]" : "bg-ink-900"}`}
+                    style={{ width: "100%" }}
+                />
+            </div>
+        </div>
+    );
+};
+
 const Dashboard = () => {
-    const navigate = useNavigate();
+    const { loginDetails, loginSuccess, setLoginSuccess, updateSuccess, setUpdateSuccess } = useContext(AuthContext);
 
-    // ---------- MERGED AuthContext (was duplicated previously) ----------
-    const { 
-        loginDetails,
-        loginSuccess,
-        setLoginSuccess,
-        updateSuccess,
-        setUpdateSuccess
-    } = useContext(AuthContext);
-
-    // LockerContext
     const {
         allLockerDetails,
         allocatedLockerDetails,
         availableLockerDetails,
-        expiredLockerDetails,
         maintenanceLockerDetails,
-        expireIn7Days,
-        expireIn1Day,
         assignSuccess,
         setAssignSuccess,
         cancelSuccess,
@@ -53,516 +70,255 @@ const Dashboard = () => {
         cancelLockers,
     } = useContext(LockerContext);
 
-    // AdminContext
-    const { 
-        deleteSuccess, 
-        setDeleteSuccess, 
-        staffSuccess, 
-        setStaffSuccess, 
-        staffDeleteSuccess, 
-        setStaffDeleteSuccess, 
-        editStaffSuccess, 
+    const {
+        deleteSuccess,
+        setDeleteSuccess,
+        staffSuccess,
+        setStaffSuccess,
+        staffDeleteSuccess,
+        setStaffDeleteSuccess,
+        editStaffSuccess,
         setEditStaffSuccess,
-        staffs,
-        lockerIssue,
-        technicalIssue,
         lockerHistory,
     } = useContext(AdminContext);
 
-    // ---------------- Toast effects (one useEffect per notification, preserving your original notifications) ----------------
     useEffect(() => {
-        if (editStaffSuccess) {
-            toast.success("User updated successfully");
-            setEditStaffSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (editStaffSuccess) { toast.success("User updated successfully"); setEditStaffSuccess(false); }
     }, [editStaffSuccess]);
-
     useEffect(() => {
-        if (loginSuccess) {
-            toast.success("Login successful. Welcome to the dashboard.");
-            setLoginSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (loginSuccess) { toast.success("Login successful. Welcome to the dashboard."); setLoginSuccess(false); }
     }, [loginSuccess]);
-
     useEffect(() => {
-        if (staffSuccess) {
-            toast.success("Staff Added Sucessfully...");
-            setStaffSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (staffSuccess) { toast.success("Staff added successfully."); setStaffSuccess(false); }
     }, [staffSuccess]);
-
     useEffect(() => {
-        if (staffDeleteSuccess) {
-            toast.success("Staff member removed successfully");
-            setStaffDeleteSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (staffDeleteSuccess) { toast.success("Staff member removed."); setStaffDeleteSuccess(false); }
     }, [staffDeleteSuccess]);
-
     useEffect(() => {
-        if (addMulSuccess) {
-            toast.success("Lockers Created Successfully");
-            setAddMulSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (addMulSuccess) { toast.success("Lockers created successfully."); setAddMulSuccess(false); }
     }, [addMulSuccess]);
-
     useEffect(() => {
-        if (assignSuccess) {
-            toast.success("Locker allocated successfully");
-            setAssignSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (assignSuccess) { toast.success("Locker allocated successfully."); setAssignSuccess(false); }
     }, [assignSuccess]);
-
     useEffect(() => {
-        if (updateSuccess) {
-            toast.success("Profile updated successfully.");
-            setUpdateSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (updateSuccess) { toast.success("Profile updated successfully."); setUpdateSuccess(false); }
     }, [updateSuccess]);
-
     useEffect(() => {
         if (cancelSuccess) {
             const message = cancelLockers?.message || "Locker taken back successfully";
             const lockerCode = cancelLockers?.data?.LockerCode;
-            const notificationMessage = lockerCode 
-                ? `${message}. Next combination is: ${lockerCode}`
-                : message;
-            toast.success(notificationMessage, {
-                autoClose: 6000,
-            });
+            toast.success(lockerCode ? `${message}. Next combination: ${lockerCode}` : message, { autoClose: 6000 });
             setCancelSuccess(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cancelSuccess, cancelLockers]);
-
     useEffect(() => {
-        if (lockerSuccess) {
-            toast.success("Locker issue raised  successfully");
-            setLockerSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (lockerSuccess) { toast.success("Locker issue raised successfully."); setLockerSuccess(false); }
     }, [lockerSuccess]);
-
     useEffect(() => {
-        if (technicalSuccess) {
-            toast.success("Technical issue reported successfully.");
-            setTechnicalSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (technicalSuccess) { toast.success("Technical issue reported successfully."); setTechnicalSuccess(false); }
     }, [technicalSuccess]);
-
     useEffect(() => {
-        if (addSuccess) {
-            toast.success("Locker Created Successfully");
-            setAddSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (addSuccess) { toast.success("Locker created successfully."); setAddSuccess(false); }
     }, [addSuccess]);
-
     useEffect(() => {
-        if (deleteSuccess) {
-            toast.success("Locker deleted successfully.");
-            setDeleteSuccess(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        if (deleteSuccess) { toast.success("Locker deleted."); setDeleteSuccess(false); }
     }, [deleteSuccess]);
 
-    // ---------------- Statistics ----------------
     const totalLockers = allLockerDetails?.length || 0;
     const availableLockers = availableLockerDetails?.length || 0;
     const inUseLockers = allocatedLockerDetails?.length || 0;
     const maintenanceLockers = maintenanceLockerDetails?.length || 0;
 
-    // ---------------- Pie Chart Data (useMemo) ----------------
     const pieChartData = useMemo(() => {
         const total = totalLockers || 1;
         const otherCount = Math.max(0, total - availableLockers - inUseLockers - maintenanceLockers);
-        
+
         const outerRadius = 100;
-        const innerRadius = 60; // Inner radius for donut hole
+        const innerRadius = 62;
         const centerX = 128;
         const centerY = 128;
-        
-        // Calculate percentages
+
         const availablePercent = (availableLockers / total) * 100;
         const inUsePercent = (inUseLockers / total) * 100;
         const maintenancePercent = (maintenanceLockers / total) * 100;
         const otherPercent = (otherCount / total) * 100;
-        
-        // Helper function to create donut slice path
+
+        const polarToCartesian = (cx, cy, r, angle) => {
+            const rad = (angle - 90) * Math.PI / 180;
+            return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+        };
         const createDonutSlice = (startAngle, endAngle) => {
             const startOuter = polarToCartesian(centerX, centerY, outerRadius, endAngle);
             const endOuter = polarToCartesian(centerX, centerY, outerRadius, startAngle);
             const startInner = polarToCartesian(centerX, centerY, innerRadius, endAngle);
             const endInner = polarToCartesian(centerX, centerY, innerRadius, startAngle);
-            const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-            
+            const largeArc = endAngle - startAngle > 180 ? 1 : 0;
             return [
                 `M ${startOuter.x} ${startOuter.y}`,
-                `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 0 ${endOuter.x} ${endOuter.y}`,
+                `A ${outerRadius} ${outerRadius} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
                 `L ${endInner.x} ${endInner.y}`,
-                `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 1 ${startInner.x} ${startInner.y}`,
-                'Z'
-            ].join(' ');
+                `A ${innerRadius} ${innerRadius} 0 ${largeArc} 1 ${startInner.x} ${startInner.y}`,
+                "Z",
+            ].join(" ");
         };
-        
-        // Convert polar coordinates to cartesian
-        const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
-            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
-            return {
-                x: centerX + (radius * Math.cos(angleInRadians)),
-                y: centerY + (radius * Math.sin(angleInRadians))
-            };
-        };
-        
-        // Calculate angles (starting from top, going clockwise)
+
         let currentAngle = 0;
-        
         const availableAngle = (availablePercent / 100) * 360;
         const inUseAngle = (inUsePercent / 100) * 360;
         const maintenanceAngle = (maintenancePercent / 100) * 360;
         const otherAngle = (otherPercent / 100) * 360;
-        
-        const availableStart = currentAngle;
-        const availableEnd = currentAngle + availableAngle;
-        currentAngle += availableAngle;
-        
-        const inUseStart = currentAngle;
-        const inUseEnd = currentAngle + inUseAngle;
-        currentAngle += inUseAngle;
-        
-        const maintenanceStart = currentAngle;
-        const maintenanceEnd = currentAngle + maintenanceAngle;
-        currentAngle += maintenanceAngle;
-        
-        const otherStart = currentAngle;
-        const otherEnd = currentAngle + otherAngle;
-    
+
+        const aS = currentAngle; const aE = currentAngle + availableAngle; currentAngle += availableAngle;
+        const iS = currentAngle; const iE = currentAngle + inUseAngle; currentAngle += inUseAngle;
+        const mS = currentAngle; const mE = currentAngle + maintenanceAngle; currentAngle += maintenanceAngle;
+        const oS = currentAngle; const oE = currentAngle + otherAngle;
+
         return {
-            available: {
-                percent: availablePercent,
-                path: availablePercent > 0 ? createDonutSlice(availableStart, availableEnd) : '',
-                startAngle: availableStart,
-                endAngle: availableEnd
-            },
-            inUse: {
-                percent: inUsePercent,
-                path: inUsePercent > 0 ? createDonutSlice(inUseStart, inUseEnd) : '',
-                startAngle: inUseStart,
-                endAngle: inUseEnd
-            },
-            maintenance: {
-                percent: maintenancePercent,
-                path: maintenancePercent > 0 ? createDonutSlice(maintenanceStart, maintenanceEnd) : '',
-                startAngle: maintenanceStart,
-                endAngle: maintenanceEnd
-            },
-            other: {
-                percent: otherPercent,
-                count: otherCount,
-                path: otherPercent > 0 ? createDonutSlice(otherStart, otherEnd) : '',
-                startAngle: otherStart,
-                endAngle: otherEnd
-            },
-            innerRadius
+            available: { percent: availablePercent, path: availablePercent > 0 ? createDonutSlice(aS, aE) : "" },
+            inUse: { percent: inUsePercent, path: inUsePercent > 0 ? createDonutSlice(iS, iE) : "" },
+            maintenance: { percent: maintenancePercent, path: maintenancePercent > 0 ? createDonutSlice(mS, mE) : "" },
+            other: { percent: otherPercent, count: otherCount, path: otherPercent > 0 ? createDonutSlice(oS, oE) : "" },
+            innerRadius,
         };
     }, [availableLockers, inUseLockers, maintenanceLockers, totalLockers]);
-    
 
-    // ---------------- Recent Activity (useMemo) ----------------
     const recentActivity = useMemo(() => {
         if (!lockerHistory?.history) return [];
-
-        const safeHistory = Array.isArray(lockerHistory.history) ? lockerHistory.history : [];
-
-        const history = [...safeHistory]
+        const safe = Array.isArray(lockerHistory.history) ? lockerHistory.history : [];
+        return [...safe]
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
             .slice(0, 5)
-            .map(item => {
+            .map((item) => {
                 const date = new Date(item.createdAt);
                 const now = new Date();
                 const diffMs = now - date;
                 const diffMins = Math.floor(diffMs / 60000);
                 const diffHours = Math.floor(diffMs / 3600000);
                 const diffDays = Math.floor(diffMs / 86400000);
-
                 let timeAgo = "";
-                if (diffMins < 60) {
-                    timeAgo = `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
-                } else if (diffHours < 24) {
-                    timeAgo = `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-                } else if (diffDays === 1) {
-                    timeAgo = "Yesterday";
-                } else {
-                    timeAgo = `${diffDays} days ago`;
-                }
+                if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+                else if (diffHours < 24) timeAgo = `${diffHours}h ago`;
+                else if (diffDays === 1) timeAgo = "yesterday";
+                else timeAgo = `${diffDays}d ago`;
 
-                // Determine icon and text based on comment/message
                 let Icon = UserPlus;
-                let iconColor = "text-purple-500";
                 const comment = (item.comment || "").toString().toLowerCase();
+                if (comment.includes("assigned") || comment.includes("allotted")) Icon = UserPlus;
+                else if (comment.includes("maintenance") || comment.includes("reported")) Icon = Wrench;
+                else if (comment.includes("opened") || comment.includes("accessed")) Icon = LockOpen;
+                else if (comment.includes("closed") || comment.includes("in use")) Icon = Lock;
 
-                if (comment.includes("assigned") || comment.includes("allotted")) {
-                    Icon = UserPlus;
-                    iconColor = "text-purple-500";
-                } else if (comment.includes("maintenance") || comment.includes("reported")) {
-                    Icon = Wrench;
-                    iconColor = "text-red-500";
-                } else if (comment.includes("opened") || comment.includes("accessed")) {
-                    Icon = LockOpen;
-                    iconColor = "text-green-500";
-                } else if (comment.includes("closed") || comment.includes("in use")) {
-                    Icon = Lock;
-                    iconColor = "text-yellow-500";
-                }
-
-                return {
-                    ...item,
-                    timeAgo,
-                    icon: Icon,
-                    iconColor
-                };
+                return { ...item, timeAgo, icon: Icon };
             });
-
-        return history;
     }, [lockerHistory]);
 
-    // ---------------- Activity text formatter ----------------
     const formatActivityText = (item) => {
         const lockerNum = item.LockerNumber || "N/A";
         const holder = item.LockerHolder || "Unknown";
         const comment = (item.comment || "").toString();
-
         const low = comment.toLowerCase();
-        if (low.includes("assigned") || low.includes("allotted")) {
-            return `Locker ${lockerNum} assigned to ${holder}.`;
-        } else if (low.includes("maintenance") || low.includes("reported")) {
-            return `Locker ${lockerNum} reported for maintenance.`;
-        } else if (low.includes("opened") || low.includes("accessed")) {
-            return `Locker ${lockerNum} opened by ${holder}.`;
-        } else if (low.includes("closed") || low.includes("in use")) {
-            return `Locker ${lockerNum} is now in use.`;
-        }
-
-        return comment || `Locker ${lockerNum} - ${item.LockerStatus || "Updated"}`;
+        if (low.includes("assigned") || low.includes("allotted")) return `Locker ${lockerNum} assigned to ${holder}.`;
+        if (low.includes("maintenance") || low.includes("reported")) return `Locker ${lockerNum} reported for maintenance.`;
+        if (low.includes("opened") || low.includes("accessed")) return `Locker ${lockerNum} opened by ${holder}.`;
+        if (low.includes("closed") || low.includes("in use")) return `Locker ${lockerNum} is now in use.`;
+        return comment || `Locker ${lockerNum} — ${item.LockerStatus || "Updated"}`;
     };
 
-    // ---------------- JSX ----------------
     return (
         <Layout>
-            <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
-            <section className="flex flex-col w-full px-4 py-8 gap-8 min-h-screen">
+            <ToastContainer position="top-right" autoClose={2000} theme="light" />
+            <section className="flex flex-col w-full px-6 lg:px-10 py-10 gap-10">
                 {/* Header */}
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                            Dashboard
-                        </h1>
-                    </div>
-                    <p className="text-purple-600 text-lg">
-                        Welcome back, <span className="font-semibold text-gray-900">{loginDetails?.name || "User"}</span>! Here's an overview of your locker management system.
+                <header className="flex flex-col gap-3">
+                    <div className="lw-section-num">Dashboard / Overview</div>
+                    <h1 className="font-display text-5xl text-ink-900 leading-[1.05]">
+                        Good day, <span className="italic">{loginDetails?.name?.split(" ")[0] || "custodian"}.</span>
+                    </h1>
+                    <div className="lw-rule-brass w-16 mt-1" />
+                    <p className="text-slate-600 max-w-2xl leading-relaxed">
+                        The locker ledger at a glance. Counts are pulled live from the database; the legend below maps
+                        status colors used across the product.
                     </p>
+                </header>
+
+                {/* Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <StatBlock num="01" label="Total" value={totalLockers} Icon={KeyRound} accent="ink" suffix="In ledger" />
+                    <StatBlock num="02" label="Available" value={availableLockers} Icon={CheckCircle} accent="green" suffix="Ready to assign" />
+                    <StatBlock num="03" label="Occupied" value={inUseLockers} Icon={Users} accent="brass" suffix="In use" />
+                    <StatBlock num="04" label="Maintenance" value={maintenanceLockers} Icon={AlertTriangle} accent="rust" suffix="Flagged" />
                 </div>
 
-                {/* Top Row - Key Metrics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* Total Lockers */}
-                    <div className="group bg-gradient-to-br from-white to-purple-50 rounded-2xl p-6 shadow-xl border border-purple-100 hover:border-purple-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Total Lockers</span>
-                            <div className="p-3 bg-purple-100 rounded-xl group-hover:bg-purple-200 transition-colors">
-                                <KeyRound className="w-6 h-6 text-purple-600" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <div className="text-5xl font-bold text-gray-900">{totalLockers}</div>
-                            <div className="text-sm text-gray-500 font-medium">lockers</div>
-                        </div>
-                    </div>
-
-                    {/* Available */}
-                    <div className="group bg-gradient-to-br from-white to-green-50 rounded-2xl p-6 shadow-xl border border-green-100 hover:border-green-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Available</span>
-                            <div className="p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors">
-                                <CheckCircle className="w-6 h-6 text-green-600" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <div className="text-5xl font-bold text-green-600">{availableLockers}</div>
-                            <div className="text-sm text-gray-500 font-medium">available</div>
-                        </div>
-                    </div>
-
-                    {/* In Use */}
-                    <div className="group bg-gradient-to-br from-white to-orange-50 rounded-2xl p-6 shadow-xl border border-orange-100 hover:border-orange-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-gray-600 text-sm font-semibold uppercase tracking-wide">In Use</span>
-                            <div className="p-3 bg-orange-100 rounded-xl group-hover:bg-orange-200 transition-colors">
-                                <Users className="w-6 h-6 text-orange-600" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <div className="text-5xl font-bold text-orange-600">{inUseLockers}</div>
-                            <div className="text-sm text-gray-500 font-medium">occupied</div>
-                        </div>
-                    </div>
-
-                    {/* Needs Maintenance */}
-                    <div className="group bg-gradient-to-br from-white to-red-50 rounded-2xl p-6 shadow-xl border border-red-100 hover:border-red-300 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <span className="text-gray-600 text-sm font-semibold uppercase tracking-wide">Maintenance</span>
-                            <div className="p-3 bg-red-100 rounded-xl group-hover:bg-red-200 transition-colors">
-                                <AlertTriangle className="w-6 h-6 text-red-600" />
-                            </div>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <div className="text-5xl font-bold text-red-600">{maintenanceLockers}</div>
-                            <div className="text-sm text-gray-500 font-medium">needs repair</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Bottom Row - Chart and Activity */}
+                {/* Chart + Activity */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Locker Status - Pie Chart */}
-                    <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                        <div className="flex items-center gap-3 mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900">Locker Status</h2>
-                        </div>
-                        <div className="flex flex-col items-center justify-center">
+                    {/* Donut */}
+                    <div className="border border-ink-900/10 bg-white p-8">
+                        <div className="lw-eyebrow mb-1">05 / Composition</div>
+                        <h2 className="font-display text-2xl text-ink-900 mb-6">Locker status</h2>
+                        <div className="flex flex-col items-center">
                             <div className="relative w-80 h-80 mb-8">
                                 <svg className="w-80 h-80" viewBox="0 0 256 256">
-                                    {/* Available - Green */}
                                     {pieChartData.available.path && (
-                                        <path
-                                            d={pieChartData.available.path}
-                                            fill="#10b981"
-                                            stroke="#fff"
-                                            strokeWidth="2"
-                                            className="hover:opacity-80 transition-opacity cursor-pointer"
-                                        />
+                                        <path d={pieChartData.available.path} fill="#3e7b5a" stroke="#fbf7ef" strokeWidth="2" />
                                     )}
-                                    {/* In Use - Orange */}
                                     {pieChartData.inUse.path && (
-                                        <path
-                                            d={pieChartData.inUse.path}
-                                            fill="#f97316"
-                                            stroke="#fff"
-                                            strokeWidth="2"
-                                            className="hover:opacity-80 transition-opacity cursor-pointer"
-                                        />
+                                        <path d={pieChartData.inUse.path} fill="#b8932c" stroke="#fbf7ef" strokeWidth="2" />
                                     )}
-                                    {/* Maintenance - Red */}
                                     {pieChartData.maintenance.path && (
-                                        <path
-                                            d={pieChartData.maintenance.path}
-                                            fill="#ef4444"
-                                            stroke="#fff"
-                                            strokeWidth="2"
-                                            className="hover:opacity-80 transition-opacity cursor-pointer"
-                                        />
+                                        <path d={pieChartData.maintenance.path} fill="#b5452c" stroke="#fbf7ef" strokeWidth="2" />
                                     )}
-                                    {/* Other - Gray */}
                                     {pieChartData.other.path && (
-                                        <path
-                                            d={pieChartData.other.path}
-                                            fill="#6b7280"
-                                            stroke="#fff"
-                                            strokeWidth="2"
-                                            className="hover:opacity-80 transition-opacity cursor-pointer"
-                                        />
+                                        <path d={pieChartData.other.path} fill="#7c7c6f" stroke="#fbf7ef" strokeWidth="2" />
                                     )}
-                                    {/* White center circle */}
-                                    <circle
-                                        cx="128"
-                                        cy="128"
-                                        r={pieChartData.innerRadius}
-                                        fill="#ffffff"
-                                        stroke="#e5e7eb"
-                                        strokeWidth="1"
-                                    />
+                                    <circle cx="128" cy="128" r={pieChartData.innerRadius} fill="#ffffff" stroke="#0b122014" strokeWidth="1" />
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className="text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">{totalLockers}</div>
-                                    <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mt-1">Total Lockers</div>
+                                    <div className="font-display text-5xl text-ink-900">{totalLockers}</div>
+                                    <div className="lw-eyebrow text-slate-500 mt-1">Total lockers</div>
                                 </div>
                             </div>
-                            {/* Legend */}
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors">
-                                    <div className="w-5 h-5 rounded-full bg-green-500 shadow-md"></div>
-                                    <div className="flex flex-col">
-                                        <span className="text-gray-900 font-semibold text-sm">Available</span>
-                                        <span className="text-xs text-gray-600">{availableLockers} ({pieChartData.available.percent.toFixed(1)}%)</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors">
-                                    <div className="w-5 h-5 rounded-full bg-orange-500 shadow-md"></div>
-                                    <div className="flex flex-col">
-                                        <span className="text-gray-900 font-semibold text-sm">In Use</span>
-                                        <span className="text-xs text-gray-600">{inUseLockers} ({pieChartData.inUse.percent.toFixed(1)}%)</span>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
-                                    <div className="w-5 h-5 rounded-full bg-red-500 shadow-md"></div>
-                                    <div className="flex flex-col">
-                                        <span className="text-gray-900 font-semibold text-sm">Maintenance</span>
-                                        <span className="text-xs text-gray-600">{maintenanceLockers} ({pieChartData.maintenance.percent.toFixed(1)}%)</span>
-                                    </div>
-                                </div>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-3 w-full max-w-md">
+                                <LegendRow color="#3e7b5a" label="Available" count={availableLockers} percent={pieChartData.available.percent} />
+                                <LegendRow color="#b8932c" label="Occupied" count={inUseLockers} percent={pieChartData.inUse.percent} />
+                                <LegendRow color="#b5452c" label="Maintenance" count={maintenanceLockers} percent={pieChartData.maintenance.percent} />
                                 {pieChartData.other.count > 0 && (
-                                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                                        <div className="w-5 h-5 rounded-full bg-gray-500 shadow-md"></div>
-                                        <div className="flex flex-col">
-                                            <span className="text-gray-900 font-semibold text-sm">Other</span>
-                                            <span className="text-xs text-gray-600">{pieChartData.other.count} ({pieChartData.other.percent.toFixed(1)}%)</span>
-                                        </div>
-                                    </div>
+                                    <LegendRow color="#7c7c6f" label="Other" count={pieChartData.other.count} percent={pieChartData.other.percent} />
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Recent Activity */}
-                    <div className="bg-white rounded-2xl p-8 shadow-xl border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
-                        <div className="flex items-center gap-3 mb-8">
-                            <h2 className="text-2xl font-bold text-gray-900">Recent Activity</h2>
-                        </div>
-                        <div className="space-y-3">
+                    {/* Recent activity */}
+                    <div className="border border-ink-900/10 bg-white p-8">
+                        <div className="lw-eyebrow mb-1">06 / Log</div>
+                        <h2 className="font-display text-2xl text-ink-900 mb-6">Recent activity</h2>
+                        <div className="divide-y divide-ink-900/10">
                             {recentActivity.length > 0 ? (
                                 recentActivity.map((item, index) => {
                                     const Icon = item.icon;
                                     return (
-                                        <div key={index} className="flex items-start gap-4 p-4 rounded-xl hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-200 border border-transparent hover:border-gray-200 group">
-                                            <div className={`${item.iconColor} p-3 rounded-xl bg-gray-100 group-hover:scale-110 transition-transform duration-200 shadow-sm`}>
-                                                <Icon className="w-5 h-5" />
+                                        <div key={index} className="flex items-start gap-4 py-4">
+                                            <div className="w-9 h-9 bg-cream-100 border border-ink-900/10 flex items-center justify-center flex-shrink-0">
+                                                <Icon className="w-4 h-4 text-ink-900" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-gray-900 text-sm font-medium leading-relaxed">
+                                                <p className="text-ink-900 text-sm leading-relaxed">
                                                     {formatActivityText(item)}
                                                 </p>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                                    <p className="text-gray-500 text-xs font-medium">{item.timeAgo}</p>
-                                                </div>
+                                                <p className="font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500 mt-1">
+                                                    {item.timeAgo}
+                                                </p>
                                             </div>
                                         </div>
                                     );
                                 })
                             ) : (
                                 <div className="text-center py-12">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-                                        <LockOpen className="w-8 h-8 text-gray-400" />
+                                    <div className="inline-flex items-center justify-center w-14 h-14 bg-cream-100 border border-ink-900/10 mb-4">
+                                        <LockOpen className="w-6 h-6 text-slate-500" />
                                     </div>
-                                    <p className="text-gray-500 font-medium">No recent activity</p>
-                                    <p className="text-gray-400 text-sm mt-1">Activity will appear here as it happens</p>
+                                    <p className="font-display text-xl text-ink-900">No recent activity</p>
+                                    <p className="text-slate-500 text-sm mt-1">Assignments and reports will appear here.</p>
                                 </div>
                             )}
                         </div>
@@ -572,5 +328,17 @@ const Dashboard = () => {
         </Layout>
     );
 };
+
+const LegendRow = ({ color, label, count, percent }) => (
+    <div className="flex items-center gap-3">
+        <span className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ backgroundColor: color }} />
+        <div className="flex flex-col">
+            <span className="text-sm text-ink-900">{label}</span>
+            <span className="font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">
+                {count} · {percent.toFixed(1)}%
+            </span>
+        </div>
+    </div>
+);
 
 export default Dashboard;

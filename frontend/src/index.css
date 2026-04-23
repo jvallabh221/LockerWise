@@ -2,6 +2,121 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    :root {
+        --lw-ink: #0b1220;
+        --lw-cream: #f6efde;
+        --lw-cream-paper: #fbf7ef;
+        --lw-brass: #b8932c;
+        --lw-slate: #5c5c51;
+    }
+
+    html, body, #root {
+        height: 100%;
+    }
+
+    body {
+        font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+        color: var(--lw-ink);
+        background-color: var(--lw-cream-paper);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    h1, h2, h3, h4, h5 {
+        font-family: 'Fraunces', Georgia, serif;
+        color: var(--lw-ink);
+        letter-spacing: -0.01em;
+    }
+
+    ::selection {
+        background: var(--lw-brass);
+        color: var(--lw-cream-paper);
+    }
+}
+
+@layer components {
+    .lw-grain {
+        position: relative;
+    }
+    .lw-grain::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.07  0 0 0 0 0.13  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
+        mix-blend-mode: multiply;
+        opacity: 0.18;
+    }
+
+    .lw-page {
+        min-height: 100%;
+        background-color: var(--lw-cream-paper);
+    }
+
+    .lw-section-num {
+        font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--lw-brass);
+    }
+
+    .lw-eyebrow {
+        font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--lw-slate);
+    }
+
+    .lw-rule {
+        height: 1px;
+        background-color: rgba(11, 18, 32, 0.12);
+    }
+
+    .lw-rule-brass {
+        height: 2px;
+        background-color: var(--lw-brass);
+    }
+
+    .lw-card {
+        background-color: #ffffff;
+        border: 1px solid rgba(11, 18, 32, 0.08);
+        border-radius: 6px;
+        box-shadow: 0 1px 0 rgba(11, 18, 32, 0.04), 0 12px 32px -22px rgba(11, 18, 32, 0.22);
+    }
+
+    .lw-input {
+        width: 100%;
+        background: transparent;
+        border: 0;
+        border-bottom: 1px solid rgba(11, 18, 32, 0.25);
+        padding: 0.65rem 0.25rem;
+        font-family: 'Manrope', sans-serif;
+        color: var(--lw-ink);
+        outline: none;
+        transition: border-color 200ms ease, background-color 200ms ease;
+    }
+    .lw-input:focus {
+        border-bottom-color: var(--lw-brass);
+        background: rgba(184, 147, 44, 0.04);
+    }
+    .lw-input::placeholder {
+        color: rgba(11, 18, 32, 0.4);
+    }
+
+    .lw-label {
+        font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--lw-slate);
+        display: block;
+        margin-bottom: 0.35rem;
+    }
+}
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
@@ -10,11 +125,11 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .no-scrollbar {
-    overflow-x: auto; /* Enable horizontal scrolling */
-    -ms-overflow-style: none; /* For Internet Explorer */
-    scrollbar-width: none; /* For Firefox */
-  }
-  
-  .no-scrollbar::-webkit-scrollbar {
-    display: none; /* For Chrome, Safari, and Opera */
-  }    
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}

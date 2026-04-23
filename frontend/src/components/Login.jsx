@@ -1,7 +1,8 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthProvider";
-import { Mail, Key, Eye, EyeOff, Loader, AlertTriangle, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader, AlertTriangle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import Wordmark from "./ui/Wordmark";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -12,145 +13,122 @@ const Login = () => {
 
     const { login } = useContext(AuthContext);
 
-    const handleEmail = (e) => setEmail(e.target.value);
-    const handlePassword = (e) => setPassword(e.target.value);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoginError("");
         setLoading(true);
         try {
             await login(email, password);
-            setLoginError("");
         } catch (err) {
-            setLoginError(err);
+            setLoginError(err?.message || err?.toString() || "Unable to sign in.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-50 flex items-center justify-center py-6 px-4">
-            <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-10 min-h-[400px] flex items-center">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full items-center justify-center">
-
-                    {/* LEFT SECTION */}
-                    <div className="flex flex-col items-center justify-center text-center px-6 md:border-r md:border-gray-300 md:pr-10">
-                        <img
-                            src="/newNew.png"
-                            alt="SafeLocker Logo"
-                            className="h-40 w-40 mb-6 drop-shadow-xl transition-transform duration-300 hover:scale-110"
-                        />
-
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight drop-shadow-sm">
-                            Locker Wise
+        <div className="min-h-screen lw-page lw-grain flex items-center justify-center py-10 px-4">
+            <div className="w-full max-w-5xl grid lg:grid-cols-12 border border-ink-900/10 bg-white shadow-paper">
+                {/* Editorial pane */}
+                <aside className="lg:col-span-5 bg-cream-50 border-b lg:border-b-0 lg:border-r border-ink-900/10 p-10 flex flex-col justify-between">
+                    <div>
+                        <Link to="/" className="text-ink-900 hover:text-brass-400 transition-colors">
+                            <Wordmark size="md" />
+                        </Link>
+                        <div className="lw-section-num mt-10 mb-3">01 / Sign in</div>
+                        <h1 className="font-display text-4xl lg:text-5xl text-ink-900 leading-[1.05]">
+                            Welcome back, <span className="italic">custodian.</span>
                         </h1>
-
-                        <p className="text-gray-600 mt-4 text-lg">
-                            Secure access to your digital lockers
-                        </p>
-
-                        <p className="text-gray-500 text-base mt-3 max-w-md">
-                            Manage your lockers efficiently with our advanced locker management platform.
+                        <div className="lw-rule-brass w-16 mt-6 mb-5" />
+                        <p className="text-slate-600 leading-relaxed max-w-sm">
+                            Your locker ledger, pending your attention. Sign in with your institutional email to
+                            continue.
                         </p>
                     </div>
+                    <dl className="mt-10 grid grid-cols-2 gap-6">
+                        <div>
+                            <dt className="lw-eyebrow">Edition</dt>
+                            <dd className="font-mono text-sm text-ink-900 mt-1">v1 · 2026</dd>
+                        </div>
+                        <div>
+                            <dt className="lw-eyebrow">Roles</dt>
+                            <dd className="font-mono text-sm text-ink-900 mt-1">Admin · Staff</dd>
+                        </div>
+                    </dl>
+                </aside>
 
-                    {/* RIGHT SECTION - FORM */}
-                    <div className="flex flex-col justify-center md:pl-10">
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Form pane */}
+                <div className="lg:col-span-7 p-10 flex flex-col justify-center">
+                    <div className="lw-eyebrow mb-2">Institutional login</div>
+                    <h2 className="font-display text-2xl text-ink-900 mb-8">Credentials</h2>
 
-                            {/* EMAIL */}
-                            <div className="flex items-center">
-                                <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-20">
-                                    Email
-                                </label>
-                                <div className="relative flex-1">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div>
+                            <label htmlFor="email" className="lw-label">Email</label>
+                            <input
+                                id="email"
+                                type="email"
+                                required
+                                className="lw-input"
+                                placeholder="name@organization.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label htmlFor="password" className="lw-label">Password</label>
+                            <div className="relative">
                                 <input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg 
-                                        focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                        placeholder="Enter your email"
-                                        value={email}
-                                        onChange={handleEmail}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* PASSWORD */}
-                            <div className="flex items-center">
-                                <label htmlFor="password" className="text-sm font-semibold text-gray-700 w-20">
-                                    Password
-                                </label>
-                                <div className="relative flex-1">
-                                <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500" />
-                                <input
-                                        id="password"
-                                        type={showPassword ? "text" : "password" }
-                                        required
-                                        className="pl-10 pr-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg 
-                                        focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                        placeholder="Enter your password"
-                                        value={password}
-                                        onChange={handlePassword}
-                                    />
-                                    <button
-                                        type="button"
-                                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                       
-                                        onClick={() => setShowPassword(!showPassword)}
-                                    >
-                                        {showPassword ? <EyeOff /> : <Eye />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* ERROR */}
-                            {loginError && (
-                                <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2">
-                                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                                    <p className="text-sm font-medium text-red-800">{loginError}</p>
-                                </div>
-                            )}
-
-                            {/* FORGOT */}
-                            <div className="flex items-center justify-end">
-                                <Link
-                                    to={"/forgot"}
-                                    className="text-sm text-gray-600 hover:text-gray-700 hover:underline font-medium"
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    required
+                                    className="lw-input pr-10"
+                                    placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:text-ink-900"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label="Toggle password visibility"
                                 >
-                                    Forgot password?
-                                </Link>
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
+                        </div>
 
-                            {/* LOGIN BUTTON */}
+                        {loginError && (
+                            <div className="flex items-start gap-2 border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2">
+                                <AlertTriangle className="w-4 h-4 mt-0.5" />
+                                <p className="text-sm">{loginError}</p>
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-between pt-2">
+                            <Link to="/forgot" className="font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500 hover:text-brass-400">
+                                Forgot password?
+                            </Link>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`w-full flex items-center justify-center gap-3 py-3 px-6 rounded-full 
-                                font-semibold text-black transition-all shadow-md ${
-                                    loading
-                                        ? "bg-gray-400 cursor-not-allowed"
-                                        : "bg-gray-400 hover:bg-gray-500 hover:shadow-lg"
-                                }`}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
                             >
                                 {loading ? (
                                     <>
-                                        <Loader className="w-5 h-5 animate-spin" />
-                                        Signing in...
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                        Signing in
                                     </>
                                 ) : (
                                     <>
-                                        <LogIn className="w-5 h-5 opacity-0 group-hover:opacity-100 transition" />
-                                        Sign In
+                                        Sign in
+                                        <ArrowRight className="w-4 h-4" />
                                     </>
                                 )}
                             </button>
-                        </form>
-                    </div>
-
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

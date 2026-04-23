@@ -1,155 +1,223 @@
 import React from "react";
-import { Shield, Key, Settings, Lock, Users, BarChart3, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ArrowRight, Grid3x3, Users, BellRing, FileText, Key, Clock } from "lucide-react";
 import DashNav from "./DashNav";
- 
+
+const Principle = ({ num, title, children }) => (
+    <div className="border-t border-ink-900/15 pt-5">
+        <div className="flex items-baseline gap-3 mb-2">
+            <span className="lw-section-num">{num}</span>
+            <h3 className="font-display text-xl text-ink-900 leading-tight">{title}</h3>
+        </div>
+        <p className="text-slate-600 leading-relaxed max-w-md">{children}</p>
+    </div>
+);
+
+const Feature = ({ num, Icon, title, body }) => (
+    <div className="flex gap-5 p-6 border border-ink-900/10 bg-white">
+        <div className="flex-shrink-0 w-10 h-10 bg-cream-100 border border-ink-900/10 flex items-center justify-center text-ink-900">
+            <Icon className="w-5 h-5" />
+        </div>
+        <div className="flex-1">
+            <div className="lw-eyebrow mb-1">{num}</div>
+            <h4 className="font-display text-lg text-ink-900 leading-tight mb-1.5">{title}</h4>
+            <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
+        </div>
+    </div>
+);
+
 const Home = () => {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 flex flex-col">
+        <div className="lw-page lw-grain flex flex-col min-h-screen">
             <DashNav />
-            
-            {/* Hero Section */}
-            <section className="relative overflow-hidden py-20 px-4 sm:px-6 lg:px-8">
+
+            {/* Hero / Cover Page */}
+            <section className="px-6 sm:px-10 lg:px-16 pt-16 pb-20">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center space-y-8">
-                        {/* Main Heading */}
-                        <div className="space-y-4">
-                            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight">
-                                Secure & Efficient
-                                <div className="block bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent pb-4">
-                                    Locker Management
-                                </div>
+                    <div className="flex items-center justify-between mb-14">
+                        <div className="lw-section-num">LockerWise / Brand Manual / Edition 01</div>
+                        <div className="lw-eyebrow hidden sm:block">A facility-management system</div>
+                    </div>
+
+                    <div className="grid lg:grid-cols-12 gap-10 items-end">
+                        <div className="lg:col-span-8">
+                            <h1 className="font-display text-ink-900 leading-[0.95] tracking-tight text-5xl sm:text-6xl lg:text-7xl">
+                                Locker keeping,
+                                <br />
+                                <span className="italic font-normal text-brass-400">kept properly.</span>
                             </h1>
-                            <p className="text-xl sm:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                                Streamline locker allocation, renewal, and issue tracking with our intuitive system designed for modern facilities.
+                            <div className="lw-rule-brass w-24 mt-8 mb-6" />
+                            <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+                                LockerWise is the quiet, institutional backbone for assigning, renewing, and retiring
+                                physical lockers — built for facilities teams who would rather not rely on a shared
+                                spreadsheet and a yellowed clipboard.
                             </p>
+                            <div className="flex flex-wrap items-center gap-4 mt-10">
+                                <Link
+                                    to="/login"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors"
+                                >
+                                    Sign in <ArrowRight className="w-4 h-4" />
+                                </Link>
+                                <Link
+                                    to="/contact-us"
+                                    className="inline-flex items-center gap-2 px-6 py-3 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                >
+                                    Contact facilities
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Stats Section */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 max-w-4xl mx-auto">
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                <div className="text-3xl font-bold text-purple-600 mb-2">100%</div>
-                                <div className="text-sm text-gray-600 font-medium">Secure</div>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                <div className="text-3xl font-bold text-purple-600 mb-2">24/7</div>
-                                <div className="text-sm text-gray-600 font-medium">Available</div>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                <div className="text-3xl font-bold text-purple-600 mb-2">Real-time</div>
-                                <div className="text-sm text-gray-600 font-medium">Tracking</div>
-                            </div>
-                            <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-                                <div className="text-3xl font-bold text-purple-600 mb-2">Easy</div>
-                                <div className="text-sm text-gray-600 font-medium">Management</div>
+                        <div className="lg:col-span-4">
+                            <div className="border border-ink-900/15 p-6 bg-cream-50">
+                                <div className="lw-eyebrow mb-4">At a glance</div>
+                                <dl className="space-y-4">
+                                    <div className="flex justify-between items-baseline border-b border-ink-900/10 pb-3">
+                                        <dt className="font-mono text-xs uppercase tracking-editorial text-slate-500">Roles</dt>
+                                        <dd className="font-display text-xl text-ink-900">Admin · Staff</dd>
+                                    </div>
+                                    <div className="flex justify-between items-baseline border-b border-ink-900/10 pb-3">
+                                        <dt className="font-mono text-xs uppercase tracking-editorial text-slate-500">Lifecycle</dt>
+                                        <dd className="font-display text-xl text-ink-900">Assign · Renew · Retire</dd>
+                                    </div>
+                                    <div className="flex justify-between items-baseline">
+                                        <dt className="font-mono text-xs uppercase tracking-editorial text-slate-500">Cadence</dt>
+                                        <dd className="font-display text-xl text-ink-900">Daily</dd>
+                                    </div>
+                                </dl>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Features Grid */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
+            {/* Philosophy */}
+            <section className="px-6 sm:px-10 lg:px-16 py-20 border-t border-ink-900/10 bg-cream-50">
+                <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10">
+                    <div className="lg:col-span-4">
+                        <div className="lw-section-num mb-3">01 / Philosophy</div>
+                        <h2 className="font-display text-4xl text-ink-900 leading-tight">
+                            A custodian, <span className="italic">not a CEO.</span>
+                        </h2>
+                        <p className="mt-5 text-slate-600 leading-relaxed">
+                            We sell against yellowed clipboards and shared spreadsheets. So the product reads
+                            like a well-kept facilities manual — grid-true, plain-spoken, warm where it matters,
+                            accountable where it counts.
+                        </p>
+                    </div>
+                    <div className="lg:col-span-8 grid sm:grid-cols-2 gap-x-10 gap-y-8">
+                        <Principle num="01" title="Grid-true">
+                            Everything aligns to a column and a row. Locker rosters, not dashboards.
+                        </Principle>
+                        <Principle num="02" title="Plain-spoken">
+                            Labels over jargon. “Assign locker,” not “provision resource.”
+                        </Principle>
+                        <Principle num="03" title="Warm metal">
+                            Midnight ink, cream paper, brass accents. The hardware, in ink form.
+                        </Principle>
+                        <Principle num="04" title="Accountable">
+                            Timestamps, owners, statuses. Every assignment has a paper trail.
+                        </Principle>
+                    </div>
+                </div>
+            </section>
+
+            {/* Features */}
+            <section className="px-6 sm:px-10 lg:px-16 py-20 border-t border-ink-900/10">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-12">
-                        <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose LockerWise?</h2>
-                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                            Powerful features designed to make locker management effortless and secure
-                        </p>
+                    <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
+                        <div>
+                            <div className="lw-section-num mb-2">02 / What it does</div>
+                            <h2 className="font-display text-4xl text-ink-900 leading-tight max-w-2xl">
+                                Assignment, renewal, reporting — <span className="italic">on one ledger.</span>
+                            </h2>
+                        </div>
+                        <div className="lw-eyebrow">Six primary jobs</div>
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <div className="group relative p-8 rounded-3xl overflow-hidden backdrop-blur-xl bg-white/40 border border-white/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 transform hover:-translate-y-3 hover:scale-105">
-                            {/* Animated gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            
-                            {/* Content */}
-                            <div className="relative z-10">
-                                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/80 to-purple-600/80 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg shadow-purple-500/30">
-                                    <Shield className="h-8 w-8 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors duration-300">Advanced Security</h3>
-                                <p className="text-gray-700 leading-relaxed">
-                                    State-of-the-art encryption and role-based access control ensure your locker data remains protected at all times.
-                                </p>
-                            </div>
-                        </div>
- 
-                        <div className="group relative p-8 rounded-3xl overflow-hidden backdrop-blur-xl bg-white/40 border border-white/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 transform hover:-translate-y-3 hover:scale-105">
-                            {/* Animated gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            
-                            {/* Content */}
-                            <div className="relative z-10">
-                                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/80 to-purple-600/80 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg shadow-purple-500/30">
-                                    <Key className="h-8 w-8 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors duration-300">Smart Access</h3>
-                                <p className="text-gray-700 leading-relaxed">
-                                    Real-time monitoring and automated notifications for seamless digital key management and locker assignments.
-                                </p>
-                            </div>
-                        </div>
- 
-                        <div className="group relative p-8 rounded-3xl overflow-hidden backdrop-blur-xl bg-white/40 border border-white/50 shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 transform hover:-translate-y-3 hover:scale-105">
-                            {/* Animated gradient background */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-purple-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                            
-                            {/* Content */}
-                            <div className="relative z-10">
-                                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/80 to-purple-600/80 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg shadow-purple-500/30">
-                                    <Settings className="h-8 w-8 text-white" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-purple-600 transition-colors duration-300">Easy Management</h3>
-                                <p className="text-gray-700 leading-relaxed">
-                                    Intuitive dashboards and streamlined workflows enable effortless locker administration for all user roles.
-                                </p>
-                            </div>
-                        </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-ink-900/10 divide-y md:divide-y-0 md:divide-x divide-ink-900/10 [&>*:nth-child(n+4)]:border-t [&>*:nth-child(n+4)]:border-ink-900/10">
+                        <Feature
+                            num="01"
+                            Icon={Grid3x3}
+                            title="Locker roster"
+                            body="Every locker, every status — occupied, available, expired, flagged — in a single indexed view."
+                        />
+                        <Feature
+                            num="02"
+                            Icon={Key}
+                            title="Assign & renew"
+                            body="Bind a locker to an employee for 3, 6, or 12 months. Renewals inherit history."
+                        />
+                        <Feature
+                            num="03"
+                            Icon={Clock}
+                            title="Expiry automation"
+                            body="Daily cron emails on expiry day, auto-expiry of overdue lockers, and rolling history cleanup."
+                        />
+                        <Feature
+                            num="04"
+                            Icon={Users}
+                            title="Staff & roles"
+                            body="Admin and Staff roles with protected routes. Staff do the rounds; admins own the ledger."
+                        />
+                        <Feature
+                            num="05"
+                            Icon={BellRing}
+                            title="Issue reporting"
+                            body="Locker and technical issues flow into one queue for triage and resolution tracking."
+                        />
+                        <Feature
+                            num="06"
+                            Icon={FileText}
+                            title="Bulk & history"
+                            body="Upload lockers by spreadsheet; inspect a full three-month history of every assignment."
+                        />
                     </div>
-
-                  
                 </div>
             </section>
- 
-            {/* About Section */}
-            <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-purple-50 via-white to-gray-50">
+
+            {/* About / Closing */}
+            <section className="px-6 sm:px-10 lg:px-16 py-20 border-t border-ink-900/10 bg-cream-50">
                 <div className="max-w-4xl mx-auto">
-                    <div className="bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
-                        <div className="text-center mb-8">
-                            <h2 className="text-4xl font-bold text-gray-900 mb-4">About LockerWise</h2>
-                            <div className="w-24 h-1 bg-gradient-to-r from-purple-600 to-purple-400 mx-auto rounded-full"></div>
-                        </div>
-                        <p className="text-lg text-gray-700 leading-relaxed mb-6 text-center">
-                            LockerWise is a secure and efficient digital locker management system designed to streamline locker allocation, renewal, and issue tracking. With features like role-based access, automated notifications, and user-friendly dashboards, it ensures seamless management for admins, staff, and users alike.
-                        </p>
-                        <div className="flex items-center justify-center gap-2 text-purple-600 font-semibold">
-                            <CheckCircle2 className="h-5 w-5" />
-                            <span>Driving excellence in facility management with cutting-edge solutions since 2020.</span>
-                        </div>
-                    </div>
+                    <div className="lw-section-num mb-3">03 / Colophon</div>
+                    <h2 className="font-display text-3xl sm:text-4xl text-ink-900 leading-tight">
+                        Built for facilities teams who prefer <span className="italic">a ledger</span> over a launch plan.
+                    </h2>
+                    <div className="lw-rule-brass w-20 my-6" />
+                    <p className="text-slate-600 leading-relaxed max-w-2xl">
+                        LockerWise is a secure, role-based locker-lifecycle system. Admins own inventory,
+                        pricing, and staff. Staff assign and maintain. Employees get a simple, legible
+                        record of what locker is theirs, and for how long.
+                    </p>
                 </div>
             </section>
- 
+
             {/* Footer */}
-            <footer className="bg-gray-900 text-gray-400 py-12 px-4 sm:px-6 lg:px-8 mt-16">
-                <div className="max-w-6xl mx-auto text-center">
-                    <div className="mb-4">
-                        <span className="text-2xl font-bold text-white">LockerWise</span>
+            <footer className="bg-ink-900 text-cream-50/80 px-6 sm:px-10 lg:px-16 py-14 mt-auto">
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+                    <div>
+                        <div className="text-cream-50">
+                            <span className="font-display text-2xl">LockerWise</span>
+                        </div>
+                        <p className="lw-eyebrow mt-3 text-cream-50/50">
+                            © {new Date().getFullYear()} DraconX INC · All rights reserved
+                        </p>
                     </div>
-                    <p className="text-sm mb-6">© {new Date().getFullYear()} DraconX INC. All rights reserved.</p>
-                    <div className="flex justify-center gap-6 text-sm">
-                        <Link to="/privacy-policy" className="hover:text-white transition-colors cursor-pointer">Privacy Policy</Link>
-                        <Link to="/terms-of-service" className="hover:text-white transition-colors cursor-pointer">Terms of Service</Link>
-                        <Link to="/contact-us" className="hover:text-white transition-colors cursor-pointer">Contact Us</Link>
-                    </div>
+                    <nav className="flex flex-wrap gap-6 font-mono text-[0.7rem] uppercase tracking-editorial">
+                        <Link to="/privacy-policy" className="hover:text-brass-300 transition-colors">
+                            Privacy
+                        </Link>
+                        <Link to="/terms-of-service" className="hover:text-brass-300 transition-colors">
+                            Terms
+                        </Link>
+                        <Link to="/contact-us" className="hover:text-brass-300 transition-colors">
+                            Contact
+                        </Link>
+                    </nav>
                 </div>
             </footer>
         </div>
     );
 };
- 
+
 export default Home;
