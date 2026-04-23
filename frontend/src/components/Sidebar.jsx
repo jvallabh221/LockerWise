@@ -6,47 +6,51 @@ const Sidebar = ({ items, role }) => {
 
     return (
         <aside
-            className="group w-16 hover:w-72 transition-all duration-300 overflow-hidden flex flex-col fixed top-20 left-0 z-40 bg-cream-50 border-r border-ink-900/10"
-            style={{ height: "calc(100vh - 80px)" }}
+            className="group fixed top-16 left-0 z-40 w-[72px] hover:w-64 transition-[width] duration-300 ease-out overflow-hidden flex flex-col bg-white border-r border-ink-100"
+            style={{ height: "calc(100vh - 64px)" }}
         >
-            <div className="px-3 pt-6 pb-3">
-                <div className="lw-eyebrow hidden group-hover:block">
-                    {role ? `${role} Menu` : "Menu"}
+            <div className="px-4 pt-5 pb-3">
+                <div className="lw-eyebrow opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    {role ? `${role} menu` : "Menu"}
                 </div>
             </div>
-            <nav className="flex-1 px-2 space-y-0.5">
-                {items.map((item, idx) => {
+            <nav className="flex-1 px-3 space-y-1">
+                {items.map((item) => {
                     const Icon = item.icon;
-                    const isActive = location.pathname === item.path;
-                    const num = String(idx + 1).padStart(2, "0");
+                    const isActive =
+                        location.pathname === item.path ||
+                        (item.path !== "/" && location.pathname.startsWith(item.path));
+
                     return (
                         <Link
                             key={item.path}
                             to={item.path}
                             title={item.title}
-                            className={`group/item flex items-center gap-3 px-3 py-2.5 rounded-sm transition-colors ${
+                            className={`relative flex items-center gap-3 h-10 px-3 rounded-lg transition-colors ${
                                 isActive
-                                    ? "bg-ink-900 text-cream-50"
-                                    : "text-ink-900 hover:bg-ink-900/5"
+                                    ? "bg-brass-50 text-brass-600"
+                                    : "text-slate-500 hover:bg-cream-200 hover:text-ink-900"
                             }`}
                         >
-                            <Icon className="w-5 h-5 flex-shrink-0" />
+                            {isActive ? (
+                                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-brass-400 rounded-r-full" />
+                            ) : null}
+                            <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-brass-500" : ""}`} />
                             <span
-                                className={`font-mono text-[0.65rem] uppercase tracking-editorial whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                                    isActive ? "text-brass-300" : "text-slate-500"
+                                className={`text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${
+                                    isActive ? "text-brass-600" : "text-ink-900"
                                 }`}
                             >
-                                {num}
-                            </span>
-                            <span className="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 {item.title}
                             </span>
                         </Link>
                     );
                 })}
             </nav>
-            <div className="px-4 py-4 border-t border-ink-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="lw-eyebrow">LockerWise / v1</div>
+            <div className="px-4 py-4 border-t border-ink-100">
+                <div className="lw-eyebrow opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    LockerWise · v1
+                </div>
             </div>
         </aside>
     );

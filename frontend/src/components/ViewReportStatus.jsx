@@ -92,11 +92,11 @@ const ViewReportStatus = () => {
                 <div className="lw-section-num mb-2">Record / Reports</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                     <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                        Report <span className="italic">status.</span>
+                        Report <span className="text-brass-500">status.</span>
                     </h1>
                     <Link
                         to="/issue_reporting"
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                     >
                         Report an issue
                     </Link>
@@ -110,7 +110,7 @@ const ViewReportStatus = () => {
                             <select
                                 value={issueType}
                                 onChange={(e) => setIssueType(e.target.value)}
-                                className="bg-transparent border border-ink-900/20 px-3 py-2 text-sm font-mono uppercase tracking-editorial text-ink-900 focus:outline-none focus:border-brass-400"
+                                className="bg-white border border-ink-100 rounded-md px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
                             >
                                 <option value="locker">Locker</option>
                                 <option value="technical">Technical</option>
@@ -125,7 +125,7 @@ const ViewReportStatus = () => {
                         />
                         <button
                             onClick={() => setSelectedDate("")}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                         >
                             <X className="w-3.5 h-3.5" /> Clear
                         </button>
@@ -146,7 +146,7 @@ const ViewReportStatus = () => {
                             <thead className="sticky top-0 bg-cream-50">
                                 <tr className="border-b border-ink-900/15">
                                     {["Issue", "Email", "Subject", "Status", "Created", "Action"].map((h) => (
-                                        <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                        <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -175,7 +175,7 @@ const ViewReportStatus = () => {
                                                     <td className="px-3 py-3">
                                                         <button
                                                             onClick={() => toggleRow(item._id)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                                         >
                                                             {isOpen ? <><ChevronUp className="w-3 h-3" /> Hide</> : <><ChevronDown className="w-3 h-3" /> Detail</>}
                                                         </button>
@@ -215,20 +215,20 @@ const ViewReportStatus = () => {
                                                                         {editableStates[item._id] && (
                                                                             <button
                                                                                 onClick={() => handleCommentSubmit(item._id)}
-                                                                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                                                                             >
                                                                                 Update
                                                                             </button>
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                                {error && <p className="text-sm text-[#7a2a18]">{error}</p>}
+                                                                {error && <p className="text-sm text-error-600">{error}</p>}
                                                                 {item.status === "Resolved" && (
                                                                     <div className="pt-2 border-t border-ink-900/10">
                                                                         <button
                                                                             onClick={() => handleDelete(item._id)}
                                                                             disabled={loading}
-                                                                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors disabled:opacity-60"
+                                                                            className="inline-flex items-center gap-2 px-4 py-2 bg-error-500 hover:bg-error-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                                                                         >
                                                                             <Trash2 className="w-4 h-4" />
                                                                             Delete issue

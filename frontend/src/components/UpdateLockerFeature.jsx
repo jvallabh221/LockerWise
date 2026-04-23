@@ -69,7 +69,7 @@ const UpdateLockerFeature = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors disabled:opacity-60"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-error-500 hover:bg-error-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                             >
                                 {loading ? <><Loader className="w-4 h-4 animate-spin" /> Resetting</> : <><RotateCcw className="w-4 h-4" /> Reset locker</>}
                             </button>

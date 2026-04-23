@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthProvider";
-import { Loader, AlertTriangle, ArrowRight } from "lucide-react";
+import { Loader2, AlertTriangle, ArrowRight, ArrowLeft, MailCheck } from "lucide-react";
 import Wordmark from "./ui/Wordmark";
 
 const ForgotPassword = () => {
@@ -42,107 +42,122 @@ const ForgotPassword = () => {
     };
 
     return (
-        <div className="min-h-screen lw-page lw-grain flex items-center justify-center py-10 px-4">
-            <div className="w-full max-w-5xl grid lg:grid-cols-12 border border-ink-900/10 bg-white shadow-paper">
-                <aside className="lg:col-span-5 bg-cream-50 border-b lg:border-b-0 lg:border-r border-ink-900/10 p-10 flex flex-col justify-between">
-                    <div>
-                        <Link to="/" className="text-ink-900 hover:text-brass-400 transition-colors">
-                            <Wordmark size="md" />
-                        </Link>
-                        <div className="lw-section-num mt-10 mb-3">
-                            {step === "email" ? "02 / Recovery" : "03 / Verification"}
-                        </div>
-                        <h1 className="font-display text-4xl lg:text-5xl text-ink-900 leading-[1.05]">
-                            {step === "email" ? (
-                                <>Forgotten something? <span className="italic">It happens.</span></>
-                            ) : (
-                                <>Check your <span className="italic">inbox.</span></>
-                            )}
-                        </h1>
-                        <div className="lw-rule-brass w-16 mt-6 mb-5" />
-                        <p className="text-slate-600 leading-relaxed max-w-sm">
-                            {step === "email"
-                                ? "Enter your institutional email — we'll send a one-time code to reset your password."
-                                : "A six-digit code has been sent to your email. Enter it here to proceed."}
-                        </p>
-                    </div>
-                    <div className="lw-eyebrow">Step {step === "email" ? "1 of 2" : "2 of 2"}</div>
-                </aside>
+        <div className="min-h-screen lw-page flex items-center justify-center py-10 px-4">
+            <div className="w-full max-w-md">
+                <div className="flex justify-center mb-6">
+                    <Link to="/" className="text-ink-900 hover:text-brass-500 transition-colors">
+                        <Wordmark size="md" />
+                    </Link>
+                </div>
 
-                <div className="lg:col-span-7 p-10 flex flex-col justify-center">
+                <div className="bg-white border border-ink-100 rounded-xl shadow-paper p-8">
                     {step === "email" ? (
-                        <form onSubmit={handleEmailSubmit} className="space-y-6">
-                            <div className="lw-eyebrow mb-2">Request code</div>
-                            <h2 className="font-display text-2xl text-ink-900 mb-6">Registered email</h2>
-                            <div>
-                                <label htmlFor="email" className="lw-label">Email</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    className="lw-input"
-                                    placeholder="name@organization.com"
-                                    value={checkEmail ?? ""}
-                                    onChange={(e) => setCheckEmail(e.target.value)}
-                                    autoComplete="off"
-                                />
-                            </div>
+                        <>
+                            <div className="lw-eyebrow mb-2">Recover account</div>
+                            <h1 className="font-display text-2xl text-ink-900 font-semibold leading-tight">
+                                Forgot your password?
+                            </h1>
+                            <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+                                Enter your institutional email and we'll send a one-time code to verify your account.
+                            </p>
 
-                            {error && (
-                                <div className="flex items-start gap-2 border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2">
-                                    <AlertTriangle className="w-4 h-4 mt-0.5" />
-                                    <p className="text-sm">{error}</p>
+                            <form onSubmit={handleEmailSubmit} className="space-y-5 mt-6">
+                                <div>
+                                    <label htmlFor="email" className="lw-label">Email address</label>
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        required
+                                        className="lw-input"
+                                        placeholder="name@organization.com"
+                                        value={checkEmail ?? ""}
+                                        onChange={(e) => setCheckEmail(e.target.value)}
+                                        autoComplete="email"
+                                    />
                                 </div>
-                            )}
 
-                            <div className="flex items-center justify-between pt-2">
-                                <Link to="/login" className="font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500 hover:text-brass-400">
-                                    Back to login
-                                </Link>
+                                {error && (
+                                    <div className="flex items-start gap-2 border border-error-500/25 bg-error-50 text-error-700 rounded-lg px-3 py-2.5">
+                                        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <p className="text-sm">{error}</p>
+                                    </div>
+                                )}
+
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brass-400 hover:bg-brass-500 active:bg-brass-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {loading ? (
                                         <>
-                                            <Loader className="w-4 h-4 animate-spin" />
-                                            Sending
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Sending code…
                                         </>
                                     ) : (
                                         <>
-                                            Request OTP
+                                            Send verification code
                                             <ArrowRight className="w-4 h-4" />
                                         </>
                                     )}
                                 </button>
-                            </div>
-                        </form>
+                            </form>
+                        </>
                     ) : (
-                        <form onSubmit={handleOtpSubmit} className="space-y-6">
-                            <div className="lw-eyebrow mb-2">Verify code</div>
-                            <h2 className="font-display text-2xl text-ink-900 mb-6">One-time password</h2>
-                            <div>
-                                <label htmlFor="otp" className="lw-label">OTP</label>
-                                <input
-                                    id="otp"
-                                    type="text"
-                                    required
-                                    className="lw-input font-mono tracking-[0.3em] text-lg"
-                                    placeholder="000000"
-                                    value={otp}
-                                    onChange={(e) => setOtp(e.target.value)}
-                                />
+                        <>
+                            <div className="mx-auto w-12 h-12 rounded-full bg-brass-50 text-brass-500 flex items-center justify-center mb-4">
+                                <MailCheck className="w-5 h-5" />
                             </div>
+                            <h1 className="font-display text-2xl text-ink-900 font-semibold leading-tight text-center">
+                                Check your inbox
+                            </h1>
+                            <p className="mt-2 text-sm text-slate-500 leading-relaxed text-center">
+                                We sent a 6-digit code to{" "}
+                                <span className="text-ink-900 font-medium">{checkEmail}</span>.
+                                Enter it below to continue.
+                            </p>
 
-                            {error && (
-                                <div className="flex items-start gap-2 border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2">
-                                    <AlertTriangle className="w-4 h-4 mt-0.5" />
-                                    <p className="text-sm">{error}</p>
+                            <form onSubmit={handleOtpSubmit} className="space-y-5 mt-6">
+                                <div>
+                                    <label htmlFor="otp" className="lw-label">Verification code</label>
+                                    <input
+                                        id="otp"
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        required
+                                        className="lw-input font-mono tracking-[0.4em] text-lg text-center"
+                                        placeholder="000000"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                                        maxLength={6}
+                                    />
                                 </div>
-                            )}
 
-                            <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
+                                {error && (
+                                    <div className="flex items-start gap-2 border border-error-500/25 bg-error-50 text-error-700 rounded-lg px-3 py-2.5">
+                                        <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                        <p className="text-sm">{error}</p>
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-brass-400 hover:bg-brass-500 active:bg-brass-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Verifying…
+                                        </>
+                                    ) : (
+                                        <>
+                                            Verify code
+                                            <ArrowRight className="w-4 h-4" />
+                                        </>
+                                    )}
+                                </button>
+
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -150,30 +165,22 @@ const ForgotPassword = () => {
                                         setError("");
                                         setOtp("");
                                     }}
-                                    className="font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500 hover:text-brass-400"
+                                    className="w-full text-sm font-medium text-slate-500 hover:text-brass-500 transition-colors"
                                 >
-                                    Change email
+                                    Use a different email
                                 </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <Loader className="w-4 h-4 animate-spin" />
-                                            Verifying
-                                        </>
-                                    ) : (
-                                        <>
-                                            Verify OTP
-                                            <ArrowRight className="w-4 h-4" />
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </>
                     )}
+                </div>
+
+                <div className="mt-5 text-center">
+                    <Link
+                        to="/login"
+                        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-brass-500 transition-colors"
+                    >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Back to sign in
+                    </Link>
                 </div>
             </div>
         </div>

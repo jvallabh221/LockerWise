@@ -33,9 +33,9 @@ const UpdateLocker = () => {
                 <div className="lw-section-num mb-2">Operations / Expired</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                     <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                        Update <span className="italic">expired lockers.</span>
+                        Update <span className="text-brass-500">expired lockers.</span>
                     </h1>
-                    <div className="font-mono text-xs uppercase tracking-editorial text-slate-500">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         {filteredLockers.length} shown
                     </div>
                 </div>
@@ -60,7 +60,7 @@ const UpdateLocker = () => {
                             <thead className="sticky top-0 bg-cream-50">
                                 <tr className="border-b border-ink-900/15">
                                     {["Locker", "Email", "Name", "Gender", "Type", "Phone", "Next code", "Expired", "Action"].map((h) => (
-                                        <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">
+                                        <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}
                                         </th>
                                     ))}
@@ -95,7 +95,7 @@ const UpdateLocker = () => {
                                                     <td className="px-3 py-3">
                                                         <button
                                                             onClick={() => toggle(item.LockerNumber)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                                         >
                                                             {isOpen ? <><ChevronUp className="w-3 h-3" /> Hide</> : <><ChevronDown className="w-3 h-3" /> Detail</>}
                                                         </button>
@@ -113,7 +113,7 @@ const UpdateLocker = () => {
                                                                 <Link
                                                                     to="/update_locker_feature"
                                                                     state={{ LockerNumber: item.LockerNumber, employeeEmail: item.employeeEmail }}
-                                                                    className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                                    className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                                                                 >
                                                                     <RotateCcw className="w-4 h-4" />
                                                                     Reset
@@ -128,7 +128,7 @@ const UpdateLocker = () => {
                                                                         employeeEmail: item.employeeEmail,
                                                                         employeeName: item.employeeName,
                                                                     }}
-                                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors"
+                                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors"
                                                                 >
                                                                     <RefreshCw className="w-4 h-4" />
                                                                     Renew

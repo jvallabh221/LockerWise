@@ -89,9 +89,9 @@ const LockerHistory = () => {
                 <div className="lw-section-num mb-2">Archive / Ledger</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                     <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                        Locker <span className="italic">history.</span>
+                        Locker <span className="text-brass-500">history.</span>
                     </h1>
-                    <div className="font-mono text-xs uppercase tracking-editorial text-slate-500">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         {history.length} entries
                     </div>
                 </div>
@@ -137,13 +137,13 @@ const LockerHistory = () => {
                             </div>
                             <button
                                 onClick={() => { setStartDate(""); setEndDate(""); }}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                             >
                                 <X className="w-3.5 h-3.5" /> Reset
                             </button>
                             <button
                                 onClick={scrollToClear}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-[#7a2a18] text-[#7a2a18] font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-[#7a2a18] hover:text-cream-50 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-error-500/30 text-error-600 bg-white text-xs font-medium rounded-md hover:bg-error-50 hover:border-error-500 transition-colors"
                             >
                                 <Trash2 className="w-3.5 h-3.5" /> Clear range
                             </button>
@@ -167,7 +167,7 @@ const LockerHistory = () => {
                                     <thead className="sticky top-0 bg-cream-50">
                                         <tr className="border-b border-ink-900/15">
                                             {["Locker", "Event", "Holder", "By", "Cost", "Status", "When"].map((h) => (
-                                                <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                                <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -179,7 +179,7 @@ const LockerHistory = () => {
                                                 <td className="px-3 py-3 text-sm text-ink-900 max-w-[160px] truncate">{item.LockerHolder}</td>
                                                 <td className="px-3 py-3 text-sm text-ink-900 max-w-[160px] truncate">{item.InitiatedBy}</td>
                                                 <td className="px-3 py-3 font-mono text-xs text-ink-900">{item.Cost || "—"}</td>
-                                                <td className="px-3 py-3 font-mono text-xs uppercase tracking-editorial text-slate-600">{item.LockerStatus}</td>
+                                                <td className="px-3 py-3 font-mono text-xs text-slate-600">{item.LockerStatus}</td>
                                                 <td className="px-3 py-3 font-mono text-xs text-ink-900">
                                                     {item.createdAt ? (
                                                         <div className="flex flex-col">
@@ -197,7 +197,7 @@ const LockerHistory = () => {
                                 </table>
                             </div>
                             <div className="p-4 border-t border-ink-900/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                                <div className="font-mono text-xs uppercase tracking-editorial text-slate-500">
+                                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {startRange}–{endRange} of {history.length}
                                 </div>
                                 <ReactPaginate
@@ -209,8 +209,8 @@ const LockerHistory = () => {
                                     pageRangeDisplayed={3}
                                     marginPagesDisplayed={1}
                                     containerClassName="flex items-center gap-1"
-                                    pageClassName="block border border-ink-900/15 hover:bg-ink-900 hover:text-cream-50 w-8 h-8 flex items-center justify-center font-mono text-xs"
-                                    activeClassName="bg-ink-900 text-cream-50"
+                                    pageClassName="block border border-ink-100 hover:bg-brass-50 hover:text-brass-600 hover:border-brass-400/40 rounded-md w-8 h-8 flex items-center justify-center text-xs font-medium"
+                                    activeClassName="bg-brass-400 text-white border-brass-400 hover:!bg-brass-500 hover:!text-white"
                                     renderOnZeroPageCount={null}
                                 />
                             </div>
@@ -247,7 +247,7 @@ const LockerHistory = () => {
                             <div className="flex items-end">
                                 <button
                                     onClick={() => { setClearStart(""); setClearEnd(""); }}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                 >
                                     Reset dates
                                 </button>
@@ -256,14 +256,14 @@ const LockerHistory = () => {
                         <div className="flex gap-3">
                             <button
                                 onClick={handleClearHistory}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-error-500 hover:bg-error-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors"
                             >
                                 <Trash2 className="w-4 h-4" />
                                 Clear history
                             </button>
                             <button
                                 onClick={() => { setShowClearSection(false); setClearStart(""); setClearEnd(""); }}
-                                className="inline-flex items-center gap-2 px-6 py-3 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                className="inline-flex items-center gap-2 px-6 py-3 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                             >
                                 Cancel
                             </button>

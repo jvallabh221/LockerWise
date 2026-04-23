@@ -80,7 +80,7 @@ const AddSingleLocker = () => {
                 rightMeta={
                     <button
                         onClick={() => setShowPriceModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                     >
                         Standard prices
                     </button>
@@ -103,7 +103,7 @@ const AddSingleLocker = () => {
                                     <thead>
                                         <tr className="border-b border-ink-900/15">
                                             {["Gender", "Type", "3 mo", "6 mo", "12 mo"].map((h) => (
-                                                <th key={h} className="px-3 py-2 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                                <th key={h} className="px-3 py-2 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -193,7 +193,7 @@ const AddSingleLocker = () => {
                                 </Link>
                             </p>
                             <button type="submit" disabled={loading}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60">
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60">
                                 {loading ? <><Loader className="w-4 h-4 animate-spin" /> Adding</> : <>Add locker <ArrowRight className="w-4 h-4" /></>}
                             </button>
                         </FormActions>

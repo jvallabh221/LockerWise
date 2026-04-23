@@ -95,7 +95,7 @@ const AccountResetPass = () => {
             <section className="w-full max-w-4xl mx-auto px-6 py-10">
                 <div className="lw-section-num mb-2">Account / Security</div>
                 <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                    Change your <span className="italic">passphrase.</span>
+                    Change your <span className="text-brass-500">password.</span>
                 </h1>
                 <div className="lw-rule-brass w-16 mt-5 mb-2" />
                 <p className="text-slate-600 max-w-xl">
@@ -135,13 +135,13 @@ const AccountResetPass = () => {
                     />
 
                     {error && (
-                        <div className="mt-6 flex items-start gap-2 border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2">
+                        <div className="mt-6 flex items-start gap-2 border border-error-500/25 bg-error-50 text-error-700 rounded-lg px-3 py-2">
                             <AlertTriangle className="w-4 h-4 mt-0.5" />
                             <p className="text-sm">{error}</p>
                         </div>
                     )}
                     {success && (
-                        <div className="mt-6 flex items-start gap-2 border border-[#b9d3c1] bg-[#e6efe8] text-[#2f5c43] px-3 py-2">
+                        <div className="mt-6 flex items-start gap-2 border border-success-500/25 bg-success-50 text-success-700 rounded-lg px-3 py-2">
                             <CheckCircle2 className="w-4 h-4 mt-0.5" />
                             <p className="text-sm">{success} — redirecting to sign-in.</p>
                         </div>
@@ -151,7 +151,7 @@ const AccountResetPass = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                         >
                             {loading ? (
                                 <>

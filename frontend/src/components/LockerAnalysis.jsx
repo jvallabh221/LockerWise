@@ -48,7 +48,7 @@ const LockerAnalysis = () => {
                 <div className="lw-section-num mb-2">Analytics / Expiring</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                     <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                        Locker <span className="italic">analysis.</span>
+                        Locker <span className="text-brass-500">analysis.</span>
                     </h1>
                     <div className="flex items-center gap-6 text-right">
                         <Stat label="Expiring today" value={todayCount} />
@@ -63,7 +63,7 @@ const LockerAnalysis = () => {
                         <select
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
-                            className="bg-transparent border border-ink-900/20 px-3 py-2 text-sm font-mono uppercase tracking-editorial text-ink-900 focus:outline-none focus:border-brass-400"
+                            className="bg-white border border-ink-100 rounded-md px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
                         >
                             <option value="all">All</option>
                             <option value="today">Today</option>
@@ -76,7 +76,7 @@ const LockerAnalysis = () => {
                             <thead className="sticky top-0 bg-cream-50">
                                 <tr className="border-b border-ink-900/15">
                                     {["Locker", "Name", "Email", "Phone", "Gender", "Type", "Duration", "Expires", "Status"].map((h) => (
-                                        <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                        <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                     ))}
                                 </tr>
                             </thead>

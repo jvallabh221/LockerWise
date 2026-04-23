@@ -30,7 +30,7 @@ const TermsOfService = () => {
                 <div className="max-w-5xl mx-auto">
                     <div className="lw-eyebrow mb-3">Colophon / Terms</div>
                     <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
-                        The agreement, <span className="italic">in writing.</span>
+                        The agreement, <span className="text-brass-500">in writing.</span>
                     </h1>
                     <div className="lw-rule-brass w-20 mt-6" />
                     <p className="mt-5 text-slate-600 max-w-2xl leading-relaxed">

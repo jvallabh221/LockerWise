@@ -10,78 +10,128 @@ export default {
         },
         extend: {
             colors: {
-                // LockerWise brand tokens
+                // LockerWise Brand Guidelines v2 — modern institutional SaaS
+                //
+                // NOTE on token keys: `ink`, `cream`, `brass`, `slate` are legacy
+                // names kept for migration stability. Their VALUES are remapped
+                // to the v2 palette so existing class usage flips automatically:
+                //   ink.*   → navy scale (primary brand anchor)
+                //   cream.* → neutral surfaces (was warm, now cool SaaS)
+                //   brass.* → accent-blue scale (was amber, now cyan/sky)
+                //   slate.* → cool neutral text/border scale
                 ink: {
-                    50: "#f2f3f6",
-                    100: "#dde0e8",
-                    200: "#b5bcca",
-                    300: "#8791a7",
-                    400: "#5d6880",
-                    500: "#3a4560",
-                    600: "#262f47",
-                    700: "#1a2236",
-                    800: "#121a2a",
-                    900: "#0b1220",
-                    DEFAULT: "#0b1220",
+                    50:  "#EEF1F8",
+                    100: "#DDE3F0",
+                    200: "#B3C0D8",
+                    300: "#6379A3",
+                    400: "#3B5288",
+                    500: "#243E72", // Navy 500
+                    600: "#1F3A68",
+                    700: "#1A3461", // Navy 700
+                    800: "#0F2348",
+                    900: "#0B1D3F", // Navy 900 — primary anchor
+                    DEFAULT: "#0B1D3F",
                 },
                 cream: {
-                    50: "#fbf7ef",
-                    100: "#f6efde",
-                    200: "#eee2c4",
-                    300: "#e3d2a6",
-                    400: "#d4bc82",
-                    500: "#c2a35e",
-                    DEFAULT: "#f6efde",
+                    // Cool neutral surfaces. Shifted so existing `bg-cream-50`
+                    // references (e.g. sticky table headers) still give a
+                    // subtle off-white vs pure white rows.
+                    50:  "#F9FAFC", // subtle off-white (sticky headers, hover rows)
+                    100: "#F4F6FB", // Neutral 50 — page background
+                    200: "#EEF1F8", // soft cool neutral
+                    300: "#E9EDF5",
+                    400: "#DDE3F0", // Neutral 200 — borders/dividers
+                    500: "#C6CFDF",
+                    DEFAULT: "#F4F6FB",
                 },
                 brass: {
-                    50: "#fbf3df",
-                    100: "#f5e5b5",
-                    200: "#e9cf78",
-                    300: "#d7b34a",
-                    400: "#b8932c",
-                    500: "#96761f",
-                    600: "#735919",
-                    DEFAULT: "#b8932c",
+                    50:  "#F0F9FF",
+                    100: "#E0F2FE",
+                    200: "#BAE6FD", // Accent Light
+                    300: "#7DD3FC",
+                    400: "#0EA5E9", // Accent — primary interactive blue
+                    500: "#0369A1", // Accent Dark
+                    600: "#075985",
+                    DEFAULT: "#0EA5E9",
                 },
                 slate: {
-                    50: "#f4f4f2",
-                    100: "#e5e5e1",
-                    200: "#c8c8c1",
-                    300: "#a3a397",
-                    400: "#7c7c6f",
-                    500: "#5c5c51",
-                    600: "#44443c",
-                    700: "#2f2f29",
-                    DEFAULT: "#5c5c51",
+                    50:  "#F4F6FB",
+                    100: "#E9EDF5",
+                    200: "#DDE3F0",
+                    300: "#C6CFDF",
+                    400: "#8C9BBA",
+                    500: "#4D5D80", // Neutral 600 — muted text
+                    600: "#3D4C6B",
+                    700: "#2E3A56",
+                    DEFAULT: "#4D5D80",
                 },
+                // Semantic tokens — precise, not loud
+                success: {
+                    50:  "#ECFDF5",
+                    100: "#D1FAE5",
+                    500: "#10B981",
+                    600: "#059669",
+                    700: "#047857",
+                    DEFAULT: "#10B981",
+                },
+                warning: {
+                    50:  "#FFFBEB",
+                    100: "#FEF3C7",
+                    500: "#F59E0B",
+                    600: "#D97706",
+                    700: "#B45309",
+                    DEFAULT: "#F59E0B",
+                },
+                error: {
+                    50:  "#FEF2F2",
+                    100: "#FEE2E2",
+                    500: "#EF4444",
+                    600: "#DC2626",
+                    700: "#B91C1C",
+                    DEFAULT: "#EF4444",
+                },
+                // Kept for back-compat — maps locker status to semantic tones
                 status: {
-                    occupied: "#b8932c",
-                    available: "#3e7b5a",
-                    flag: "#b5452c",
-                    maintenance: "#7c7c6f",
+                    occupied:    "#F59E0B", // warning
+                    available:   "#10B981", // success
+                    expired:     "#EF4444", // error
+                    flag:        "#EF4444",
+                    maintenance: "#4D5D80",
                 },
-                // Back-compat aliases (existing code uses these heavily)
-                blue: { DEFAULT: "#6366f1" },
-                white: { DEFAULT: "#ffffff" },
+                // Back-compat alias (a few components still reference these)
+                blue:  { DEFAULT: "#0EA5E9" },
+                white: { DEFAULT: "#FFFFFF" },
             },
             fontFamily: {
-                display: ['Fraunces', 'Georgia', 'serif'],
-                sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-                mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
+                // Token keys unchanged. Values swapped to v2 stack.
+                display: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                sans:    ['"DM Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                mono:    ['"DM Mono"', 'ui-monospace', 'Menlo', 'monospace'],
             },
             letterSpacing: {
-                'editorial': '0.14em',
+                // Dialled down from 0.14em → 0.06em for a premium SaaS feel.
+                editorial: '0.06em',
+            },
+            borderRadius: {
+                // Named tokens for consistent SaaS radii
+                xs: '4px',
+                sm: '6px',
+                md: '8px',
+                lg: '10px',
+                xl: '12px',
             },
             boxShadow: {
-                paper: '0 1px 0 rgba(11,18,32,0.04), 0 12px 32px -20px rgba(11,18,32,0.18)',
-                inset: 'inset 0 0 0 1px rgba(11,18,32,0.08)',
+                // v2 shadows — navy-tinted, soft, premium (not heavy)
+                xs:    '0 1px 2px 0 rgba(11, 29, 63, 0.04)',
+                paper: '0 1px 2px rgba(11, 29, 63, 0.04), 0 4px 12px rgba(11, 29, 63, 0.06)',
+                card:  '0 1px 2px rgba(11, 29, 63, 0.04), 0 4px 12px rgba(11, 29, 63, 0.06)',
+                pop:   '0 4px 6px -1px rgba(11, 29, 63, 0.08), 0 10px 24px -6px rgba(11, 29, 63, 0.12)',
+                ring:  '0 0 0 3px rgba(14, 165, 233, 0.18)',
+                inset: 'inset 0 0 0 1px rgba(11, 29, 63, 0.06)',
             },
             screens: {
-                ssm: "320px",
-                xxl: "1440px",
-            },
-            backgroundImage: {
-                'grain': "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.04  0 0 0 0 0.07  0 0 0 0 0.13  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")",
+                ssm:  "320px",
+                xxl:  "1440px",
             },
         },
     },

@@ -147,7 +147,7 @@ const AvailableLockers = () => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                             >
                                 {loading ? (
                                     <>
@@ -303,7 +303,7 @@ const AvailableLockers = () => {
                                 <button
                                     type="submit"
                                     disabled={assignLoading}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                                 >
                                     {assignLoading ? (
                                         <>

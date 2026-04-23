@@ -111,7 +111,7 @@ export default function EditLockerDetails() {
                                         type="button"
                                         onClick={changePin}
                                         disabled={loading}
-                                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                         title="Rotate"
                                     >
                                         <RefreshCcw className="w-3.5 h-3.5" />
@@ -127,7 +127,7 @@ export default function EditLockerDetails() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                             >
                                 {loading ? <><Loader className="w-4 h-4 animate-spin" /> Updating</> : <><Save className="w-4 h-4" /> Save changes</>}
                             </button>

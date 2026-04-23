@@ -33,7 +33,7 @@ const EditableField = ({ id, label, type = "text", value, onChange, editable, on
             <button
                 type="button"
                 onClick={onToggle}
-                className="flex-shrink-0 w-9 h-9 border border-ink-900/15 bg-white hover:bg-ink-900 hover:text-cream-50 text-ink-900 transition-colors flex items-center justify-center"
+                className="flex-shrink-0 w-9 h-9 border border-ink-100 bg-white hover:bg-cream-200 hover:border-ink-200 text-ink-900 rounded-md transition-colors flex items-center justify-center"
                 aria-label={editable ? "Cancel" : "Edit"}
             >
                 {editable ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
@@ -145,7 +145,7 @@ const EditStaffDetails = () => {
                             <button
                                 type="submit"
                                 disabled={loading || !anyEdit}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? <><Loader className="w-4 h-4 animate-spin" /> Updating</> : <><Save className="w-4 h-4" /> Save changes</>}
                             </button>

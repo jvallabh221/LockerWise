@@ -42,11 +42,11 @@ const StaffManagement = () => {
                 <div className="lw-section-num mb-2">Directory / Staff</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
                     <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                        Staff <span className="italic">management.</span>
+                        Staff <span className="text-brass-500">management.</span>
                     </h1>
                     <Link
                         to="/add_single_staff"
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors"
                     >
                         <UserPlus className="w-4 h-4" />
                         Add staff
@@ -73,7 +73,7 @@ const StaffManagement = () => {
                             <thead className="sticky top-0 bg-cream-50">
                                 <tr className="border-b border-ink-900/15">
                                     {["Name", "Gender", "Email", "Phone", "Action"].map((h) => (
-                                        <th key={h} className="px-4 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                        <th key={h} className="px-4 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -96,13 +96,13 @@ const StaffManagement = () => {
                                                 <div className="flex gap-2">
                                                     <button
                                                         onClick={() => handleEdit(item._id)}
-                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                                     >
                                                         <Pencil className="w-3 h-3" /> Edit
                                                     </button>
                                                     <button
                                                         onClick={() => handleDelete(item._id)}
-                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[#7a2a18] text-[#7a2a18] font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-[#7a2a18] hover:text-cream-50 transition-colors"
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-error-500/30 text-error-600 bg-white text-xs font-medium rounded-md hover:bg-error-50 hover:border-error-500 transition-colors"
                                                     >
                                                         <Trash2 className="w-3 h-3" /> Remove
                                                     </button>
@@ -116,7 +116,7 @@ const StaffManagement = () => {
                     </div>
                 </div>
                 {error && (
-                    <p className="mt-4 text-sm text-[#7a2a18]">{error}</p>
+                    <p className="mt-4 text-sm text-error-600">{error}</p>
                 )}
             </section>
         </Layout>

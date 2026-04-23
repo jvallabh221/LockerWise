@@ -31,7 +31,7 @@ const LockerIssueForm = () => {
     };
 
     return (
-        <FormCard num="§ 02" title="Locker issue details">
+        <FormCard num="Step 2" title="Locker issue details">
             <p className="text-slate-600 text-sm mb-6 max-w-xl">
                 Report problems with a specific locker. Include as much detail as possible so our team can resolve it quickly.
             </p>
@@ -89,7 +89,7 @@ const LockerIssueForm = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                     >
                         {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         {loading ? "Reporting" : "Submit issue"}

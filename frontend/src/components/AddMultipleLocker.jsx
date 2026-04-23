@@ -70,7 +70,7 @@ const AddMultipleLocker = () => {
                     <a
                         href="/multipleLockersTemplate.xlsx"
                         download="Lockers.xlsx"
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         Download template
@@ -103,7 +103,7 @@ const AddMultipleLocker = () => {
                         <button
                             onClick={handleFileUpload}
                             disabled={loading || !file}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? <><Loader className="w-4 h-4 animate-spin" /> Uploading</> : <><Upload className="w-4 h-4" /> Upload file</>}
                         </button>

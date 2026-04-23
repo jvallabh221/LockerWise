@@ -8,15 +8,15 @@ const Unauthorize = () => {
         <div className="lw-page lw-grain min-h-screen flex flex-col">
             <DashNav />
             <main className="flex-1 flex items-center justify-center px-6">
-                <div className="max-w-lg w-full border border-ink-900/15 bg-white p-10">
+                <div className="max-w-lg w-full border border-ink-100 bg-white rounded-xl shadow-paper p-10">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-[#7a2a18] text-cream-50 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-error-500 text-white flex items-center justify-center">
                             <Lock className="w-5 h-5" />
                         </div>
-                        <div className="lw-section-num text-[#7a2a18]">Access denied</div>
+                        <div className="lw-section-num text-error-600">Access denied</div>
                     </div>
                     <h1 className="font-display text-4xl text-ink-900 leading-tight">
-                        You don't have <span className="italic">permission</span> to view this page.
+                        You don't have <span className="text-error-600">permission</span> to view this page.
                     </h1>
                     <div className="lw-rule-brass w-16 mt-5 mb-5" />
                     <p className="text-slate-600 leading-relaxed">
@@ -26,13 +26,13 @@ const Unauthorize = () => {
                     <div className="mt-8 flex gap-3">
                         <Link
                             to="/dashboard"
-                            className="inline-flex items-center px-5 py-2.5 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors"
+                            className="inline-flex items-center px-5 py-2.5 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors"
                         >
                             Back to dashboard
                         </Link>
                         <Link
                             to="/"
-                            className="inline-flex items-center px-5 py-2.5 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                            className="inline-flex items-center px-5 py-2.5 bg-white text-ink-900 border border-ink-100 hover:bg-cream-200 hover:border-ink-200 font-medium text-sm rounded-md transition-colors"
                         >
                             Home
                         </Link>

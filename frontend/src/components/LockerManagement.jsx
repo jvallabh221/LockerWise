@@ -27,15 +27,15 @@ const toneForStatus = (status) => {
 
 const Action = ({ to, Icon, children, tone = "ink" }) => {
     const toneMap = {
-        ink: "bg-white text-ink-900 border-ink-900 hover:bg-ink-900 hover:text-cream-50",
+        ink: "bg-white text-ink-900 border-ink-100 hover:bg-cream-200 hover:border-ink-200",
         brass: "bg-white text-ink-900 border-brass-400 hover:bg-brass-400",
-        rust: "bg-white text-[#7a2a18] border-[#7a2a18] hover:bg-[#7a2a18] hover:text-cream-50",
-        green: "bg-white text-[#2f5c43] border-[#2f5c43] hover:bg-[#2f5c43] hover:text-cream-50",
+        rust: "bg-white text-error-600 border-error-500/30 hover:bg-error-50 hover:border-error-500",
+        green: "bg-white text-success-700 border-success-500/30 hover:bg-success-50 hover:border-success-500",
     };
     return (
         <Link
             to={to}
-            className={`inline-flex items-center gap-2 px-4 py-2 border font-mono text-xs uppercase tracking-editorial transition-colors ${toneMap[tone]}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 border rounded-md text-sm font-medium transition-colors ${toneMap[tone]}`}
         >
             <Icon className="w-4 h-4" />
             {children}
@@ -88,9 +88,9 @@ const LockerManagement = () => {
                     <div className="lw-section-num">Ledger / Lockers</div>
                     <div className="flex items-end justify-between gap-6 flex-wrap">
                         <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
-                            Locker <span className="italic">management.</span>
+                            Locker <span className="text-brass-500">management.</span>
                         </h1>
-                        <div className="font-mono text-xs uppercase tracking-editorial text-slate-500">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                             {filteredLockers.length} of {allLockerDetails.length} shown
                         </div>
                     </div>
@@ -122,7 +122,7 @@ const LockerManagement = () => {
                             <select
                                 value={locker || ""}
                                 onChange={(e) => setLocker(e.target.value || null)}
-                                className="bg-transparent border border-ink-900/20 px-3 py-2 text-sm font-mono uppercase tracking-editorial text-ink-900 focus:outline-none focus:border-brass-400"
+                                className="bg-white border border-ink-100 rounded-md px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
                             >
                                 <option value="">All</option>
                                 <option value="expired">Expired</option>
@@ -149,7 +149,7 @@ const LockerManagement = () => {
                             <thead className="sticky top-0 z-10 bg-cream-50">
                                 <tr className="border-b border-ink-900/15">
                                     {["Locker", "Email", "Name", "Emp ID", "Phone", "Status", "Expires", "Action"].map((h) => (
-                                        <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">
+                                        <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}
                                         </th>
                                     ))}
@@ -193,7 +193,7 @@ const LockerManagement = () => {
                                                             <select
                                                                 value={item.LockerStatus || ""}
                                                                 onChange={(e) => changeLockerStatus(item.LockerNumber, e.target.value)}
-                                                                className="bg-transparent border border-ink-900/20 px-2 py-1 text-xs font-mono uppercase tracking-editorial text-ink-900 focus:outline-none focus:border-brass-400"
+                                                                className="bg-white border border-ink-100 rounded-md px-2 py-1 text-xs text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
                                                             >
                                                                 <option value="available">Available</option>
                                                                 <option value="maintainance">Maintenance</option>
@@ -208,7 +208,7 @@ const LockerManagement = () => {
                                                     <td className="px-3 py-3">
                                                         <button
                                                             onClick={() => toggleRowExpansion(item.LockerNumber)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-900/20 text-ink-900 font-mono text-[0.65rem] uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
                                                         >
                                                             {isExpanded ? (
                                                                 <>
@@ -241,7 +241,7 @@ const LockerManagement = () => {
                                                                     <Link
                                                                         to="/editLockerDetails"
                                                                         state={item}
-                                                                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                                                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                                                                     >
                                                                         <Pencil className="w-4 h-4" />
                                                                         Edit locker

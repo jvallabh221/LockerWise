@@ -39,7 +39,7 @@ const TechnicalIssue = () => {
                 italicTitle="issue."
                 description="Report a problem with the LockerWise system itself — authentication, dashboards, or any other technical concern."
             >
-                <FormCard num="§ 01" title="Issue details">
+                <FormCard num="Step 1" title="Issue details">
                     <form onSubmit={handleSubmit}>
                         <FieldGrid cols={2}>
                             <FieldRow label="Email" htmlFor="email" span={2}>
@@ -83,14 +83,14 @@ const TechnicalIssue = () => {
                         <FormActions align="between">
                             <Link
                                 to="/issue_reporting"
-                                className="font-mono text-xs uppercase tracking-editorial text-slate-600 hover:text-ink-900 border-b border-slate-300 hover:border-ink-900 pb-0.5"
+                                className="text-sm font-medium text-brass-500 hover:text-brass-600 underline-offset-4 hover:underline"
                             >
                                 Locker issue →
                             </Link>
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-brass-400 hover:bg-brass-500 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                             >
                                 {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                                 {loading ? "Reporting" : "Submit issue"}

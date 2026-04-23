@@ -28,10 +28,10 @@ const UpdateLockerPrice = () => {
                         if (isEditable[typeKey]) saveLockerPrice(typeKey);
                         toggleEditable(typeKey);
                     }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-[0.65rem] uppercase tracking-editorial transition-colors ${
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                         isEditable[typeKey]
-                            ? "bg-ink-900 text-cream-50 hover:bg-ink-700"
-                            : "border border-ink-900/20 text-ink-900 hover:bg-ink-900 hover:text-cream-50"
+                            ? "bg-brass-400 text-white hover:bg-brass-500 shadow-xs"
+                            : "border border-ink-100 text-ink-900 bg-white hover:bg-cream-200 hover:border-ink-200"
                     }`}
                 >
                     {isEditable[typeKey] ? <><Save className="w-3.5 h-3.5" /> Save</> : <><Edit2 className="w-3.5 h-3.5" /> Edit</>}
@@ -54,7 +54,7 @@ const UpdateLockerPrice = () => {
                             <thead>
                                 <tr className="border-b border-ink-900/15 bg-cream-50">
                                     {["Gender", "Type", "3 mo", "6 mo", "12 mo", "Action"].map((h) => (
-                                        <th key={h} className="px-4 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">
+                                        <th key={h} className="px-4 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}
                                         </th>
                                     ))}

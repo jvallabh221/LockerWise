@@ -42,7 +42,7 @@ const ContactUs = () => {
                 <div className="max-w-6xl mx-auto">
                     <div className="lw-eyebrow mb-3">Colophon / Contact</div>
                     <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
-                        Write to us, <span className="italic">plainly.</span>
+                        Write to us, <span className="text-brass-500">plainly.</span>
                     </h1>
                     <div className="lw-rule-brass w-20 mt-6" />
                     <p className="mt-5 text-slate-600 max-w-2xl leading-relaxed">
@@ -115,7 +115,7 @@ const ContactUs = () => {
 
                             {submitted ? (
                                 <div className="py-10 text-center">
-                                    <div className="inline-flex items-center justify-center w-14 h-14 bg-[#e6efe8] border border-[#b9d3c1] text-[#2f5c43] mb-4">
+                                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-success-50 border border-success-500/25 text-success-600 mb-4">
                                         <CheckCircle2 className="w-6 h-6" />
                                     </div>
                                     <h3 className="font-display text-2xl text-ink-900">Message sent</h3>
@@ -179,7 +179,7 @@ const ContactUs = () => {
                                     </div>
 
                                     {error && (
-                                        <div className="border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2 text-sm">
+                                        <div className="border border-error-500/25 bg-error-50 text-error-700 rounded-lg px-3 py-2.5 text-sm">
                                             {error}
                                         </div>
                                     )}
@@ -187,7 +187,7 @@ const ContactUs = () => {
                                     <button
                                         type="submit"
                                         disabled={loading}
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-brass-400 hover:bg-brass-500 active:bg-brass-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                                     >
                                         {loading ? (
                                             <>

@@ -65,7 +65,7 @@ const ViewStaffDetails = () => {
                             type="button"
                             onClick={() => setShowConfirm(true)}
                             disabled={loading}
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors disabled:opacity-60"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-error-500 hover:bg-error-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors disabled:opacity-60"
                         >
                             {loading ? <><Loader className="w-4 h-4 animate-spin" /> Removing</> : <><Trash2 className="w-4 h-4" /> Remove staff</>}
                         </button>
@@ -76,7 +76,7 @@ const ViewStaffDetails = () => {
                     <div className="fixed inset-0 bg-ink-900/70 flex items-center justify-center z-50 px-4">
                         <div className="bg-white border border-ink-900/10 max-w-md w-full p-8">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-[#7a2a18] text-cream-50 flex items-center justify-center">
+                                <div className="w-10 h-10 bg-error-500 text-white rounded-full flex items-center justify-center">
                                     <AlertTriangle className="w-5 h-5" />
                                 </div>
                                 <h2 className="font-display text-2xl text-ink-900">Confirm removal</h2>
@@ -87,13 +87,13 @@ const ViewStaffDetails = () => {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowConfirm(false)}
-                                    className="flex-1 px-4 py-2.5 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                                    className="flex-1 px-4 py-2.5 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
                                 >
                                     Go back
                                 </button>
                                 <button
                                     onClick={handleConfirm}
-                                    className="flex-1 px-4 py-2.5 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors"
+                                    className="flex-1 px-4 py-2.5 bg-error-500 hover:bg-error-600 text-white font-medium text-sm rounded-md shadow-xs transition-colors"
                                 >
                                     Confirm
                                 </button>
