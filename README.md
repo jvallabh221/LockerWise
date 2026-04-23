@@ -47,3 +47,17 @@ Open: http://localhost:5000 (backend serves built frontend)
    - `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASS`, `FROM_EMAIL`
    - `IMG_LINK` (optional)
 4. Deploy. Railway auto-assigns `PORT` and a public URL — one URL serves both frontend and API.
+
+## Create the first Admin
+
+The app has no default admin. After the DB is reachable (locally or on Railway), seed one:
+
+```
+cd backend
+ADMIN_EMAIL=you@domain.com ADMIN_PASSWORD='Strong!Pass1' npm run seed:admin
+```
+
+Optional vars: `ADMIN_NAME`, `ADMIN_PHONE`, `ADMIN_GENDER` (`Male`|`Female`|`Other`).  
+Set `ADMIN_RESET=true` to overwrite the password of an existing admin with the same email.
+
+On Railway, run the same command from the backend service's **Shell** tab — it reuses the app's `DBURL` automatically.
