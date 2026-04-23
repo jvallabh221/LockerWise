@@ -1,67 +1,74 @@
-import React, { useState, useContext, lazy, useRef } from "react";
+import React, { useState, useContext, useRef } from "react";
 import Layout from "./Layout";
-import { User, Mail, Loader, Edit2, X, Phone, Key, Save, AlertTriangle, Edit, UserCircle } from "lucide-react";
+import { Edit2, X, Save, Loader } from "lucide-react";
 import { AdminContext } from "../context/AdminProvider";
+import {
+    PageShell,
+    FormCard,
+    FieldGrid,
+    FieldRow,
+    ErrorBanner,
+    FormActions,
+} from "./ui/FormShell";
 
+const EditableField = ({ id, label, type = "text", value, onChange, editable, onToggle, inputRef, placeholder, span = 1, children }) => (
+    <div className={span === 2 ? "sm:col-span-2" : ""}>
+        <label htmlFor={id} className="lw-label">{label}</label>
+        <div className="flex items-end gap-2">
+            {children ? (
+                <div className="flex-1">{children}</div>
+            ) : (
+                <input
+                    id={id}
+                    ref={inputRef}
+                    type={type}
+                    readOnly={!editable}
+                    value={value}
+                    onChange={onChange}
+                    placeholder={placeholder}
+                    className="lw-input flex-1"
+                    autoComplete="off"
+                />
+            )}
+            <button
+                type="button"
+                onClick={onToggle}
+                className="flex-shrink-0 w-9 h-9 border border-ink-900/15 bg-white hover:bg-ink-900 hover:text-cream-50 text-ink-900 transition-colors flex items-center justify-center"
+                aria-label={editable ? "Cancel" : "Edit"}
+            >
+                {editable ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+            </button>
+        </div>
+    </div>
+);
+
+const GENDER_OPTIONS = ["Male", "Female", "Other"];
 
 const EditStaffDetails = () => {
     const { staffDetails, editStaffDetails } = useContext(AdminContext);
 
-    const [username, setUsername] = useState(staffDetails.user.name || "");
-    const [email, setEmail] = useState(staffDetails.user.email || "");
-    const [phone, setPhone] = useState(staffDetails.user.phoneNumber || "");
-    const GENDER_OPTIONS = ["Male", "Female", "Other"];
-    const [gender, setGender] = useState(
-        staffDetails?.user?.gender && GENDER_OPTIONS.includes(staffDetails.user.gender)
-            ? staffDetails.user.gender
-            : staffDetails?.user?.gender || "Male"
-    );
+    const [username, setUsername] = useState(staffDetails?.user?.name || "");
+    const [email, setEmail] = useState(staffDetails?.user?.email || "");
+    const [phone, setPhone] = useState(staffDetails?.user?.phoneNumber || "");
+    const [gender, setGender] = useState(staffDetails?.user?.gender || "Male");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const [isUsernameEditable, setIsUsernameEditable] = useState(false);
-    const [isEmailEditable, setIsEmailEditable] = useState(false);
-    const [isPhoneEditable, setIsPhoneEditable] = useState(false);
-    const [isGenderEditable, setIsGenderEditable] = useState(false);
-    const [isPasswordEditable, setIsPasswordEditable] = useState(false);
+    const [uEdit, setUEdit] = useState(false);
+    const [eEdit, setEEdit] = useState(false);
+    const [pEdit, setPEdit] = useState(false);
+    const [gEdit, setGEdit] = useState(false);
+    const [pwdEdit, setPwdEdit] = useState(false);
 
-    const usernameRef = useRef(null);
-    const emailRef = useRef(null);
-    const phoneRef = useRef(null);
-    const genderRef = useRef(null);
-    const passwordRef = useRef(null);
+    const refs = { u: useRef(), e: useRef(), p: useRef(), g: useRef(), pwd: useRef() };
 
-    const handleEditClick = (field) => {
-        switch (field) {
-            case "username":
-                setIsUsernameEditable(!isUsernameEditable);
-                if (!isUsernameEditable) usernameRef.current?.focus();
-                break;
-            case "email":
-                setIsEmailEditable(!isEmailEditable);
-                if (!isEmailEditable) emailRef.current?.focus();
-                break;
-            case "phone":
-                setIsPhoneEditable(!isPhoneEditable);
-                if (!isPhoneEditable) phoneRef.current?.focus();
-                break;
-            case "gender":
-                setIsGenderEditable(!isGenderEditable);
-                if (!isGenderEditable) genderRef.current?.focus();
-                // Ensure gender is a valid option when opening edit
-                if (!isGenderEditable && gender && !GENDER_OPTIONS.includes(gender)) {
-                    setGender("Male");
-                }
-                break;
-            case "password":
-                setIsPasswordEditable(!isPasswordEditable);
-                if (!isPasswordEditable) passwordRef.current?.focus();
-                break;
-            default:
-                break;
-        }
+    const toggle = (which, setter, state, ref) => {
+        setter(!state);
+        setTimeout(() => !state && ref.current?.focus(), 0);
     };
+
+    const anyEdit = uEdit || eEdit || pEdit || gEdit || pwdEdit;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -69,15 +76,9 @@ const EditStaffDetails = () => {
         setLoading(true);
         try {
             await editStaffDetails(staffDetails.user._id, username, staffDetails.user.role, email, password, phone, gender);
-            // Reset all fields to readonly
-            setIsUsernameEditable(false);
-            setIsEmailEditable(false);
-            setIsPhoneEditable(false);
-            setIsGenderEditable(false);
-            setIsPasswordEditable(false);
-        } catch (error) {
-            //console.error(error);
-            setError(error);
+            setUEdit(false); setEEdit(false); setPEdit(false); setGEdit(false); setPwdEdit(false);
+        } catch (err) {
+            setError(typeof err === "string" ? err : "Failed to update.");
         } finally {
             setLoading(false);
         }
@@ -85,253 +86,73 @@ const EditStaffDetails = () => {
 
     return (
         <Layout>
-            <section className="flex flex-col items-center justify-center py-4 px-4">
-                <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6">
-                    {/* Header */}
-                    <div className="text-center flex flex-col items-center gap-3 mb-6">
-                       
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            Edit Staff Details
-                        </h1>
-                        <p className="text-sm text-gray-600">
-                            Review and update staff account information
-                        </p>
-                    </div>
+            <PageShell
+                eyebrow="Directory / Edit"
+                title="Edit"
+                italicTitle="staff record."
+                description="Review and update staff account information. Click the edit icon on a field to change it."
+            >
+                <FormCard>
+                    <form onSubmit={handleSubmit}>
+                        <div className="lw-eyebrow mb-4">Record</div>
+                        <FieldGrid cols={2}>
+                            <EditableField
+                                id="username" label="Username"
+                                value={username} onChange={(e) => setUsername(e.target.value)}
+                                editable={uEdit} onToggle={() => toggle("u", setUEdit, uEdit, refs.u)}
+                                inputRef={refs.u} placeholder="Display name"
+                            />
+                            <EditableField
+                                id="email" label="Email" type="email"
+                                value={email} onChange={(e) => setEmail(e.target.value)}
+                                editable={eEdit} onToggle={() => toggle("e", setEEdit, eEdit, refs.e)}
+                                inputRef={refs.e} placeholder="name@organization.com"
+                            />
+                            <EditableField
+                                id="phone" label="Phone"
+                                value={phone} onChange={(e) => setPhone(e.target.value)}
+                                editable={pEdit} onToggle={() => toggle("p", setPEdit, pEdit, refs.p)}
+                                inputRef={refs.p} placeholder="+1 ..."
+                            />
+                            <EditableField
+                                id="gender" label="Gender"
+                                editable={gEdit}
+                                onToggle={() => toggle("g", setGEdit, gEdit, refs.g)}
+                            >
+                                {gEdit ? (
+                                    <select ref={refs.g} className="lw-input w-full"
+                                        value={GENDER_OPTIONS.includes(gender) ? gender : "Male"}
+                                        onChange={(e) => setGender(e.target.value)}>
+                                        {GENDER_OPTIONS.map((opt) => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input readOnly className="lw-input w-full" value={gender} tabIndex={-1} />
+                                )}
+                            </EditableField>
+                            <EditableField
+                                id="password" label="New password" type="password" span={2}
+                                value={password} onChange={(e) => setPassword(e.target.value)}
+                                editable={pwdEdit} onToggle={() => toggle("pwd", setPwdEdit, pwdEdit, refs.pwd)}
+                                inputRef={refs.pwd} placeholder="Leave empty to keep current"
+                            />
+                        </FieldGrid>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Username Field */}
-                        <div className="flex items-center">
-                            <label htmlFor="username" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Username
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <User className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="username"
-                                        name="username"
-                                        ref={usernameRef}
-                                        type="text"
-                                        readOnly={!isUsernameEditable}
-                                        className={`pl-10 pr-10 outline-none w-full py-2 border-2 rounded-lg focus:ring-2 focus:ring-gray-500 transition-colors text-sm ${
-                                            isUsernameEditable 
-                                                ? "bg-white border-gray-500 focus:border-gray-500" 
-                                                : "bg-gray-50 border-gray-300"
-                                        }`}
-                                        placeholder="Username"
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        autoComplete="off"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEditClick("username")}
-                                        className="absolute right-3 h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors z-10"
-                                    >
-                                        {isUsernameEditable ? (
-                                            <X className="h-5 w-5" />
-                                        ) : (
-                                            <Edit2 className="h-5 w-5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <ErrorBanner>{error}</ErrorBanner>
 
-                        {/* Email Field */}
-                        <div className="flex items-center">
-                            <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Email
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <Mail className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        ref={emailRef}
-                                        type="email"
-                                        readOnly={!isEmailEditable}
-                                        className={`pl-10 pr-10 outline-none w-full py-2 border-2 rounded-lg focus:ring-2 focus:ring-gray-500 transition-colors text-sm ${
-                                            isEmailEditable 
-                                                ? "bg-white border-gray-500 focus:border-gray-500" 
-                                                : "bg-gray-50 border-gray-300"
-                                        }`}
-                                        placeholder="Email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        autoComplete="off"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEditClick("email")}
-                                        className="absolute right-3 h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors z-10"
-                                    >
-                                        {isEmailEditable ? (
-                                            <X className="h-5 w-5" />
-                                        ) : (
-                                            <Edit2 className="h-5 w-5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Phone and Gender in one row */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="flex items-center">
-                                <label htmlFor="phone" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                    Phone
-                                </label>
-                                <div className="relative flex-1">
-                                    <div className="flex items-center">
-                                        <Phone className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                        <input
-                                            id="phone"
-                                            name="phone"
-                                            ref={phoneRef}
-                                            type="text"
-                                            readOnly={!isPhoneEditable}
-                                            className={`pl-10 pr-10 outline-none w-full py-2 border-2 rounded-lg focus:ring-2 focus:ring-gray-500 transition-colors text-sm ${
-                                                isPhoneEditable 
-                                                    ? "bg-white border-gray-500 focus:border-gray-500" 
-                                                    : "bg-gray-50 border-gray-300"
-                                            }`}
-                                            placeholder="Phone"
-                                            value={phone}
-                                            onChange={(e) => setPhone(e.target.value)}
-                                            autoComplete="off"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEditClick("phone")}
-                                            className="absolute right-3 h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors z-10"
-                                        >
-                                            {isPhoneEditable ? (
-                                                <X className="h-5 w-5" />
-                                            ) : (
-                                                <Edit2 className="h-5 w-5" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center">
-                                <label htmlFor="gender" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                    Gender
-                                </label>
-                                <div className="relative flex-1">
-                                    <div className="flex items-center">
-                                        <UserCircle className="absolute left-3 h-5 w-5 text-gray-500 z-10 pointer-events-none" />
-                                        {isGenderEditable ? (
-                                            <select
-                                                id="gender"
-                                                name="gender"
-                                                ref={genderRef}
-                                                className="pl-10 pr-10 outline-none w-full py-2 border-2 border-gray-500 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 bg-white text-sm cursor-pointer appearance-none"
-                                                value={GENDER_OPTIONS.includes(gender) ? gender : "Male"}
-                                                onChange={(e) => setGender(e.target.value)}
-                                            >
-                                                {GENDER_OPTIONS.map((opt) => (
-                                                    <option key={opt} value={opt}>{opt}</option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                className="pl-10 pr-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg bg-gray-50 text-sm cursor-default"
-                                                value={gender}
-                                                tabIndex={-1}
-                                            />
-                                        )}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleEditClick("gender")}
-                                            className="absolute right-3 h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors z-10"
-                                        >
-                                            {isGenderEditable ? (
-                                                <X className="h-5 w-5" />
-                                            ) : (
-                                                <Edit2 className="h-5 w-5" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Password Field */}
-                        <div className="flex items-center">
-                            <label htmlFor="password" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Password
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <Key className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        ref={passwordRef}
-                                        type="password"
-                                        readOnly={!isPasswordEditable}
-                                        className={`pl-10 pr-10 outline-none w-full py-2 border-2 rounded-lg focus:ring-2 focus:ring-gray-500 transition-colors text-sm ${
-                                            isPasswordEditable 
-                                                ? "bg-white border-gray-500 focus:border-gray-500" 
-                                                : "bg-gray-50 border-gray-300"
-                                        }`}
-                                        placeholder="Set New Password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => handleEditClick("password")}
-                                        className="absolute right-3 h-5 w-5 text-gray-500 hover:text-gray-700 transition-colors z-10"
-                                    >
-                                        {isPasswordEditable ? (
-                                            <X className="h-5 w-5" />
-                                        ) : (
-                                            <Edit2 className="h-5 w-5" />
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                <p className="text-sm font-medium text-red-800">{error}</p>
-                            </div>
-                        )}
-
-                        {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={loading || (!isUsernameEditable && !isEmailEditable && !isPhoneEditable && !isGenderEditable && !isPasswordEditable)}
-                            className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white transition-colors shadow-md ${
-                                loading || (!isUsernameEditable && !isEmailEditable && !isPhoneEditable && !isGenderEditable && !isPasswordEditable)
-                                    ? "bg-gray-400 cursor-not-allowed" 
-                                    : "bg-gray-400 hover:bg-gray-500"
-                            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                    Updating...
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="w-5 h-5" />
-                                    Update Details
-                                </>
-                            )}
-                        </button>
+                        <FormActions>
+                            <button
+                                type="submit"
+                                disabled={loading || !anyEdit}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? <><Loader className="w-4 h-4 animate-spin" /> Updating</> : <><Save className="w-4 h-4" /> Save changes</>}
+                            </button>
+                        </FormActions>
                     </form>
-                </div>
-            </section>
+                </FormCard>
+            </PageShell>
         </Layout>
     );
 };

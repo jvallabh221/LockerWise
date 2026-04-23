@@ -1,14 +1,17 @@
-import React, { useState, lazy, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Layout from "./Layout";
-import { Loader, Hash, RotateCcw, Mail, AlertTriangle } from "lucide-react";
+import { Loader, RotateCcw } from "lucide-react";
 import { LockerContext } from "../context/LockerProvider";
-
-const getCancelLockerErrorMessage = (backendMessage) => {
-    return backendMessage || "No locker matched.";
-};
+import {
+    PageShell,
+    FormCard,
+    ReadonlyBlock,
+    ErrorBanner,
+    FormActions,
+} from "./ui/FormShell";
 
 const UpdateLockerFeature = () => {
     const { cancelLocker, setCancelSuccess } = useContext(LockerContext);
@@ -21,28 +24,22 @@ const UpdateLockerFeature = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");        
-
-        if (!/^\d*\.?\d*$/.test(LockerNumber)) {
-            setError("Invalid input: Locker Number must be a positive number.");
-            return;
-        }
-
+        setError("");
+        if (!/^\d*\.?\d*$/.test(LockerNumber))
+            return setError("Locker number must be a positive number.");
         setLoading(true);
-
         try {
             const result = await cancelLocker(LockerNumber, employeeEmail);
             if (result && result.data) {
                 const nextCode = result.data.LockerCode || "";
-                toast.success(`Locker reset successfully. Next combination: ${nextCode}`, { autoClose: 5000 });
+                toast.success(`Locker reset. Next combination: ${nextCode}`, { autoClose: 5000 });
                 setCancelSuccess(false);
                 setTimeout(() => navigate("/dashboard"), 5000);
             } else {
-                setError(getCancelLockerErrorMessage(null));
+                setError("No locker matched.");
             }
         } catch (err) {
-            const backendMessage = err.response?.data?.message;
-            setError(getCancelLockerErrorMessage(backendMessage));
+            setError(err.response?.data?.message || "No locker matched.");
         } finally {
             setLoading(false);
         }
@@ -50,93 +47,37 @@ const UpdateLockerFeature = () => {
 
     return (
         <Layout>
-            <section className="flex flex-col items-center justify-center py-4 px-4">
-                <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6">
-                    {/* Header */}
-                    <div className="text-center flex flex-col items-center gap-3 mb-6">
-                        
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            Reset the Current Locker
-                        </h1>
-                        <p className="text-sm text-gray-600">
-                            Reset the locker combination for the selected locker
-                        </p>
-                    </div>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="flex items-center">
-                            <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Email
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <Mail className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        required
-                                        className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                        placeholder="Enter the email"
-                                        value={employeeEmail || ""}
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-                        </div>
+            <PageShell
+                eyebrow="Operations / Reset"
+                title="Reset"
+                italicTitle="locker combination."
+                description="Return this locker to the pool and generate a new combination for future assignment."
+            >
+                <FormCard>
+                    <ReadonlyBlock
+                        title="Subject locker"
+                        items={[
+                            { label: "Locker #", value: LockerNumber },
+                            { label: "Email", value: employeeEmail },
+                        ]}
+                    />
 
-                        <div className="flex items-center">
-                            <label htmlFor="number" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Locker Number
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <Hash className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="number"
-                                        name="number"
-                                        type="text"
-                                        required
-                                        className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                        placeholder="Enter the locker number"
-                                        value={LockerNumber || ""}
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-                        </div>
+                    <form onSubmit={handleSubmit} className="mt-8">
+                        <ErrorBanner>{error}</ErrorBanner>
 
-                        {error && (
-                            <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                <p className="text-sm font-medium text-red-800">{error}</p>
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white transition-colors shadow-md ${
-                                loading 
-                                    ? "bg-orange-500 cursor-not-allowed" 
-                                    : "bg-orange-600 hover:bg-orange-700"
-                            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500`}
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                    Resetting...
-                                </>
-                            ) : (
-                                <>
-                                    <RotateCcw className="w-5 h-5" />
-                                    Reset Locker
-                                </>
-                            )}
-                        </button>
+                        <FormActions>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-[#7a2a18] text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-[#5e1f0f] transition-colors disabled:opacity-60"
+                            >
+                                {loading ? <><Loader className="w-4 h-4 animate-spin" /> Resetting</> : <><RotateCcw className="w-4 h-4" /> Reset locker</>}
+                            </button>
+                        </FormActions>
                     </form>
-                </div>
-            </section>
-            <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="colored" />
+                </FormCard>
+            </PageShell>
+            <ToastContainer position="top-right" autoClose={3000} theme="colored" />
         </Layout>
     );
 };

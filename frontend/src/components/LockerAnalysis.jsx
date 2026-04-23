@@ -1,144 +1,108 @@
 import React, { useState, useContext, useEffect } from "react";
 import Layout from "./Layout";
 import { LockerContext } from "../context/LockerProvider";
-import { FaEnvelope, FaGenderless, FaClock, FaUser, FaPhone, FaCalendarAlt } from "react-icons/fa";
+import { Badge } from "./ui/Badge";
 
 const LockerAnalysis = () => {
     const { expireIn7Days, expireIn1Day } = useContext(LockerContext);
 
-    let lockers = expireIn7Days?.data || [];
-    let smallLocker = expireIn1Day?.data || [];
+    const lockers = expireIn7Days?.data || [];
+    const smallLocker = expireIn1Day?.data || [];
 
-    const [filterType, setFilterType] = useState("all"); // "all", "today", "7days"
+    const [filterType, setFilterType] = useState("all");
     const [allLockers, setAllLockers] = useState([]);
 
     useEffect(() => {
-        // Combine all lockers (both today and 7 days)
         if (Array.isArray(lockers) && Array.isArray(smallLocker)) {
-            // Mark today's lockers
-            const todayLockers = smallLocker.map(item => ({ ...item, isToday: true }));
-            // Mark 7 days lockers (excluding today's)
-            const todayIds = smallLocker.map((item) => item._id);
+            const todayLockers = smallLocker.map((it) => ({ ...it, isToday: true }));
+            const todayIds = smallLocker.map((it) => it._id);
             const sevenDaysLockers = lockers
-                .filter((item) => !todayIds.includes(item._id))
-                .map(item => ({ ...item, isToday: false }));
-            
-            // Combine all lockers
+                .filter((it) => !todayIds.includes(it._id))
+                .map((it) => ({ ...it, isToday: false }));
             setAllLockers([...todayLockers, ...sevenDaysLockers]);
         } else {
             setAllLockers([]);
         }
     }, [lockers, smallLocker]);
 
-    // Filter lockers based on selected filter
-    const filteredLockers = allLockers.filter((item) => {
+    const filtered = allLockers.filter((item) => {
         if (filterType === "all") return true;
         if (filterType === "today") return item.isToday === true;
         if (filterType === "7days") return item.isToday === false;
         return true;
     });
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case "occupied":
-                return "text-green-700 bg-green-100";
-            case "available":
-                return "text-gray-700 bg-gray-100";
-            case "expired":
-                return "text-red-700 bg-red-100";
-            default:
-                return "text-gray-700 bg-gray-100";
-        }
+    const toneForStatus = (s) => {
+        if (s === "occupied") return "occupied";
+        if (s === "available") return "available";
+        if (s === "expired") return "expired";
+        return "muted";
     };
+
+    const todayCount = allLockers.filter((it) => it.isToday).length;
+    const sevenCount = allLockers.length - todayCount;
 
     return (
         <Layout>
-            <section className="flex flex-col w-full px-4 py-12 gap-4">
-                <h1 className="text-5xl font-bold text-gray-900 text-center">
-                    Locker Analysis
-                </h1>
-                
-                {/* Filter Section */}
-                <div className="bg-white rounded-2xl shadow-xl relative">
-                    <div className="sticky top-0 z-10 bg-white flex justify-end items-center p-4 gap-4 border-b border-gray-200 rounded-t-2xl">
+            <section className="w-full px-6 lg:px-10 py-10">
+                <div className="lw-section-num mb-2">Analytics / Expiring</div>
+                <div className="flex items-end justify-between gap-6 flex-wrap">
+                    <h1 className="font-display text-4xl sm:text-5xl text-ink-900 leading-tight">
+                        Locker <span className="italic">analysis.</span>
+                    </h1>
+                    <div className="flex items-center gap-6 text-right">
+                        <Stat label="Expiring today" value={todayCount} />
+                        <Stat label="Next 7 days" value={sevenCount} />
+                    </div>
+                </div>
+                <div className="lw-rule-brass w-16 mt-5 mb-8" />
+
+                <div className="border border-ink-900/10 bg-white">
+                    <div className="flex justify-end p-4 border-b border-ink-900/10 gap-3 items-center">
+                        <span className="lw-eyebrow">Window</span>
                         <select
-                            id="filter"
                             value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
-                            className="border-2 border-gray-300 px-4 py-2 w-[12rem] rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500 cursor-pointer bg-white"
+                            className="bg-transparent border border-ink-900/20 px-3 py-2 text-sm font-mono uppercase tracking-editorial text-ink-900 focus:outline-none focus:border-brass-400"
                         >
-                            <option value="all">All Lockers</option>
+                            <option value="all">All</option>
                             <option value="today">Today</option>
-                            <option value="7days">7 Days</option>
+                            <option value="7days">Next 7 days</option>
                         </select>
                     </div>
 
-                    {/* Table Section */}
-                    <div className="overflow-x-auto">
-                        <table className="w-full border-collapse">
-                            <thead className="sticky top-0 z-1">
-                                <tr className="bg-gray-300 text-black">
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Locker ID</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Name</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Email</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Phone</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Gender</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Type</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Duration</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Expires On</th>
-                                    <th className="px-4 py-3 text-left font-semibold border-b border-gray-500">Status</th>
+                    <div className="overflow-x-auto max-h-[70vh] overflow-y-auto no-scrollbar">
+                        <table className="w-full border-collapse min-w-[1000px]">
+                            <thead className="sticky top-0 bg-cream-50">
+                                <tr className="border-b border-ink-900/15">
+                                    {["Locker", "Name", "Email", "Phone", "Gender", "Type", "Duration", "Expires", "Status"].map((h) => (
+                                        <th key={h} className="px-3 py-3 text-left font-mono text-[0.7rem] uppercase tracking-editorial text-slate-500">{h}</th>
+                                    ))}
                                 </tr>
                             </thead>
-                            <tbody className="bg-gray-50">
-                                {filteredLockers.length === 0 ? (
+                            <tbody>
+                                {filtered.length === 0 ? (
                                     <tr>
-                                        <td colSpan="9" className="px-4 py-8 text-center text-gray-600">
-                                            No lockers found
+                                        <td colSpan="9" className="px-4 py-12 text-center">
+                                            <div className="lw-eyebrow mb-2">No records</div>
+                                            <p className="text-slate-600 text-sm">No lockers found for this window.</p>
                                         </td>
                                     </tr>
                                 ) : (
-                                    filteredLockers.map((item, index) => (
-                                        <tr 
-                                            key={index} 
-                                            className="border-b border-gray-200 hover:bg-gray-100 transition-colors bg-white"
-                                        >
-                                            <td className="px-4 py-3 text-gray-900 font-medium">
-                                                #{item.LockerNumber}
+                                    filtered.map((item, index) => (
+                                        <tr key={index} className="border-b border-ink-900/10 hover:bg-cream-50/60 transition-colors">
+                                            <td className="px-3 py-3 font-mono text-sm text-ink-900">#{item.LockerNumber}</td>
+                                            <td className="px-3 py-3 text-sm text-ink-900">{item.employeeName || <Dash />}</td>
+                                            <td className="px-3 py-3 text-sm text-ink-900 truncate max-w-[200px]">{item.employeeEmail || <Dash />}</td>
+                                            <td className="px-3 py-3 font-mono text-xs text-ink-900">{item.employeePhone || <Dash />}</td>
+                                            <td className="px-3 py-3 text-sm text-ink-900">{item.availableForGender || <Dash />}</td>
+                                            <td className="px-3 py-3 text-sm text-ink-900">{item.LockerType || <Dash />}</td>
+                                            <td className="px-3 py-3 text-sm text-ink-900">{item.Duration || <Dash />}</td>
+                                            <td className="px-3 py-3 font-mono text-xs text-ink-900">
+                                                {item.expiresOn ? new Date(item.expiresOn).toISOString().split("T")[0] : <Dash />}
                                             </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                {item.employeeName || "N/A"}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                <div className="flex items-center gap-2">
-                                                    <FaEnvelope className="text-gray-500" />
-                                                    <span className="no-scrollbar whitespace-nowrap">{item.employeeEmail || "N/A"}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                <div className="flex items-center gap-2">
-                                                    <FaPhone className="text-gray-500" />
-                                                    <span>{item.employeePhone || "N/A"}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                {item.availableForGender || "N/A"}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                {item.LockerType || "N/A"}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                {item.Duration || "N/A"}
-                                            </td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                <div className="flex items-center gap-2">
-                                                    <FaCalendarAlt className="text-gray-500" />
-                                                    <span>{item.expiresOn ? new Date(item.expiresOn).toISOString().split("T")[0] : "N/A"}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`text-sm font-medium rounded px-2 py-1 ${getStatusColor(item.LockerStatus)}`}>
-                                                    {item.LockerStatus}
-                                                </span>
+                                            <td className="px-3 py-3">
+                                                <Badge tone={toneForStatus(item.LockerStatus)}>{item.LockerStatus}</Badge>
                                             </td>
                                         </tr>
                                     ))
@@ -151,5 +115,14 @@ const LockerAnalysis = () => {
         </Layout>
     );
 };
+
+const Dash = () => <span className="text-slate-400">—</span>;
+
+const Stat = ({ label, value }) => (
+    <div>
+        <div className="lw-eyebrow">{label}</div>
+        <div className="font-display text-2xl text-ink-900 leading-none mt-1">{value}</div>
+    </div>
+);
 
 export default LockerAnalysis;
