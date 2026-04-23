@@ -1,191 +1,162 @@
 import React from "react";
-import { FileText, AlertCircle, CheckCircle, XCircle, Scale, Gavel } from "lucide-react";
 import DashNav from "./DashNav";
+
+const Clause = ({ num, title, children }) => (
+    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-ink-900/10 first:border-t-0">
+        <div className="md:col-span-3">
+            <div className="lw-section-num mb-2">{num}</div>
+            <h2 className="font-display text-2xl text-ink-900 leading-tight">{title}</h2>
+        </div>
+        <div className="md:col-span-9 text-slate-700 leading-relaxed space-y-4">{children}</div>
+    </section>
+);
+
+const List = ({ items }) => (
+    <ul className="space-y-2 text-slate-700">
+        {items.map((it, i) => (
+            <li key={i} className="flex gap-3">
+                <span className="font-mono text-xs text-brass-400 mt-1">{String(i + 1).padStart(2, "0")}</span>
+                <span>{it}</span>
+            </li>
+        ))}
+    </ul>
+);
 
 const TermsOfService = () => {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+        <div className="lw-page lw-grain min-h-screen flex flex-col">
             <DashNav />
-            
-            <section className="py-16 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <div className="flex justify-center mb-6">
-                            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Scale className="h-10 w-10 text-white" />
-                            </div>
-                        </div>
-                        <h1 className="text-5xl font-bold text-gray-900 mb-4">Terms of Service</h1>
-                        <p className="text-lg text-gray-600">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
+            <section className="px-6 sm:px-10 lg:px-16 py-16">
+                <div className="max-w-5xl mx-auto">
+                    <div className="lw-eyebrow mb-3">Colophon / Terms</div>
+                    <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
+                        The agreement, <span className="italic">in writing.</span>
+                    </h1>
+                    <div className="lw-rule-brass w-20 mt-6" />
+                    <p className="mt-5 text-slate-600 max-w-2xl leading-relaxed">
+                        Terms of Service for LockerWise. Last updated{" "}
+                        <span className="font-mono">
+                            {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                        </span>
+                        .
+                    </p>
 
-                    {/* Content */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 space-y-8">
-                        
-                        {/* Introduction */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <FileText className="h-6 w-6 text-purple-600" />
-                                Agreement to Terms
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                By accessing and using the LockerWise locker management system, you agree to be bound by these Terms of Service. 
-                                If you do not agree to these terms, please do not use our service. These terms apply to all users, including 
-                                administrators, staff members, and end users.
+                    <div className="mt-12 border border-ink-900/10 bg-white p-8 md:p-12">
+                        <Clause num="01 / Agreement" title="Agreement to terms">
+                            <p>
+                                By accessing and using LockerWise, you agree to these Terms of Service. If you do not
+                                agree, please do not use the service. These terms apply to administrators, staff, and
+                                end users.
                             </p>
-                        </section>
+                        </Clause>
 
-                        {/* Use of Service */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <CheckCircle className="h-6 w-6 text-purple-600" />
-                                Use of Service
-                            </h2>
-                            <div className="space-y-4">
+                        <Clause num="02 / Use" title="Use of service">
+                            <p className="font-semibold text-ink-900">Eligibility</p>
+                            <p>
+                                You must be authorized by your organization. Provide accurate information and keep your
+                                account up to date.
+                            </p>
+                            <p className="font-semibold text-ink-900 mt-4">Account security</p>
+                            <List
+                                items={[
+                                    "Keep your password confidential",
+                                    "Report unauthorized access immediately",
+                                    "Do not share your account",
+                                    "Log out after each session",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="03 / Acceptable use" title="What's not allowed">
+                            <List
+                                items={[
+                                    "Illegal or unauthorized use",
+                                    "Unauthorized access attempts",
+                                    "Disrupting service or servers",
+                                    "Transmitting malware",
+                                    "Automated access without permission",
+                                    "Reverse engineering the service",
+                                    "Violating laws or regulations",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="04 / Lockers" title="Assignments and usage">
+                            <p className="font-semibold text-ink-900">Assignment terms</p>
+                            <List
+                                items={[
+                                    "Use assigned lockers for their intended purpose",
+                                    "Maintain lockers in good condition",
+                                    "Report issues or damages immediately",
+                                    "Comply with renewal and cancellation policies",
+                                ]}
+                            />
+                            <p className="font-semibold text-ink-900 mt-4">Prohibited items</p>
+                            <p>
+                                Illegal, hazardous, or prohibited items are not permitted. Violation may result in
+                                immediate termination of access.
+                            </p>
+                        </Clause>
+
+                        <Clause num="05 / IP" title="Intellectual property">
+                            <p>
+                                LockerWise, including design, features, and content, is owned by DraconX LLC. Do not
+                                copy, modify, or distribute without written permission.
+                            </p>
+                        </Clause>
+
+                        <Clause num="06 / Liability" title="Limitation of liability">
+                            <List
+                                items={[
+                                    'Service provided "as is" without warranties',
+                                    "No liability for indirect or consequential damages",
+                                    "Total liability limited to amounts paid in the past 12 months",
+                                    "Not responsible for items stored in lockers",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="07 / Termination" title="Ending access">
+                            <List
+                                items={[
+                                    "Violation of these Terms",
+                                    "Fraudulent or illegal activity",
+                                    "Non-payment (if applicable)",
+                                    "Organization request",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="08 / Changes" title="Updates to these terms">
+                            <p>
+                                We reserve the right to modify these terms. Significant changes will be notified. Continued
+                                use after changes constitutes acceptance.
+                            </p>
+                        </Clause>
+
+                        <Clause num="09 / Law" title="Governing law">
+                            <p>
+                                These Terms shall be governed by the laws of the jurisdiction in which DraconX LLC
+                                operates.
+                            </p>
+                        </Clause>
+
+                        <Clause num="10 / Contact" title="Reach us">
+                            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Eligibility</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        You must be authorized by your organization to use LockerWise. You must provide accurate and complete 
-                                        information when creating an account and keep your account information updated.
-                                    </p>
+                                    <dt className="lw-eyebrow">Email</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">legal@lockerwise.com</dd>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Account Security</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        You are responsible for maintaining the confidentiality of your account credentials. You agree to:
-                                    </p>
-                                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-700 ml-4">
-                                        <li>Keep your password secure and confidential</li>
-                                        <li>Notify us immediately of any unauthorized access</li>
-                                        <li>Not share your account with others</li>
-                                        <li>Log out after each session</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Acceptable Use */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <AlertCircle className="h-6 w-6 text-purple-600" />
-                                Acceptable Use Policy
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                You agree to use LockerWise only for lawful purposes and in accordance with these Terms. You agree NOT to:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>Use the service for any illegal or unauthorized purpose</li>
-                                <li>Attempt to gain unauthorized access to the system or other users' accounts</li>
-                                <li>Interfere with or disrupt the service or servers</li>
-                                <li>Transmit any viruses, malware, or harmful code</li>
-                                <li>Use automated systems to access the service without permission</li>
-                                <li>Modify, adapt, or reverse engineer any part of the service</li>
-                                <li>Violate any applicable laws or regulations</li>
-                            </ul>
-                        </section>
-
-                        {/* Locker Assignments */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Locker Assignments and Usage</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Assignment Terms</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        Locker assignments are subject to availability and organizational policies. You agree to:
-                                    </p>
-                                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-700 ml-4">
-                                        <li>Use assigned lockers only for their intended purpose</li>
-                                        <li>Maintain the locker in good condition</li>
-                                        <li>Report any issues or damages immediately</li>
-                                        <li>Comply with renewal and cancellation policies</li>
-                                    </ul>
+                                    <dt className="lw-eyebrow">Phone</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">+1 (555) 123-4567</dd>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Prohibited Items</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        You may not store illegal, hazardous, or prohibited items in assigned lockers. Violation of this policy 
-                                        may result in immediate termination of locker access and account suspension.
-                                    </p>
+                                    <dt className="lw-eyebrow">Address</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">DraconX LLC · Dover, DE</dd>
                                 </div>
-                            </div>
-                        </section>
-
-                        {/* Intellectual Property */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <Gavel className="h-6 w-6 text-purple-600" />
-                                Intellectual Property
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                The LockerWise service, including its design, features, and content, is owned by DraconX LLC and protected by 
-                                intellectual property laws. You may not copy, modify, distribute, or create derivative works based on our 
-                                service without express written permission.
-                            </p>
-                        </section>
-
-                        {/* Limitation of Liability */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Limitation of Liability</h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                To the maximum extent permitted by law:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>LockerWise is provided "as is" without warranties of any kind</li>
-                                <li>We are not liable for any indirect, incidental, or consequential damages</li>
-                                <li>Our total liability shall not exceed the amount you paid for the service in the past 12 months</li>
-                                <li>We are not responsible for loss or damage to items stored in lockers</li>
-                            </ul>
-                        </section>
-
-                        {/* Termination */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <XCircle className="h-6 w-6 text-purple-600" />
-                                Termination
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                We may terminate or suspend your account and access to the service immediately, without prior notice, for:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>Violation of these Terms of Service</li>
-                                <li>Fraudulent or illegal activity</li>
-                                <li>Non-payment of fees (if applicable)</li>
-                                <li>At the request of your organization</li>
-                            </ul>
-                        </section>
-
-                        {/* Changes to Terms */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to Terms</h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                We reserve the right to modify these Terms of Service at any time. We will notify users of significant changes 
-                                via email or through the service. Your continued use of LockerWise after changes become effective constitutes 
-                                acceptance of the revised terms.
-                            </p>
-                        </section>
-
-                        {/* Governing Law */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Governing Law</h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                These Terms of Service shall be governed by and construed in accordance with the laws of the jurisdiction in 
-                                which DraconX LLC operates, without regard to its conflict of law provisions.
-                            </p>
-                        </section>
-
-                        {/* Contact Information */}
-                        <section className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                If you have any questions about these Terms of Service, please contact us:
-                            </p>
-                            <div className="space-y-2 text-gray-700">
-                                <p><strong>Email:</strong> legal@lockerwise.com</p>
-                                <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-                                <p><strong>Address:</strong> DraconX LLC, 123 Business Street, City, State 12345</p>
-                            </div>
-                        </section>
+                            </dl>
+                        </Clause>
                     </div>
                 </div>
             </section>
@@ -194,4 +165,3 @@ const TermsOfService = () => {
 };
 
 export default TermsOfService;
-

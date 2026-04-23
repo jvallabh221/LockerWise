@@ -1,60 +1,55 @@
-import React, { useState, lazy, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { LockerContext } from "../context/LockerProvider";
 import axios from "axios";
 import Layout from "./Layout";
-import { Upload, FileSpreadsheet, Download, CheckCircle, AlertCircle, Loader } from "lucide-react";
-
+import { Upload, FileSpreadsheet, Download, Loader } from "lucide-react";
+import {
+    PageShell,
+    FormCard,
+    ErrorBanner,
+    SuccessBanner,
+    FormActions,
+} from "./ui/FormShell";
 
 const AddMultipleLocker = () => {
     const { setAddMulSuccess, fetchAndCategorizeLockers } = useContext(LockerContext);
-
     const loginDetails = JSON.parse(localStorage.getItem("loginDetails"));
 
     const [file, setFile] = useState(null);
-    const [uploadStatus, setUploadStatus] = useState("");
     const [loading, setLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
-
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
-    };
+    const [success, setSuccess] = useState("");
+    const [error, setError] = useState("");
 
     const handleFileUpload = async () => {
-        if (!file) {
-            setUploadStatus("Please select a file to upload.");
-            setIsSuccess(false);
-            return;
-        }
+        if (!file) return setError("Please select a file to upload.");
 
         setLoading(true);
-        setIsSuccess(false);
-        setUploadStatus("");
+        setSuccess("");
+        setError("");
 
         const formData = new FormData();
         formData.append("file", file);
 
         try {
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/admin/upload-excel`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                    Authorization: `Bearer ${loginDetails.token}`,
-                },
-            });
+            const response = await axios.post(
+                `${import.meta.env.VITE_BACKEND_URL}/admin/upload-excel`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${loginDetails.token}`,
+                    },
+                }
+            );
             if (response.status === 201) {
-                const message = response.data.message || "File processed and lockers added successfully";
-                setUploadStatus(message);
-                setIsSuccess(true);
+                const msg = response.data.message || "File processed. Lockers added.";
+                setSuccess(msg);
                 setAddMulSuccess(true);
                 setFile(null);
-                // Refresh locker data after successful upload
-                if (fetchAndCategorizeLockers) {
-                    await fetchAndCategorizeLockers();
-                }
+                if (fetchAndCategorizeLockers) await fetchAndCategorizeLockers();
             }
-        } catch (error) {
-            const errorMessage = error.response?.data?.message || "Error uploading file. Please try again.";
-            setUploadStatus(errorMessage);
-            setIsSuccess(false);
+        } catch (err) {
+            setError(err.response?.data?.message || "Error uploading file. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -62,97 +57,59 @@ const AddMultipleLocker = () => {
 
     return (
         <Layout>
-            <section className="flex flex-col items-center justify-center py-4 px-4">
-                <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6">
-                    <div className="text-center flex flex-col items-center gap-3 mb-6">
-                        <div className="bg-gray-100 p-4 rounded-full">
-                            <FileSpreadsheet className="w-12 h-12 text-gray-600" />
-                        </div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            Add Multiple Lockers
-                        </h1>
-                        <p className="text-sm text-gray-600">Upload an Excel file to add multiple lockers at once</p>
-                    </div>
+            <PageShell
+                eyebrow="Inventory / Bulk"
+                title="Bulk import"
+                italicTitle="lockers."
+                description="Upload a spreadsheet to add multiple lockers at once. Download the template to get started."
+            >
+                <FormCard num="01 / Template" title="Start from the template">
+                    <p className="text-slate-600 mb-6 max-w-xl">
+                        The template defines the expected columns. Fill in one row per locker, save as .xlsx, and upload below.
+                    </p>
+                    <a
+                        href="/multipleLockersTemplate.xlsx"
+                        download="Lockers.xlsx"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-900 text-ink-900 font-mono text-xs uppercase tracking-editorial hover:bg-ink-900 hover:text-cream-50 transition-colors"
+                    >
+                        <Download className="w-4 h-4" />
+                        Download template
+                    </a>
+                </FormCard>
 
-                    {/* Download Template */}
-                    <div className="mb-6">
-                        <a 
-                            href="/multipleLockersTemplate.xlsx" 
-                            download="Lockers.xlsx" 
-                            className="flex items-center justify-center gap-2 bg-gray-400 hover:bg-gray-500 text-black px-6 py-3 rounded-lg font-semibold transition-colors shadow-md"
-                        >
-                            <Download className="w-5 h-5" />
-                            Download Template
-                        </a>
-                    </div>
+                <FormCard num="02 / Upload" title="Upload your file">
+                    <label className="block border border-dashed border-ink-900/25 bg-cream-50 p-8 text-center cursor-pointer hover:border-brass-400 transition-colors">
+                        <FileSpreadsheet className="w-8 h-8 mx-auto text-slate-500 mb-3" />
+                        <div className="lw-eyebrow mb-1">Excel file</div>
+                        <p className="text-sm text-slate-600">
+                            {file ? (
+                                <span className="font-mono text-ink-900">{file.name}</span>
+                            ) : (
+                                <>Click to choose a .xlsx or .xls file</>
+                            )}
+                        </p>
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            onChange={(e) => setFile(e.target.files[0])}
+                            className="hidden"
+                        />
+                    </label>
 
-                    {/* File Upload Section */}
-                    <div className="space-y-4">
-                        <div className="flex items-center">
-                            <label className="text-sm font-semibold text-gray-700 w-24 flex-shrink-0">
-                                Select Excel File
-                            </label>
-                            <div className="relative flex-1">
-                                <input
-                                    type="file"
-                                    name="file"
-                                    onChange={handleFileChange}
-                                    accept=".xlsx, .xls"
-                                    className="block w-full text-sm text-gray-700 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 file:bg-gray-400 file:text-black file:font-medium file:border-none file:px-4 file:py-2 file:rounded-l-lg file:mr-4 hover:file:bg-gray-500 transition-colors"
-                                />
-                                {file && (
-                                    <div className="mt-2 flex items-center text-sm text-gray-600">
-                                        <FileSpreadsheet className="w-4 h-4" />
-                                        <span className="font-medium">{file.name}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                    <ErrorBanner>{error}</ErrorBanner>
+                    <SuccessBanner>{success}</SuccessBanner>
 
-                        <button 
+                    <FormActions>
+                        <button
                             onClick={handleFileUpload}
                             disabled={loading || !file}
-                            className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white transition-colors shadow-md ${
-                                loading || !file
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-gray-600 hover:bg-gray-700"
-                            }`}
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? (
-                                <>
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                    Uploading...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-5 h-5" />
-                                    Upload the File
-                                </>
-                            )}
+                            {loading ? <><Loader className="w-4 h-4 animate-spin" /> Uploading</> : <><Upload className="w-4 h-4" /> Upload file</>}
                         </button>
-                    </div>
-
-                    {/* Upload Status */}
-                    {uploadStatus && (
-                        <div className={`mt-6 p-4 rounded-lg flex items-center ${
-                            isSuccess 
-                                ? "bg-green-50 border border-green-200" 
-                                : "bg-red-50 border border-red-200"
-                        }`}>
-                            {isSuccess ? (
-                                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                            ) : (
-                                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                            )}
-                            <p className={`text-sm font-medium ${
-                                isSuccess ? "text-green-800" : "text-red-800"
-                            }`}>
-                                {uploadStatus}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </section>
+                    </FormActions>
+                </FormCard>
+            </PageShell>
         </Layout>
     );
 };

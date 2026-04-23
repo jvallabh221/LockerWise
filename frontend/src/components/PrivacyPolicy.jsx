@@ -1,176 +1,158 @@
 import React from "react";
-import { Shield, Lock, Eye, FileText, Database, UserCheck } from "lucide-react";
 import DashNav from "./DashNav";
+
+const Clause = ({ num, title, children }) => (
+    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-ink-900/10 first:border-t-0">
+        <div className="md:col-span-3">
+            <div className="lw-section-num mb-2">{num}</div>
+            <h2 className="font-display text-2xl text-ink-900 leading-tight">{title}</h2>
+        </div>
+        <div className="md:col-span-9 text-slate-700 leading-relaxed space-y-4">{children}</div>
+    </section>
+);
+
+const List = ({ items }) => (
+    <ul className="space-y-2 text-slate-700">
+        {items.map((it, i) => (
+            <li key={i} className="flex gap-3">
+                <span className="font-mono text-xs text-brass-400 mt-1">{String(i + 1).padStart(2, "0")}</span>
+                <span>{it}</span>
+            </li>
+        ))}
+    </ul>
+);
 
 const PrivacyPolicy = () => {
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+        <div className="lw-page lw-grain min-h-screen flex flex-col">
             <DashNav />
-            
-            <section className="py-16 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <div className="flex justify-center mb-6">
-                            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Shield className="h-10 w-10 text-white" />
-                            </div>
-                        </div>
-                        <h1 className="text-5xl font-bold text-gray-900 mb-4">Privacy Policy</h1>
-                        <p className="text-lg text-gray-600">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
+            <section className="px-6 sm:px-10 lg:px-16 py-16">
+                <div className="max-w-5xl mx-auto">
+                    <div className="lw-eyebrow mb-3">Colophon / Policy</div>
+                    <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
+                        Privacy, <span className="italic">plainly stated.</span>
+                    </h1>
+                    <div className="lw-rule-brass w-20 mt-6" />
+                    <p className="mt-5 text-slate-600 max-w-2xl leading-relaxed">
+                        How LockerWise collects, uses, and safeguards your information. Last updated{" "}
+                        <span className="font-mono">
+                            {new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
+                        </span>
+                        .
+                    </p>
 
-                    {/* Content */}
-                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 md:p-12 space-y-8">
-                        
-                        {/* Introduction */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <FileText className="h-6 w-6 text-purple-600" />
-                                Introduction
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                At LockerWise, we are committed to protecting your privacy and ensuring the security of your personal information. 
-                                This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our locker 
-                                management system.
+                    <div className="mt-12 border border-ink-900/10 bg-white p-8 md:p-12">
+                        <Clause num="01 / Introduction" title="Our commitment">
+                            <p>
+                                At LockerWise, we are committed to protecting your privacy and ensuring the security
+                                of your personal information. This policy explains how we collect, use, disclose, and
+                                safeguard your data when you use our locker management system.
                             </p>
-                        </section>
+                        </Clause>
 
-                        {/* Information We Collect */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <Database className="h-6 w-6 text-purple-600" />
-                                Information We Collect
-                            </h2>
-                            <div className="space-y-4">
+                        <Clause num="02 / Collection" title="What we collect">
+                            <p className="font-semibold text-ink-900">Personal information</p>
+                            <List
+                                items={[
+                                    "Name and contact information (email, phone)",
+                                    "Employee ID and organizational details",
+                                    "Account credentials and authentication data",
+                                    "Locker assignment and usage history",
+                                ]}
+                            />
+                            <p className="font-semibold text-ink-900 mt-4">Usage information</p>
+                            <List
+                                items={[
+                                    "Login timestamps and session data",
+                                    "System access logs and activity records",
+                                    "Device information and IP addresses",
+                                    "Browser type and version",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="03 / Purpose" title="How we use it">
+                            <List
+                                items={[
+                                    "Provide, maintain, and improve our locker management services",
+                                    "Process assignments, renewals, and cancellations",
+                                    "Authenticate users and ensure system security",
+                                    "Send notifications and important updates",
+                                    "Generate reports and analytics for administration",
+                                    "Comply with legal obligations and prevent fraud",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="04 / Security" title="How we protect it">
+                            <List
+                                items={[
+                                    "Encryption of data in transit and at rest",
+                                    "Role-based access controls",
+                                    "Regular security audits",
+                                    "Secure server infrastructure and backups",
+                                    "Staff training on data protection",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="05 / Sharing" title="Who sees it">
+                            <p>
+                                We do not sell, trade, or rent your personal information. We may share only under:
+                            </p>
+                            <List
+                                items={[
+                                    "Authorized administrators within your organization",
+                                    "Legal requirements or processes",
+                                    "Protection of rights, safety, or property",
+                                    "Service providers under confidentiality",
+                                    "Business transfers (with prior notice)",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="06 / Your rights" title="What you can do">
+                            <List
+                                items={[
+                                    "Access your personal data",
+                                    "Correct inaccurate information",
+                                    "Request deletion (subject to legal requirements)",
+                                    "Object to processing",
+                                    "Request data portability",
+                                ]}
+                            />
+                        </Clause>
+
+                        <Clause num="07 / Retention" title="How long we keep it">
+                            <p>
+                                We retain personal information only as long as necessary to fulfill the purposes outlined
+                                here, unless a longer retention period is required or permitted by law.
+                            </p>
+                        </Clause>
+
+                        <Clause num="08 / Changes" title="Updates to this policy">
+                            <p>
+                                We may update this policy periodically. Significant changes will be posted here along
+                                with a revised "Last updated" date.
+                            </p>
+                        </Clause>
+
+                        <Clause num="09 / Contact" title="Reach us">
+                            <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
                                 <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Personal Information</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        We collect personal information that you provide directly to us, including:
-                                    </p>
-                                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-700 ml-4">
-                                        <li>Name and contact information (email, phone number)</li>
-                                        <li>Employee ID and organizational details</li>
-                                        <li>Account credentials and authentication data</li>
-                                        <li>Locker assignment and usage history</li>
-                                    </ul>
+                                    <dt className="lw-eyebrow">Email</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">privacy@lockerwise.com</dd>
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Usage Information</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        We automatically collect information about how you interact with our system, including:
-                                    </p>
-                                    <ul className="list-disc list-inside mt-2 space-y-2 text-gray-700 ml-4">
-                                        <li>Login timestamps and session data</li>
-                                        <li>System access logs and activity records</li>
-                                        <li>Device information and IP addresses</li>
-                                        <li>Browser type and version</li>
-                                    </ul>
+                                    <dt className="lw-eyebrow">Phone</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">+1 (555) 123-4567</dd>
                                 </div>
-                            </div>
-                        </section>
-
-                        {/* How We Use Your Information */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <Eye className="h-6 w-6 text-purple-600" />
-                                How We Use Your Information
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                We use the information we collect for the following purposes:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>To provide, maintain, and improve our locker management services</li>
-                                <li>To process locker assignments, renewals, and cancellations</li>
-                                <li>To authenticate users and ensure system security</li>
-                                <li>To send notifications and important updates about locker status</li>
-                                <li>To generate reports and analytics for administrative purposes</li>
-                                <li>To comply with legal obligations and prevent fraudulent activities</li>
-                            </ul>
-                        </section>
-
-                        {/* Data Security */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <Lock className="h-6 w-6 text-purple-600" />
-                                Data Security
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                We implement industry-standard security measures to protect your personal information:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>Encryption of data in transit and at rest</li>
-                                <li>Role-based access controls and authentication protocols</li>
-                                <li>Regular security audits and vulnerability assessments</li>
-                                <li>Secure server infrastructure and data backup systems</li>
-                                <li>Employee training on data protection and privacy practices</li>
-                            </ul>
-                        </section>
-
-                        {/* Data Sharing and Disclosure */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                                <UserCheck className="h-6 w-6 text-purple-600" />
-                                Data Sharing and Disclosure
-                            </h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                We do not sell, trade, or rent your personal information to third parties. We may share your information only in the following circumstances:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li>With authorized administrators and staff members within your organization</li>
-                                <li>When required by law or to comply with legal processes</li>
-                                <li>To protect our rights, privacy, safety, or property</li>
-                                <li>With service providers who assist in operating our system (under strict confidentiality agreements)</li>
-                                <li>In connection with a business transfer or merger (with prior notice)</li>
-                            </ul>
-                        </section>
-
-                        {/* Your Rights */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Rights</h2>
-                            <p className="text-gray-700 leading-relaxed mb-3">
-                                You have the following rights regarding your personal information:
-                            </p>
-                            <ul className="list-disc list-inside space-y-2 text-gray-700 ml-4">
-                                <li><strong>Access:</strong> Request access to your personal data</li>
-                                <li><strong>Correction:</strong> Request correction of inaccurate information</li>
-                                <li><strong>Deletion:</strong> Request deletion of your personal data (subject to legal requirements)</li>
-                                <li><strong>Objection:</strong> Object to processing of your personal data</li>
-                                <li><strong>Portability:</strong> Request transfer of your data to another service</li>
-                            </ul>
-                        </section>
-
-                        {/* Data Retention */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Data Retention</h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                We retain your personal information only for as long as necessary to fulfill the purposes outlined in this Privacy Policy, 
-                                unless a longer retention period is required or permitted by law. Locker assignment records and usage history are typically 
-                                retained for administrative and audit purposes.
-                            </p>
-                        </section>
-
-                        {/* Changes to This Policy */}
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Changes to This Policy</h2>
-                            <p className="text-gray-700 leading-relaxed">
-                                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy 
-                                on this page and updating the "Last updated" date. You are advised to review this Privacy Policy periodically for any changes.
-                            </p>
-                        </section>
-
-                        {/* Contact Us */}
-                        <section className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-4">Contact Us</h2>
-                            <p className="text-gray-700 leading-relaxed mb-4">
-                                If you have any questions about this Privacy Policy or wish to exercise your rights, please contact us:
-                            </p>
-                            <div className="space-y-2 text-gray-700">
-                                <p><strong>Email:</strong> privacy@lockerwise.com</p>
-                                <p><strong>Phone:</strong> +1 (555) 123-4567</p>
-                                <p><strong>Address:</strong> DraconX LLC, 123 Business Street, City, State 12345</p>
-                            </div>
-                        </section>
+                                <div>
+                                    <dt className="lw-eyebrow">Address</dt>
+                                    <dd className="font-mono text-sm text-ink-900 mt-1">DraconX LLC · Dover, DE</dd>
+                                </div>
+                            </dl>
+                        </Clause>
                     </div>
                 </div>
             </section>
@@ -179,4 +161,3 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
-

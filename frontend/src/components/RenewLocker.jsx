@@ -1,63 +1,59 @@
-import React, { useState, lazy, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { LockerContext } from "../context/LockerProvider";
 import Layout from "./Layout";
-import { Loader, Hash, User, DollarSign, RefreshCw, Mail, Calendar, AlertTriangle } from "lucide-react";
-
-const getRenewLockerErrorMessage = (backendMessage) => {
-    return backendMessage || "No locker matched.";
-};
+import { Loader, RefreshCw } from "lucide-react";
+import {
+    PageShell,
+    FormCard,
+    FieldGrid,
+    FieldRow,
+    ErrorBanner,
+    ReadonlyBlock,
+    FormActions,
+} from "./ui/FormShell";
 
 const RenewLocker = () => {
     const location = useLocation();
-    const [cost, setCost] = useState(null);
+    const [cost, setCost] = useState("");
     const [months, setMonths] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [loading, setLoading] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const { handleRenewLocker } = useContext(LockerContext);
 
-    const { LockerNumber, employeeName, LockerPrice3Month, LockerPrice6Month, LockerPrice12Month, employeeEmail } = location.state || {};
+    const {
+        LockerNumber,
+        employeeName,
+        LockerPrice3Month,
+        LockerPrice6Month,
+        LockerPrice12Month,
+        employeeEmail,
+    } = location.state || {};
 
     useEffect(() => {
-        if (months === "3") {
-            setCost(LockerPrice3Month);
-        } else if (months === "6") {
-            setCost(LockerPrice6Month);
-        } else if (months === "12") {
-            setCost(LockerPrice12Month);
-        } else {
-            setCost("");
-        }
-    }, [months]);
+        if (months === "3") setCost(LockerPrice3Month);
+        else if (months === "6") setCost(LockerPrice6Month);
+        else if (months === "12") setCost(LockerPrice12Month);
+        else setCost("");
+    }, [months, LockerPrice3Month, LockerPrice6Month, LockerPrice12Month]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-        
-        // Basic validation
-        if (!months) {
-            setError("Duration is required.");
-            return;
-        }
-    
-        if (months === "customize" && (!startDate || !endDate)) {
-            setError("Start and end dates are required for custom duration.");
-            return;
-        }
-        
-        if (!/^\d*\.?\d*$/.test(cost)) {
-            setError("Invalid input: Price must be a positive number.");
-            return;
-        }
+        if (!months) return setError("Duration is required.");
+        if (months === "customize" && (!startDate || !endDate))
+            return setError("Start and end dates are required for custom duration.");
+        if (!/^\d*\.?\d*$/.test(cost))
+            return setError("Invalid input: Price must be a positive number.");
+
         setLoading(true);
         try {
             await handleRenewLocker(LockerNumber, cost, months, startDate, endDate, employeeEmail);
         } catch (err) {
-            const backendMessage = err.response?.data?.message;
-            setError(getRenewLockerErrorMessage(backendMessage));
+            setError(err.response?.data?.message || "No locker matched.");
         } finally {
             setLoading(false);
         }
@@ -65,237 +61,80 @@ const RenewLocker = () => {
 
     return (
         <Layout>
-            <section className="flex flex-col items-center justify-center py-4 px-4">
-                <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl p-6">
-                    {/* Header */}
-                    <div className="text-center flex flex-col items-center gap-3 mb-6">
-                       
-                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                            Renew the Current Locker
-                        </h1>
-                        <p className="text-sm text-gray-600">
-                            Renew the locker subscription for the selected locker
-                        </p>
-                    </div>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Locker Number and Employee Name in one row */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="flex items-center">
-                                <label htmlFor="number" className="text-sm font-semibold text-gray-700 w-24 flex-shrink-0">
-                                    Locker Number
-                                </label>
-                                <div className="relative flex-1">
-                                    <div className="flex items-center">
-                                        <Hash className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                        <input
-                                            id="number"
-                                            name="number"
-                                            type="text"
-                                            required
-                                            className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                            placeholder="Locker Number"
-                                            value={LockerNumber || ""}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+            <PageShell
+                eyebrow="Operations / Renew"
+                title="Renew"
+                italicTitle="subscription."
+                description="Extend the assignment for an existing locker."
+            >
+                <FormCard>
+                    <ReadonlyBlock
+                        title="Current assignment"
+                        items={[
+                            { label: "Locker #", value: LockerNumber },
+                            { label: "Name", value: employeeName },
+                            { label: "Email", value: employeeEmail },
+                        ]}
+                    />
 
-                            <div className="flex items-center">
-                                <label htmlFor="code" className="text-sm font-semibold text-gray-700 w-24 flex-shrink-0">
-                                    Employee Name
-                                </label>
-                                <div className="relative flex-1">
-                                    <div className="flex items-center">
-                                        <User className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                        <input
-                                            id="code"
-                                            name="code"
-                                            type="text"
-                                            required
-                                            className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                            placeholder="Employee Name"
-                                            value={employeeName || ""}
-                                            readOnly
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center">
-                            <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Email
-                            </label>
-                            <div className="relative flex-1">
-                                <div className="flex items-center">
-                                    <Mail className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        required
-                                        className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                        placeholder="Enter the email"
-                                        value={employeeEmail || ""}
-                                        readOnly
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center">
-                            <label htmlFor="duration" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Duration
-                            </label>
-                            <div className="relative flex-1">
-                                <select
-                                    id="duration"
-                                    value={months}
-                                    onChange={(e) => setMonths(e.target.value)}
-                                    className="outline-none w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                >
-                                    <option value="" disabled>
-                                        Select Duration
-                                    </option>
+                    <form onSubmit={handleSubmit} className="mt-8">
+                        <div className="lw-eyebrow mb-4">New term</div>
+                        <FieldGrid cols={2}>
+                            <FieldRow label="Duration" htmlFor="duration" span={months === "customize" ? 2 : 1}>
+                                <select id="duration" className="lw-input"
+                                    value={months} onChange={(e) => setMonths(e.target.value)}>
+                                    <option value="" disabled>Select duration</option>
                                     <option value="3">3 months</option>
                                     <option value="6">6 months</option>
                                     <option value="12">12 months</option>
                                     <option value="customize">Customize</option>
                                 </select>
-                            </div>
-                        </div>
+                            </FieldRow>
 
-                        {months === "customize" ? (
-                            <>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center">
-                                        <label htmlFor="start-date" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                            Start Date
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <Calendar className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="start-date"
-                                                    name="start-date"
-                                                    type="date"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    value={startDate ? startDate.split("T")[0] : ""}
-                                                    onChange={(e) => {
-                                                        const selectedDate = new Date(e.target.value);
-                                                        const now = new Date();
-                                                        selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
-                                                        setStartDate(selectedDate.toISOString());
-                                                    }}
-                                                    min={new Date().toISOString().split("T")[0]}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                        <label htmlFor="end-date" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                            End Date
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <Calendar className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="end-date"
-                                                    name="end-date"
-                                                    type="date"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    value={endDate ? endDate.split("T")[0] : ""}
-                                                    onChange={(e) => {
-                                                        const selectedDate = new Date(e.target.value);
-                                                        selectedDate.setHours(23, 59, 59, 999);
-                                                        setEndDate(selectedDate.toISOString());
-                                                    }}
-                                                    min={startDate ? startDate.split("T")[0] : ""}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="flex items-center">
-                                    <label htmlFor="cost-manual" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                        Cost
-                                    </label>
-                                    <div className="relative flex-1">
-                                        <div className="flex items-center">
-                                            <DollarSign className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                            <input
-                                                id="cost-manual"
-                                                name="cost-manual"
-                                                type="text"
-                                                required
-                                                className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                placeholder="Enter the cost"
-                                                value={cost || ""}
-                                                onChange={(e) => setCost(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="flex items-center">
-                                <label htmlFor="cost-auto" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                    Cost
-                                </label>
-                                <div className="relative flex-1">
-                                    <div className="flex items-center">
-                                        <DollarSign className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                        <input
-                                            id="cost-auto"
-                                            name="cost-auto"
-                                            type="text"
-                                            required
-                                            className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                            placeholder="Enter the cost"
-                                            value={cost || ""}
-                                            onChange={(e) => setCost(e.target.value)}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                <p className="text-sm font-medium text-red-800">{error}</p>
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white transition-colors shadow-md ${
-                                loading 
-                                    ? "bg-green-500 cursor-not-allowed" 
-                                    : "bg-green-600 hover:bg-green-700"
-                            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
-                        >
-                            {loading ? (
+                            {months === "customize" ? (
                                 <>
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                    Renewing...
+                                    <FieldRow label="Start date" htmlFor="start-date">
+                                        <input id="start-date" type="date" required className="lw-input"
+                                            value={startDate ? startDate.split("T")[0] : ""}
+                                            onChange={(e) => {
+                                                const sel = new Date(e.target.value);
+                                                const now = new Date();
+                                                sel.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                                                setStartDate(sel.toISOString());
+                                            }}
+                                            min={new Date().toISOString().split("T")[0]} />
+                                    </FieldRow>
+                                    <FieldRow label="End date" htmlFor="end-date">
+                                        <input id="end-date" type="date" required className="lw-input"
+                                            value={endDate ? endDate.split("T")[0] : ""}
+                                            onChange={(e) => {
+                                                const sel = new Date(e.target.value);
+                                                sel.setHours(23, 59, 59, 999);
+                                                setEndDate(sel.toISOString());
+                                            }}
+                                            min={startDate ? startDate.split("T")[0] : ""} />
+                                    </FieldRow>
                                 </>
-                            ) : (
-                                <>
-                                    <RefreshCw className="w-5 h-5" />
-                                    Renew Locker
-                                </>
-                            )}
-                        </button>
+                            ) : null}
+
+                            <FieldRow label="Cost (USD)" htmlFor="cost" span={2}>
+                                <input id="cost" type="text" required className="lw-input"
+                                    value={cost || ""} onChange={(e) => setCost(e.target.value)}
+                                    readOnly={months !== "customize"} placeholder="Cost" />
+                            </FieldRow>
+                        </FieldGrid>
+
+                        <ErrorBanner>{error}</ErrorBanner>
+
+                        <FormActions>
+                            <button type="submit" disabled={loading}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60">
+                                {loading ? <><Loader className="w-4 h-4 animate-spin" /> Renewing</> : <><RefreshCw className="w-4 h-4" /> Renew locker</>}
+                            </button>
+                        </FormActions>
                     </form>
-                </div>
-            </section>
+                </FormCard>
+            </PageShell>
         </Layout>
     );
 };

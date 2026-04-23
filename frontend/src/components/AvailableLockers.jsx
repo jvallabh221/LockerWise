@@ -1,8 +1,16 @@
-import React, { useState, lazy, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { LockerContext } from "../context/LockerProvider";
 import Layout from "./Layout";
-import { Search, Loader, CheckCircle, Hash, Key, ClipboardType, User, FolderOpen, Mail, Phone, DollarSign, Calendar, AlertTriangle, UserPlus } from "lucide-react";
-
+import { Search, Loader, UserPlus } from "lucide-react";
+import {
+    PageShell,
+    FormCard,
+    FieldGrid,
+    FieldRow,
+    ErrorBanner,
+    ReadonlyBlock,
+    FormActions,
+} from "./ui/FormShell";
 
 const AvailableLockers = () => {
     const { availableLocker, availableLockers, setAvailableLockers, allocateLocker } = useContext(LockerContext);
@@ -12,7 +20,6 @@ const AvailableLockers = () => {
     const [loading, setLoading] = useState(false);
     const [availableError, setAvailableError] = useState("");
 
-    // Assign locker states
     const [months, setMonths] = useState(null);
     const [empName, setEmpName] = useState(null);
     const [empId, setEmpId] = useState(null);
@@ -24,11 +31,9 @@ const AvailableLockers = () => {
     const [assignLoading, setAssignLoading] = useState(false);
     const [assignError, setAssignError] = useState("");
 
-    // Clear available lockers when locker type or gender changes
     useEffect(() => {
         if (availableLockers) {
             setAvailableLockers(null);
-            // Reset assign form states
             setMonths(null);
             setEmpName(null);
             setEmpId(null);
@@ -43,24 +48,11 @@ const AvailableLockers = () => {
     }, [lockerType, gender]);
 
     useEffect(() => {
-        if (months === "3" && availableLockers?.data) {
-            setCost(availableLockers.data.LockerPrice3Month);
-        } else if (months === "6" && availableLockers?.data) {
-            setCost(availableLockers.data.LockerPrice6Month);
-        } else if (months === "12" && availableLockers?.data) {
-            setCost(availableLockers.data.LockerPrice12Month);
-        } else {
-            setCost("");
-        }
+        if (months === "3" && availableLockers?.data) setCost(availableLockers.data.LockerPrice3Month);
+        else if (months === "6" && availableLockers?.data) setCost(availableLockers.data.LockerPrice6Month);
+        else if (months === "12" && availableLockers?.data) setCost(availableLockers.data.LockerPrice12Month);
+        else setCost("");
     }, [months, availableLockers]);
-
-    const handleLockerType = (e) => {
-        setLockerType(e.target.value);
-    };
-
-    const handleGender = (e) => {
-        setGender(e.target.value);
-    };
 
     const handleCheckAvailability = async (e) => {
         e.preventDefault();
@@ -78,24 +70,13 @@ const AvailableLockers = () => {
     const handleAssignLocker = async (e) => {
         e.preventDefault();
         setAssignError("");
-
-        if (!months) {
-            setAssignError("Duration is required.");
-            return;
-        }
-    
-        if (months === "customize" && (!startDate || !endDate)) {
-            setAssignError("Start and end dates are required for custom duration.");
-            return;
-        }   
-        
-        if (!/^\d*\.?\d*$/.test(cost)) {
-            setAssignError("Invalid input: Cost must be a positive number.");
-            return;
-        }
+        if (!months) return setAssignError("Duration is required.");
+        if (months === "customize" && (!startDate || !endDate))
+            return setAssignError("Start and end dates are required for custom duration.");
+        if (!/^\d*\.?\d*$/.test(cost))
+            return setAssignError("Invalid input: Cost must be a positive number.");
 
         setAssignLoading(true);
-
         try {
             await allocateLocker(
                 availableLockers.data.LockerNumber,
@@ -111,387 +92,236 @@ const AvailableLockers = () => {
                 startDate,
                 endDate
             );
-        } catch (error) {
+        } catch {
             setAssignError("Error allocating locker. Please try again.");
         } finally {
             setAssignLoading(false);
         }
     };
 
+    const data = availableLockers?.data;
+
     return (
         <Layout>
-            <section className="flex flex-col items-center justify-center py-4 px-4">
-                <div className="w-full max-w-5xl space-y-6">
-                    {/* Check Availability Form */}
-                    <div className="bg-white rounded-2xl shadow-xl p-6">
-                        <div className="text-center flex flex-col items-center gap-3 mb-6">
-                            
-                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                                Check Locker Availability
-                        </h1>
-                            <p className="text-sm text-gray-600">
-                                Search for available lockers by type and gender
-                            </p>
-                    </div>
+            <PageShell
+                eyebrow="Operations / Assign"
+                title="Assign a"
+                italicTitle="locker."
+                description="Find an available locker by type and gender, then complete the assignment below."
+            >
+                {/* Step 1 — availability */}
+                <FormCard num="01 / Availability" title="Check availability">
+                    <form onSubmit={handleCheckAvailability}>
+                        <FieldGrid cols={2}>
+                            <FieldRow label="Locker type" htmlFor="lockerType">
+                                <select
+                                    id="lockerType"
+                                    value={lockerType}
+                                    onChange={(e) => setLockerType(e.target.value)}
+                                    required
+                                    className="lw-input"
+                                >
+                                    <option value="" disabled>Select type</option>
+                                    <option value="half">Half</option>
+                                    <option value="full">Full</option>
+                                </select>
+                            </FieldRow>
+                            <FieldRow label="Gender" htmlFor="gender">
+                                <select
+                                    id="gender"
+                                    value={gender}
+                                    onChange={(e) => setGender(e.target.value)}
+                                    required
+                                    className="lw-input"
+                                >
+                                    <option value="" disabled>Select gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </FieldRow>
+                        </FieldGrid>
 
-                        <form onSubmit={handleCheckAvailability} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                        <div className="flex items-center">
-                                    <label htmlFor="lockerType" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Locker Type
-                            </label>
-                            <div className="relative flex-1">
-                            <select
-                                id="lockerType"
-                                value={lockerType}
-                                onChange={handleLockerType}
-                                required
-                                    className="outline-none w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                            >
-                                    <option value="" disabled>
-                                        Select Locker Type
-                                </option>
-                                <option value="half">Half</option>
-                                <option value="full">Full</option>
-                            </select>
-                            </div>
-                        </div>
+                        <ErrorBanner>{availableError}</ErrorBanner>
 
-                        <div className="flex items-center">
-                                    <label htmlFor="gender" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                                Gender
-                            </label>
-                            <div className="relative flex-1">
-                            <select
-                                id="gender"
-                                value={gender}
-                                onChange={handleGender}
-                                required
-                                    className="outline-none w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                            >
-                                    <option value="" disabled>
-                                        Select Gender
-                                </option>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                            </div>
-                                </div>
-                        </div>
-
-                            {availableError && (
-                                <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                                    <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                    <p className="text-sm font-medium text-red-800">{availableError}</p>
-                                </div>
-                            )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                                className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-black transition-colors shadow-md ${
-                                    loading 
-                                        ? "bg-gray-400 cursor-not-allowed" 
-                                        : "bg-gray-400 hover:bg-gray-500"
-                                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
+                        <FormActions>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
                             >
                                 {loading ? (
                                     <>
-                                        <Loader className="w-5 h-5 animate-spin" />
-                                        Checking...
+                                        <Loader className="w-4 h-4 animate-spin" />
+                                        Checking
                                     </>
                                 ) : (
                                     <>
-                                        <Search className="w-5 h-5" />
-                                        Check Availability
+                                        <Search className="w-4 h-4" />
+                                        Check availability
                                     </>
                                 )}
                             </button>
-                        </form>
-                    </div>
+                        </FormActions>
+                    </form>
+                </FormCard>
 
-                    {/* Assign Locker Form - Show when data is available */}
-                    {availableLockers?.data && (
-                        <div className="bg-white rounded-2xl shadow-xl p-6">
-                            <div className="text-center flex flex-col items-center gap-3 mb-6">
-                                
-                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                                    Assign Locker
-                                </h1>
-                                <p className="text-sm text-gray-600">
-                                    Locker found! Fill in the user's details to assign
-                                </p>
-                            </div>
+                {/* Step 2 — assignment */}
+                {data && (
+                    <FormCard num="02 / Assignment" title="Assign to user">
+                        <ReadonlyBlock
+                            title="Locker on file"
+                            items={[
+                                { label: "Locker #", value: data.LockerNumber },
+                                { label: "Code", value: data.LockerCode },
+                                { label: "Type", value: data.LockerType },
+                                { label: "Serial", value: data.LockerSerialNumber },
+                                { label: "Gender", value: data.availableForGender },
+                            ]}
+                        />
 
-                            <form onSubmit={handleAssignLocker} className="space-y-4">
-                                {/* Read-only locker details */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
-                                    <div className="flex items-center">
-                                        <p className="text-xs font-bold text-gray-700 w-24 flex-shrink-0">Locker Number:</p>
-                                        <p className="text-sm font-semibold text-gray-900">{availableLockers.data.LockerNumber}</p>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <p className="text-xs font-bold text-gray-700 w-24 flex-shrink-0">Locker Code:</p>
-                                        <p className="text-sm font-semibold text-gray-900">{availableLockers.data.LockerCode}</p>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <p className="text-xs font-bold text-gray-700 w-24 flex-shrink-0">Type:</p>
-                                        <p className="text-sm font-semibold text-gray-900">{availableLockers.data.LockerType}</p>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <p className="text-xs font-bold text-gray-700 w-24 flex-shrink-0">Serial Number:</p>
-                                        <p className="text-sm font-semibold text-gray-900">{availableLockers.data.LockerSerialNumber}</p>
-                                    </div>
-                                    <div className="flex items-center">
-                                        <p className="text-xs font-bold text-gray-700 w-24 flex-shrink-0">Gender:</p>
-                                        <p className="text-sm font-semibold text-gray-900">{availableLockers.data.availableForGender}</p>
-                                    </div>
-                                </div>
+                        <form onSubmit={handleAssignLocker} className="mt-8">
+                            <div className="lw-eyebrow mb-4">User details</div>
+                            <FieldGrid cols={2}>
+                                <FieldRow label="Name" htmlFor="name">
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        required
+                                        placeholder="Full name"
+                                        value={empName || ""}
+                                        onChange={(e) => setEmpName(e.target.value)}
+                                        className="lw-input"
+                                    />
+                                </FieldRow>
+                                <FieldRow label="Employee ID" htmlFor="Id">
+                                    <input
+                                        id="Id"
+                                        type="text"
+                                        required
+                                        placeholder="ID"
+                                        value={empId || ""}
+                                        onChange={(e) => setEmpId(e.target.value)}
+                                        className="lw-input"
+                                    />
+                                </FieldRow>
+                                <FieldRow label="Email" htmlFor="email">
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        required
+                                        placeholder="name@organization.com"
+                                        value={empEmail || ""}
+                                        onChange={(e) => setEmpEmail(e.target.value)}
+                                        autoComplete="off"
+                                        className="lw-input"
+                                    />
+                                </FieldRow>
+                                <FieldRow label="Phone" htmlFor="Phone">
+                                    <input
+                                        id="Phone"
+                                        type="text"
+                                        required
+                                        placeholder="+1 ..."
+                                        value={empPhone || ""}
+                                        onChange={(e) => setEmpPhone(e.target.value)}
+                                        className="lw-input"
+                                    />
+                                </FieldRow>
+                            </FieldGrid>
 
-                                {/* Employee details */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center">
-                                        <label htmlFor="name" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                            Name
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <FolderOpen className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="name"
-                                                    name="name"
-                                                    type="text"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    placeholder="Name"
-                                                    value={empName || ""}
-                                                    onChange={(e) => setEmpName(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                        <label htmlFor="Id" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                            ID
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <Hash className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="Id"
-                                                    name="Id"
-                                                    type="text"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    placeholder="ID"
-                                                    value={empId || ""}
-                                                    onChange={(e) => setEmpId(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="flex items-center">
-                                        <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                            Email
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <Mail className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="email"
-                                                    name="email"
-                                                    type="email"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    placeholder="Email"
-                                                    value={empEmail || ""}
-                                                    onChange={(e) => setEmpEmail(e.target.value)}
-                                                    autoComplete="off"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center">
-                                        <label htmlFor="Phone" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                            Phone
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <Phone className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="Phone"
-                                                    name="Phone"
-                                                    type="text"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                    placeholder="Phone"
-                                                    value={empPhone || ""}
-                                                    onChange={(e) => setEmpPhone(e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center">
-                                    <label htmlFor="duration" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                        Duration
-                                    </label>
-                                    <div className="relative flex-1">
-                                        <select
-                                            id="duration"
-                                            value={months || ""}
-                                            onChange={(e) => setMonths(e.target.value)}
-                                            className="outline-none w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                        >
-                                            <option value="" disabled>
-                                                Select Duration
-                                            </option>
-                                            <option value="3">3 months</option>
-                                            <option value="6">6 months</option>
-                                            <option value="12">12 months</option>
-                                            <option value="customize">Customize</option>
-                                        </select>
-                                    </div>
-                                </div>
+                            <div className="lw-rule my-8" />
+                            <div className="lw-eyebrow mb-4">Term & cost</div>
+                            <FieldGrid cols={2}>
+                                <FieldRow label="Duration" htmlFor="duration" span={months === "customize" ? 2 : 1}>
+                                    <select
+                                        id="duration"
+                                        value={months || ""}
+                                        onChange={(e) => setMonths(e.target.value)}
+                                        className="lw-input"
+                                    >
+                                        <option value="" disabled>Select duration</option>
+                                        <option value="3">3 months</option>
+                                        <option value="6">6 months</option>
+                                        <option value="12">12 months</option>
+                                        <option value="customize">Customize</option>
+                                    </select>
+                                </FieldRow>
 
                                 {months === "customize" ? (
                                     <>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="flex items-center">
-                                                <label htmlFor="startDate" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                                    Start Date
-                                                </label>
-                                                <div className="relative flex-1">
-                                                    <div className="flex items-center">
-                                                        <Calendar className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                        <input
-                                                            id="startDate"
-                                                            name="startDate"
-                                                            type="date"
-                                                            required
-                                                            className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                            value={startDate ? startDate.split("T")[0] : ""}
-                                                            onChange={(e) => {
-                                                                const selectedDate = new Date(e.target.value);
-                                                                const now = new Date();
-                                                                selectedDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
-                                                                setStartDate(selectedDate.toISOString());
-                                                            }}
-                                                            min={new Date().toISOString().split("T")[0]}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center">
-                                                <label htmlFor="endDate" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                                    End Date
-                                                </label>
-                                                <div className="relative flex-1">
-                                                    <div className="flex items-center">
-                                                        <Calendar className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                        <input
-                                                            id="endDate"
-                                                            name="endDate"
-                                                            type="date"
-                                                            required
-                                                            className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                            value={endDate ? endDate.split("T")[0] : ""}
-                                                            onChange={(e) => {
-                                                                const selectedDate = new Date(e.target.value);
-                                                                selectedDate.setHours(23, 59, 59, 999);
-                                                                setEndDate(selectedDate.toISOString());
-                                                            }}
-                                                            min={startDate ? startDate.split("T")[0] : ""}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center">
-                                            <label htmlFor="cost-manual" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                                Cost
-                                            </label>
-                                            <div className="relative flex-1">
-                                                <div className="flex items-center">
-                                                    <DollarSign className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                    <input
-                                                        id="cost-manual"
-                                                        name="cost-manual"
-                                                        type="text"
-                                                        required
-                                                        className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                                        placeholder="Enter the cost"
-                                                        value={cost || ""}
-                                                        onChange={(e) => setCost(e.target.value)}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <FieldRow label="Start date" htmlFor="startDate">
+                                            <input
+                                                id="startDate"
+                                                type="date"
+                                                required
+                                                value={startDate ? startDate.split("T")[0] : ""}
+                                                onChange={(e) => {
+                                                    const sel = new Date(e.target.value);
+                                                    const now = new Date();
+                                                    sel.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+                                                    setStartDate(sel.toISOString());
+                                                }}
+                                                min={new Date().toISOString().split("T")[0]}
+                                                className="lw-input"
+                                            />
+                                        </FieldRow>
+                                        <FieldRow label="End date" htmlFor="endDate">
+                                            <input
+                                                id="endDate"
+                                                type="date"
+                                                required
+                                                value={endDate ? endDate.split("T")[0] : ""}
+                                                onChange={(e) => {
+                                                    const sel = new Date(e.target.value);
+                                                    sel.setHours(23, 59, 59, 999);
+                                                    setEndDate(sel.toISOString());
+                                                }}
+                                                min={startDate ? startDate.split("T")[0] : ""}
+                                                className="lw-input"
+                                            />
+                                        </FieldRow>
                                     </>
-                                ) : (
-                                    <div className="flex items-center">
-                                        <label htmlFor="cost-auto" className="text-sm font-semibold text-gray-700 w-28 flex-shrink-0">
-                                            Cost
-                                        </label>
-                                        <div className="relative flex-1">
-                                            <div className="flex items-center">
-                                                <DollarSign className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                                                <input
-                                                    id="cost-auto"
-                                                    name="cost-auto"
-                                                    type="text"
-                                                    required
-                                                    className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm bg-gray-50"
-                                                    placeholder="Cost"
-                                                    value={cost || ""}
-                                                    readOnly
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                ) : null}
 
-                                {assignError && (
-                                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                                        <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                                        <p className="text-sm font-medium text-red-800">{assignError}</p>
-                                    </div>
-                                )}
+                                <FieldRow label="Cost (USD)" htmlFor="cost" span={2}>
+                                    <input
+                                        id="cost"
+                                        type="text"
+                                        required
+                                        placeholder={months === "customize" ? "Enter cost" : "Auto-calculated"}
+                                        value={cost || ""}
+                                        onChange={(e) => setCost(e.target.value)}
+                                        readOnly={months !== "customize"}
+                                        className="lw-input"
+                                    />
+                                </FieldRow>
+                            </FieldGrid>
 
+                            <ErrorBanner>{assignError}</ErrorBanner>
+
+                            <FormActions>
                                 <button
                                     type="submit"
                                     disabled={assignLoading}
-                                    className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-white transition-colors shadow-md ${
-                                        assignLoading 
-                                            ? "bg-purple-500 cursor-not-allowed" 
-                                            : "bg-purple-400 hover:bg-purple-500"
-                                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
                                 >
                                     {assignLoading ? (
                                         <>
-                                            <Loader className="w-5 h-5 animate-spin" />
-                                            Assigning...
+                                            <Loader className="w-4 h-4 animate-spin" />
+                                            Assigning
                                         </>
                                     ) : (
                                         <>
-                                            <UserPlus className="w-5 h-5" />
-                                            Assign Locker
+                                            <UserPlus className="w-4 h-4" />
+                                            Assign locker
                                         </>
                                     )}
-                        </button>
-                    </form>
-                        </div>
-                    )}
-                </div>
-            </section>
+                                </button>
+                            </FormActions>
+                        </form>
+                    </FormCard>
+                )}
+            </PageShell>
         </Layout>
     );
 };

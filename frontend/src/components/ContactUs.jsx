@@ -1,242 +1,220 @@
 import React, { useState } from "react";
-import { Mail, Phone, MapPin, Send, MessageSquare, User, CheckCircle2 } from "lucide-react";
+import { Mail, Phone, MapPin, Send, CheckCircle2, Loader } from "lucide-react";
 import DashNav from "./DashNav";
 
 const ContactUs = () => {
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        subject: "",
-        message: ""
-    });
+    const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-
+    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/contact/contactMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-    });
-
-    const data = await res.json();
-
-    if (data.success && res.status === 200) {
-        setSubmitted(true);
-        setFormData({ name: "", email: "", subject: "", message: "" });
-        setTimeout(() => setSubmitted(false), 3000);
-    } else {
-        const errorMessage = data.message || "Error sending message";
-        alert(errorMessage);
-    }
-};
-
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/contact/contactMessage`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            const data = await res.json();
+            if (data.success && res.status === 200) {
+                setSubmitted(true);
+                setFormData({ name: "", email: "", subject: "", message: "" });
+                setTimeout(() => setSubmitted(false), 3500);
+            } else {
+                setError(data.message || "Error sending message");
+            }
+        } catch (err) {
+            setError("Unable to send. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+        <div className="lw-page lw-grain min-h-screen flex flex-col">
             <DashNav />
-            
-            <section className="py-16 px-4 sm:px-6 lg:px-8">
+            <section className="px-6 sm:px-10 lg:px-16 py-16">
                 <div className="max-w-6xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <div className="flex justify-center mb-6">
-                            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <MessageSquare className="h-10 w-10 text-white" />
-                            </div>
-                        </div>
-                        <h1 className="text-5xl font-bold text-gray-900 mb-4">Contact Us</h1>
-                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                            Have questions or need assistance? We're here to help! Reach out to us through any of the channels below.
-                        </p>
-                    </div>
+                    <div className="lw-eyebrow mb-3">Colophon / Contact</div>
+                    <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
+                        Write to us, <span className="italic">plainly.</span>
+                    </h1>
+                    <div className="lw-rule-brass w-20 mt-6" />
+                    <p className="mt-5 text-slate-600 max-w-2xl leading-relaxed">
+                        For demos, support, or policy questions — use the form, or reach us directly.
+                    </p>
 
-                    <div className="grid md:grid-cols-2 gap-8">
-                        {/* Contact Information */}
-                        <div className="space-y-6">
-                            <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-                                <h2 className="text-3xl font-bold text-gray-900 mb-6">Get in Touch</h2>
-                                
+                    <div className="grid md:grid-cols-12 gap-8 mt-12">
+                        {/* Left column */}
+                        <div className="md:col-span-5 space-y-6">
+                            <div className="border border-ink-900/10 bg-white p-8">
+                                <div className="lw-eyebrow mb-6">01 / Direct lines</div>
+
                                 <div className="space-y-6">
-                                    {/* Email */}
-                                    <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <Mail className="h-6 w-6 text-white" />
-                                        </div>
+                                    <div className="flex items-start gap-4">
+                                        <Mail className="w-5 h-5 text-ink-900 mt-0.5" />
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                                            <p className="text-gray-600">support@draconx.com</p>
-                                            <p className="text-gray-600">lockerwise@draconx.com</p>
+                                            <div className="lw-label">Email</div>
+                                            <p className="font-mono text-sm text-ink-900">support@draconx.com</p>
+                                            <p className="font-mono text-sm text-ink-900">lockerwise@draconx.com</p>
                                         </div>
                                     </div>
-
-                                    {/* Phone */}
-                                    <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <Phone className="h-6 w-6 text-white" />
-                                        </div>
+                                    <div className="lw-rule" />
+                                    <div className="flex items-start gap-4">
+                                        <Phone className="w-5 h-5 text-ink-900 mt-0.5" />
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-                                            <p className="text-gray-600">+1 (831)-216-8890</p>
-                                            <p className="text-sm text-gray-500">Mon-Fri, 9:00 AM - 6:00 PM EST</p>
+                                            <div className="lw-label">Phone</div>
+                                            <p className="font-mono text-sm text-ink-900">+1 (831) 216-8890</p>
+                                            <p className="text-xs text-slate-500 mt-1">Mon–Fri · 9:00–18:00 EST</p>
                                         </div>
                                     </div>
-
-                                    {/* Address */}
-                                    <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                                            <MapPin className="h-6 w-6 text-white" />
-                                        </div>
+                                    <div className="lw-rule" />
+                                    <div className="flex items-start gap-4">
+                                        <MapPin className="w-5 h-5 text-ink-900 mt-0.5" />
                                         <div>
-                                            <h3 className="font-semibold text-gray-900 mb-1">Address</h3>
-                                            <p className="text-gray-600">DraconX Inc.</p>
-                                            <p className="text-gray-600">8 The Green Ste A</p>
-                                            <p className="text-gray-600">Dover, Delaware</p>
-                                            <p className="text-gray-600">United States of America, 19901</p>
+                                            <div className="lw-label">Office</div>
+                                            <p className="text-sm text-ink-900 leading-relaxed">
+                                                DraconX Inc.<br />
+                                                8 The Green Ste A<br />
+                                                Dover, Delaware 19901<br />
+                                                USA
+                                            </p>
                                         </div>
-                                    </div>
-                                </div>
-
-                                {/* Business Hours */}
-                                <div className="mt-8 p-6 bg-gradient-to-br from-purple-50 to-gray-50 rounded-xl border border-purple-100">
-                                    <h3 className="font-semibold text-gray-900 mb-3">Business Hours</h3>
-                                    <div className="space-y-2 text-gray-700">
-                                        <p><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM EST</p>
-                                        <p><strong>Saturday:</strong> 10:00 AM - 4:00 PM EST</p>
-                                        <p><strong>Sunday:</strong> Closed</p>
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="border border-ink-900/10 bg-cream-50 p-8">
+                                <div className="lw-eyebrow mb-4">02 / Hours</div>
+                                <dl className="space-y-2 font-mono text-sm">
+                                    <div className="flex justify-between">
+                                        <dt className="text-slate-500">Mon – Fri</dt>
+                                        <dd className="text-ink-900">09:00 – 18:00</dd>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <dt className="text-slate-500">Saturday</dt>
+                                        <dd className="text-ink-900">10:00 – 16:00</dd>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <dt className="text-slate-500">Sunday</dt>
+                                        <dd className="text-ink-900">Closed</dd>
+                                    </div>
+                                </dl>
+                            </div>
                         </div>
 
-                        {/* Contact Form */}
-                        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-                            <h2 className="text-3xl font-bold text-gray-900 mb-6">Send us a Message</h2>
-                            
+                        {/* Right column — form */}
+                        <div className="md:col-span-7 border border-ink-900/10 bg-white p-8 md:p-10">
+                            <div className="lw-eyebrow mb-1">03 / Message</div>
+                            <h2 className="font-display text-3xl text-ink-900 mb-8">Send us a note</h2>
+
                             {submitted ? (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <CheckCircle2 className="h-8 w-8 text-green-600" />
+                                <div className="py-10 text-center">
+                                    <div className="inline-flex items-center justify-center w-14 h-14 bg-[#e6efe8] border border-[#b9d3c1] text-[#2f5c43] mb-4">
+                                        <CheckCircle2 className="w-6 h-6" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                                    <p className="text-gray-600">We'll get back to you as soon as possible.</p>
+                                    <h3 className="font-display text-2xl text-ink-900">Message sent</h3>
+                                    <p className="text-slate-600 mt-1">We'll be in touch shortly.</p>
                                 </div>
                             ) : (
                                 <form onSubmit={handleSubmit} className="space-y-6">
-                                    {/* Name */}
-                                    <div>
-                                        <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                                            <User className="inline h-4 w-4 mr-2" />
-                                            Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors outline-none"
-                                            placeholder="Your full name"
-                                        />
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label htmlFor="name" className="lw-label">Name</label>
+                                            <input
+                                                id="name"
+                                                name="name"
+                                                type="text"
+                                                required
+                                                value={formData.name}
+                                                onChange={handleChange}
+                                                placeholder="Full name"
+                                                className="lw-input"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="email" className="lw-label">Email</label>
+                                            <input
+                                                id="email"
+                                                name="email"
+                                                type="email"
+                                                required
+                                                value={formData.email}
+                                                onChange={handleChange}
+                                                placeholder="you@organization.com"
+                                                className="lw-input"
+                                            />
+                                        </div>
                                     </div>
-
-                                    {/* Email */}
                                     <div>
-                                        <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                                            <Mail className="inline h-4 w-4 mr-2" />
-                                            Email
-                                        </label>
+                                        <label htmlFor="subject" className="lw-label">Subject</label>
                                         <input
-                                            type="email"
-                                            id="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors outline-none"
-                                            placeholder="your.email@example.com"
-                                        />
-                                    </div>
-
-                                    {/* Subject */}
-                                    <div>
-                                        <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
-                                            Subject
-                                        </label>
-                                        <input
-                                            type="text"
                                             id="subject"
                                             name="subject"
+                                            type="text"
+                                            required
                                             value={formData.subject}
                                             onChange={handleChange}
-                                            required
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors outline-none"
-                                            placeholder="What is this regarding?"
+                                            placeholder="What is this about?"
+                                            className="lw-input"
                                         />
                                     </div>
-
-                                    {/* Message */}
                                     <div>
-                                        <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
-                                            <MessageSquare className="inline h-4 w-4 mr-2" />
-                                            Message
-                                        </label>
+                                        <label htmlFor="message" className="lw-label">Message</label>
                                         <textarea
                                             id="message"
                                             name="message"
+                                            rows={6}
+                                            required
                                             value={formData.message}
                                             onChange={handleChange}
-                                            required
-                                            rows={6}
-                                            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors outline-none resize-none"
-                                            placeholder="Tell us how we can help you..."
+                                            placeholder="How can we help?"
+                                            className="lw-input resize-none"
                                         />
                                     </div>
 
-                                    {/* Submit Button */}
+                                    {error && (
+                                        <div className="border border-[#d58874] bg-[#f6dfd5] text-[#7a2a18] px-3 py-2 text-sm">
+                                            {error}
+                                        </div>
+                                    )}
+
                                     <button
                                         type="submit"
-                                        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                        disabled={loading}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
                                     >
-                                        <Send className="h-5 w-5" />
-                                        Send Message
+                                        {loading ? (
+                                            <>
+                                                <Loader className="w-4 h-4 animate-spin" />
+                                                Sending
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="w-4 h-4" />
+                                                Send message
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}
                         </div>
                     </div>
 
-                    {/* Additional Info */}
-                    <div className="mt-12 bg-gradient-to-br from-purple-50 to-gray-50 rounded-3xl p-8 border border-purple-100">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">How quickly will I receive a response?</h3>
-                                <p className="text-gray-600">We typically respond within 24-48 hours during business days.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Can I schedule a demo?</h3>
-                                <p className="text-gray-600">Yes! Contact us to schedule a personalized demo of LockerWise.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">Do you offer technical support?</h3>
-                                <p className="text-gray-600">We provide comprehensive technical support for all our clients.</p>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 mb-2">What if I have an urgent issue?</h3>
-                                <p className="text-gray-600">For urgent matters, please call our support line directly.</p>
-                            </div>
+                    {/* FAQ */}
+                    <div className="mt-16 border border-ink-900/10 bg-cream-50 p-8 md:p-12">
+                        <div className="lw-eyebrow mb-2">04 / FAQ</div>
+                        <h2 className="font-display text-3xl text-ink-900 mb-8">Frequently asked</h2>
+                        <div className="grid md:grid-cols-2 gap-x-10 gap-y-6">
+                            <Faq q="How quickly will I receive a response?" a="Typically within 24–48 hours on business days." />
+                            <Faq q="Can I schedule a demo?" a="Yes. Contact us and we'll arrange a personalized walkthrough." />
+                            <Faq q="Do you offer technical support?" a="We provide comprehensive technical support for all clients." />
+                            <Faq q="What if I have an urgent issue?" a="Call our support line directly for urgent matters." />
                         </div>
                     </div>
                 </div>
@@ -245,5 +223,11 @@ const ContactUs = () => {
     );
 };
 
-export default ContactUs;
+const Faq = ({ q, a }) => (
+    <div className="border-t border-ink-900/10 pt-4">
+        <h3 className="font-display text-lg text-ink-900">{q}</h3>
+        <p className="text-slate-600 mt-1">{a}</p>
+    </div>
+);
 
+export default ContactUs;
