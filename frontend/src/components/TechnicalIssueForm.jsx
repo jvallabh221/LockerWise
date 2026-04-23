@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { LockerContext } from "../context/LockerProvider";
-import { Mail, Loader, BookOpen, Send, AlertTriangle } from "lucide-react";
+import { Loader, Send } from "lucide-react";
+import { FormCard, FieldRow, FieldGrid, ErrorBanner, FormActions } from "./ui/FormShell";
 
 const TechnicalIssueForm = () => {
     const [subject, setSubject] = useState("");
@@ -11,132 +12,77 @@ const TechnicalIssueForm = () => {
 
     const { handleTechnicalIssue } = useContext(LockerContext);
 
-    const handleSubject = (e) => {
-        setSubject(e.target.value);
-    };
-
-    const handleDescription = (e) => {
-        setDescription(e.target.value);
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError("");
         setLoading(true);
-
         try {
             await handleTechnicalIssue(subject, description, email);
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setError(err.message);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-            <div className="text-center flex flex-col items-center gap-3 mb-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Technical Issue Details
-                </h2>
-                <p className="text-sm text-gray-600">
-                    Report any technical issues or problems with the system
-                </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex items-center">
-                    <label htmlFor="email" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                        Email
-                    </label>
-                    <div className="relative flex-1">
-                        <div className="flex items-center">
-                            <Mail className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                required
-                                className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                placeholder="Email ID"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                autoComplete="off"
-                            />
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="flex items-center">
-                    <label htmlFor="subject" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                        Subject
-                    </label>
-                    <div className="relative flex-1">
-                        <div className="flex items-center">
-                            <BookOpen className="absolute left-3 h-5 w-5 text-gray-500 z-10" />
-                            <input
-                                id="subject"
-                                name="subject"
-                                type="text"
-                                required
-                                className="pl-10 outline-none w-full py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm"
-                                placeholder="Subject"
-                                value={subject}
-                                onChange={handleSubject}
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex items-center">
-                    <label htmlFor="description" className="text-sm font-semibold text-gray-700 w-20 flex-shrink-0">
-                        Description
-                    </label>
-                    <div className="relative flex-1">
+        <FormCard num="§ 02" title="Technical issue details">
+            <p className="text-slate-600 text-sm mb-6 max-w-xl">
+                Report technical problems with the LockerWise system itself — login, emails, dashboards, or anything else.
+            </p>
+            <form onSubmit={handleSubmit}>
+                <FieldGrid cols={2}>
+                    <FieldRow label="Email" htmlFor="email" span={2}>
+                        <input
+                            id="email"
+                            type="email"
+                            required
+                            className="lw-input"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="off"
+                        />
+                    </FieldRow>
+                    <FieldRow label="Subject" htmlFor="subject" span={2}>
+                        <input
+                            id="subject"
+                            type="text"
+                            required
+                            className="lw-input"
+                            placeholder="Short summary"
+                            value={subject}
+                            onChange={(e) => setSubject(e.target.value)}
+                        />
+                    </FieldRow>
+                    <FieldRow label="Description" htmlFor="description" span={2}>
                         <textarea
                             id="description"
-                            name="description"
                             required
-                            rows="4"
-                            className="outline-none w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors text-sm resize-none"
-                            placeholder="Describe the technical issue in detail..."
+                            rows={5}
+                            className="lw-input resize-none"
+                            placeholder="Describe the technical issue in detail…"
                             value={description}
-                            onChange={handleDescription}
+                            onChange={(e) => setDescription(e.target.value)}
                         />
-                    </div>
-                </div>
+                    </FieldRow>
+                </FieldGrid>
 
-                {error && (
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center">
-                        <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                        <p className="text-sm font-medium text-red-800">{error}</p>
-                    </div>
-                )}
+                <ErrorBanner>{error}</ErrorBanner>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full flex items-center justify-center gap-2 py-3 px-6 rounded-lg font-semibold text-black transition-colors shadow-md ${
-                        loading 
-                            ? "bg-gray-400 cursor-not-allowed" 
-                            : "bg-gray-400 hover:bg-gray-500"
-                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500`}
-                >
-                    {loading ? (
-                        <>
-                            <Loader className="w-5 h-5 animate-spin" />
-                            Reporting...
-                        </>
-                    ) : (
-                        <>
-                            <Send className="w-5 h-5" />
-                            Submit Issue
-                        </>
-                    )}
-                </button>
+                <FormActions>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-ink-900 text-cream-50 font-mono text-xs uppercase tracking-editorial hover:bg-ink-700 transition-colors disabled:opacity-60"
+                    >
+                        {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {loading ? "Reporting" : "Submit issue"}
+                    </button>
+                </FormActions>
             </form>
-        </div>
+        </FormCard>
     );
 };
 
 export default TechnicalIssueForm;
-
