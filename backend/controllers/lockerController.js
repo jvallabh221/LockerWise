@@ -14,6 +14,7 @@ const {
     flattenLocker,
     flattenLockers,
     mergeAssignmentIntoLocker,
+    ASSIGNMENT_FIELD_SET,
 } = require("../utils/flattenLockerResponse.js");
 
 exports.getAvailableLocker = async (req, res) => {
@@ -654,6 +655,41 @@ exports.editLockerDetails = async (req, res) => {
             return res.status(400).json({ message: "LockerNumber is required" });
         }
 
+        // Split LockerDetails into locker-config vs assignment fields. The
+        // generic $set dump is preserved here for shape-compatibility with
+        // the current API; §12 tracks narrowing this endpoint as a Phase 2
+        // follow-up.
+        const lockerFields = {};
+        const assignmentFields = {};
+        for (const [k, v] of Object.entries(LockerDetails)) {
+            if (k === 'LockerNumber') continue; // the lookup key, not a mutation
+            if (ASSIGNMENT_FIELD_SET.has(k)) assignmentFields[k] = v;
+            else lockerFields[k] = v;
+        }
+
+        // If the payload touches assignment fields but no active Assignment
+        // exists for this locker, reject the whole request — silent drops
+        // would mean the admin's edits vanish without explanation.
+        if (Object.keys(assignmentFields).length > 0) {
+            const lockerForCheck = await Locker.findOne({
+                LockerNumber: LockerDetails.LockerNumber,
+            }).lean();
+            if (!lockerForCheck) {
+                return res.status(400).json({ message: "Locker not found" });
+            }
+            const activeAsgnCheck = await Assignment.findOne({
+                lockerId: lockerForCheck._id,
+                status: 'active',
+                deletedAt: null,
+            }).lean();
+            if (!activeAsgnCheck) {
+                const offending = Object.keys(assignmentFields).join(', ');
+                return res.status(400).json({
+                    message: `Cannot edit assignment fields on an unassigned locker: ${offending}. Allocate the locker first.`,
+                });
+            }
+        }
+
         const locker = await withAtomic(async (session) => {
             const l = await Locker.findOne({ LockerNumber: LockerDetails.LockerNumber }).session(session);
             if (!l) {
@@ -662,11 +698,30 @@ exports.editLockerDetails = async (req, res) => {
                 throw e;
             }
 
-            await Locker.updateOne(
-                { LockerNumber: LockerDetails.LockerNumber },
-                { $set: LockerDetails },
-                { session }
-            );
+            if (Object.keys(lockerFields).length > 0) {
+                await Locker.updateOne(
+                    { _id: l._id },
+                    { $set: lockerFields },
+                    { session }
+                );
+            }
+            if (Object.keys(assignmentFields).length > 0) {
+                await Assignment.updateOne(
+                    { lockerId: l._id, status: 'active', deletedAt: null },
+                    { $set: assignmentFields },
+                    { session }
+                );
+            }
+
+            // Read the post-update Assignment for the History holder/cost —
+            // prefer the incoming payload values when present (preserves
+            // pre-A2.0.1 behavior where History read LockerDetails.employeeName
+            // and l.CostToEmployee).
+            const activeAsgn = await Assignment.findOne({
+                lockerId: l._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
 
             let userName = "Admin";
             if (req.user.role !== "Admin") {
@@ -674,8 +729,17 @@ exports.editLockerDetails = async (req, res) => {
                 userName = user?.name || "System";
             }
             const stat = (l.LockerStatus).charAt(0).toUpperCase() + (l.LockerStatus).slice(1);
+            const holderName =
+                LockerDetails.employeeName !== undefined
+                    ? LockerDetails.employeeName
+                    : (activeAsgn ? activeAsgn.employeeName : 'N/A');
+            const cost =
+                LockerDetails.CostToEmployee !== undefined
+                    ? LockerDetails.CostToEmployee
+                    : (activeAsgn ? activeAsgn.CostToEmployee : 0);
+
             await History.create(
-                [{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: LockerDetails.employeeName, InitiatedBy: userName, Cost: l.CostToEmployee, LockerStatus: stat }],
+                [{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: holderName, InitiatedBy: userName, Cost: cost, LockerStatus: stat }],
                 { session }
             );
             return l;
@@ -728,7 +792,19 @@ exports.editLockerDetails = async (req, res) => {
                 </p>
             </div>
         `;
-        await mailSender(locker.employeeEmail, "Notification of Locker Update", htmlBody);
+        // Send email to whichever employeeEmail we know — prefer payload,
+        // else the (post-update) active Assignment.
+        const emailTo =
+            LockerDetails.employeeEmail !== undefined
+                ? LockerDetails.employeeEmail
+                : (await Assignment.findOne({
+                      lockerId: locker._id,
+                      status: 'active',
+                      deletedAt: null,
+                  }))?.employeeEmail;
+        if (emailTo) {
+            await mailSender(emailTo, "Notification of Locker Update", htmlBody);
+        }
 
         return res.status(200).json({ message: "Locker updated successfully" });
     } catch (err) {
@@ -758,6 +834,17 @@ exports.changeLockerStatus = async (req, res) => {
                 { session }
             );
 
+            // History's LockerHolder / Cost read from the CURRENT active
+            // Assignment (status:'active', deletedAt:null). If no active
+            // Assignment exists (e.g. the locker was just cancelled in a
+            // prior request), fall back to defaults — does NOT read an
+            // ended Assignment's values.
+            const activeAsgn = await Assignment.findOne({
+                lockerId: locker._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
             let userName = "Admin";
             if (req.user.role !== "Admin") {
                 const user = await User.findOne({ email: req.user.email }).session(session);
@@ -765,7 +852,14 @@ exports.changeLockerStatus = async (req, res) => {
             }
             const stat = (LockerStatus).charAt(0).toUpperCase() + (LockerStatus).slice(1);
             await History.create(
-                [{ LockerNumber, comment: "Locker Status Changed", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }],
+                [{
+                    LockerNumber,
+                    comment: "Locker Status Changed",
+                    LockerHolder: activeAsgn ? activeAsgn.employeeName : 'N/A',
+                    InitiatedBy: userName,
+                    Cost: activeAsgn ? activeAsgn.CostToEmployee : 0,
+                    LockerStatus: stat,
+                }],
                 { session }
             );
         });

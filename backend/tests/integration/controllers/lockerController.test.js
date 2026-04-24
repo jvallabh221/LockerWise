@@ -648,3 +648,197 @@ describe('POST /api/locker/deleteLocker', () => {
         expect(res.status).toBe(400);
     });
 });
+
+describe('PUT /api/locker/editLockerDetails', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    async function callEdit(adminUser, body) {
+        return request(app)
+            .put('/api/locker/editLockerDetails')
+            .set(createAuthHeader(adminUser))
+            .send(body);
+    }
+
+    it('routes config fields to Locker and assignment fields to Assignment', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const locker = await createTestLocker({ lockerNumber: 4801, status: 'occupied' });
+        const asgn = await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'Before',
+            employeeEmail: 'before@example.com',
+            costToEmployee: 100,
+        });
+
+        const res = await callEdit(admin, {
+            LockerDetails: {
+                LockerNumber: 4801,
+                LockerCode: 'C-999',    // config → Locker
+                employeeName: 'After',  // assignment → Assignment
+                CostToEmployee: 250,    // assignment → Assignment
+            },
+        });
+
+        expect(res.status).toBe(200);
+
+        const lockerDb = await Locker.findById(locker._id).lean();
+        expect(lockerDb.LockerCode).toBe('C-999');
+
+        const asgnDb = await Assignment.findById(asgn._id);
+        expect(asgnDb.employeeName).toBe('After');
+        expect(asgnDb.CostToEmployee).toBe(250);
+    });
+
+    it('updates only Locker when payload has no assignment fields', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const locker = await createTestLocker({ lockerNumber: 4802, status: 'available' });
+
+        const res = await callEdit(admin, {
+            LockerDetails: {
+                LockerNumber: 4802,
+                LockerType: 'full',
+                LockerCode: 'X-1',
+            },
+        });
+
+        expect(res.status).toBe(200);
+        const lockerDb = await Locker.findById(locker._id).lean();
+        expect(lockerDb.LockerType).toBe('full');
+        expect(lockerDb.LockerCode).toBe('X-1');
+    });
+
+    it('returns 400 when payload has assignment fields but no active Assignment exists', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        await createTestLocker({ lockerNumber: 4803, status: 'available' });
+
+        const res = await callEdit(admin, {
+            LockerDetails: {
+                LockerNumber: 4803,
+                employeeName: 'Ghost',
+                employeeEmail: 'ghost@example.com',
+            },
+        });
+
+        expect(res.status).toBe(400);
+        expect(res.body.message).toContain('assignment fields');
+        expect(res.body.message).toContain('employeeName');
+        expect(res.body.message).toContain('employeeEmail');
+    });
+
+    it('returns 400 when locker does not exist (no silent no-op)', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const res = await callEdit(admin, {
+            LockerDetails: {
+                LockerNumber: 9991,
+                LockerType: 'full',
+            },
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when LockerNumber is missing', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const res = await callEdit(admin, { LockerDetails: { LockerType: 'full' } });
+        expect(res.status).toBe(400);
+    });
+
+    it('writes History LockerHolder=payload.employeeName when provided', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin', name: 'AdminA' });
+        const locker = await createTestLocker({ lockerNumber: 4804, status: 'occupied' });
+        await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'Original',
+            employeeEmail: 'original@example.com',
+            costToEmployee: 100,
+        });
+
+        await callEdit(admin, {
+            LockerDetails: {
+                LockerNumber: 4804,
+                employeeName: 'Renamed',
+                CostToEmployee: 175,
+            },
+        });
+
+        const history = await History.findOne({ LockerNumber: 4804, comment: 'Locker Details Updated' });
+        expect(history).toBeTruthy();
+        expect(history.LockerHolder).toBe('Renamed');
+        expect(history.Cost).toBe(175);
+    });
+});
+
+describe('PUT /api/locker/changeLockerStatus', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    async function callStatus(staffUser, body) {
+        return request(app)
+            .put('/api/locker/changeLockerStatus')
+            .set(createAuthHeader(staffUser))
+            .send(body);
+    }
+
+    it('updates LockerStatus and writes History with holder name from active Assignment', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff', name: 'StaffB' });
+        const locker = await createTestLocker({ lockerNumber: 4901, status: 'available' });
+        await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'StatusHolder',
+            costToEmployee: 75,
+        });
+
+        const res = await callStatus(staff, {
+            LockerNumber: 4901,
+            LockerStatus: 'expired',
+        });
+
+        expect(res.status).toBe(200);
+        const reloaded = await Locker.findById(locker._id).lean();
+        expect(reloaded.LockerStatus).toBe('expired');
+
+        const history = await History.findOne({ LockerNumber: 4901, comment: 'Locker Status Changed' });
+        expect(history.LockerHolder).toBe('StatusHolder');
+        expect(history.Cost).toBe(75);
+        expect(history.LockerStatus).toBe('Expired');
+    });
+
+    it('writes History with defaults when no active Assignment exists (just-ended edge case)', async () => {
+        // User's addition #3: if a request ended the Assignment and then
+        // changeLockerStatus runs, History should read defaults — NOT the
+        // just-ended Assignment's values.
+        const { user: staff } = await createTestUser({ role: 'Staff', name: 'StaffC' });
+        const locker = await createTestLocker({ lockerNumber: 4902, status: 'available' });
+        const asgn = await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'JustEnded',
+            costToEmployee: 500,
+        });
+        // Simulate cancel having run first.
+        await Assignment.updateOne(
+            { _id: asgn._id },
+            { $set: { status: 'ended', endedReason: 'cancelled', endedAt: new Date() } },
+        );
+
+        await callStatus(staff, {
+            LockerNumber: 4902,
+            LockerStatus: 'expired',
+        });
+
+        const history = await History.findOne({ LockerNumber: 4902, comment: 'Locker Status Changed' });
+        expect(history.LockerHolder).toBe('N/A');  // default, not 'JustEnded'
+        expect(history.Cost).toBe(0);              // default, not 500
+    });
+
+    it('returns 400 when LockerNumber is missing', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const res = await callStatus(staff, { LockerStatus: 'available' });
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when locker does not exist', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const res = await callStatus(staff, {
+            LockerNumber: 9992,
+            LockerStatus: 'available',
+        });
+        expect(res.status).toBe(400);
+    });
+});
