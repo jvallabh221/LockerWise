@@ -3,12 +3,17 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require("../models/userModel.js");
 const Locker = require("../models/lockerModel.js");
+const Assignment = require("../models/assignmentModel.js");
 const mailSender = require("../utils/mailSender.js");
 const History = require("../models/History.js");
 const Issue = require("../models/Issue.js");
 const Price = require("../models/Prices.js");
 const fs = require("fs");
 const { withAtomic } = require("../utils/atomic");
+const {
+    flattenLocker,
+    flattenLockers,
+} = require("../utils/flattenLockerResponse.js");
 
 exports.getAvailableLocker = async (req, res) => {
     try {
@@ -89,20 +94,33 @@ exports.allocateLocker = async (req, res) => {
                 e.status = 400;
                 throw e;
             }
+            // Locker-config fields stay on Locker. The 11 assignment fields
+            // (employeeName/Email/Id/Phone/Gender, CostToEmployee, Duration,
+            // StartDate, EndDate, expiresOn, emailSent) now live on the new
+            // Assignment doc created below.
             l.LockerCode = lockerCode;
             l.LockerType = lockerType;
-            l.employeeName = employeeName;
-            l.employeeId = employeeId;
-            l.employeeEmail = employeeEmail;
-            l.employeePhone = employeePhone;
-            l.employeeGender = employeeGender;
-            l.CostToEmployee = costToEmployee;
-            l.Duration = duration;
-            l.StartDate = startDate;
-            l.EndDate = endDate;
             l.LockerStatus = "occupied";
-            l.expiresOn = expiresOn;
             await l.save({ session });
+
+            await Assignment.create(
+                [{
+                    lockerId: l._id,
+                    employeeName,
+                    employeeId,
+                    employeeEmail,
+                    employeePhone,
+                    employeeGender,
+                    CostToEmployee: costToEmployee,
+                    Duration: duration,
+                    StartDate: startDate,
+                    EndDate: endDate,
+                    expiresOn,
+                    emailSent: false,
+                    status: 'active',
+                }],
+                { session }
+            );
 
             const user = await User.findOne({ email: req.user.email }).session(session);
             await History.create(
@@ -162,7 +180,7 @@ exports.allocateLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker allocated successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in allocating Locker: ${err.message}` });
