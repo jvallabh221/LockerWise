@@ -2,9 +2,9 @@ require('dotenv').config();
 const cron = require('node-cron');
 const createApp = require('./createApp.js');
 const dbConnect = require('./utils/databaseConnect.js');
-const mailSender = require('./utils/mailSender.js');
-const Locker = require('./models/lockerModel.js');
 const History = require('./models/History.js');
+const sendExpiryEmails = require('./jobs/sendExpiryEmails.js');
+const markExpiredAssignments = require('./jobs/markExpiredAssignments.js');
 
 const app = createApp();
 
@@ -20,129 +20,46 @@ async function startServer() {
     }
 }
 
-function formatdate(date) {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${day}/${month}/${year}`;
-};
-
-
-cron.schedule('0 0 * * *', async () => { // Runs daily at 12:00 AM
+// Daily at 12:00 AM — email holders whose Assignment expires today.
+cron.schedule('0 0 * * *', async () => {
     try {
-        const startOfTodayUTC = new Date();
-        startOfTodayUTC.setHours(0, 0, 0, 0);
-        const endOfTodayUTC = new Date();
-        endOfTodayUTC.setHours(23, 59, 59, 999); // End of UTC day
-
-        // console.log("Querying lockers with:", { startOfTodayUTC, endOfTodayUTC });
-
-        const data = await Locker.find({
-            expiresOn: { $gte: startOfTodayUTC, $lte: endOfTodayUTC },
-            emailSent: { $ne: true },
-        });
-
-        for (const locker of data) {
-            const email = locker.employeeEmail;
-            const name = locker.employeeName;
-            const lockerNumber = locker.LockerNumber
-            const startDate = locker.StartDate;
-            const endDate = locker.EndDate;
-            const duration = locker.Duration
-            const currentDate = new Date()
-            const formatted = formatdate(currentDate)
-            const htmlBody = `
-              <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
-
-              <div style="text-align: center; margin-bottom: 20px;">
-                  <img
-                  src="${process.env.IMG_LINK}"
-                  alt="Company Logo"
-                  style="width: 500px; height: auto;"
-                  />
-              </div>
-
-
-              <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
-                  Dear ${name},
-              </p>
-              <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
-                  We want to notify you that the locker assigned to you is expiring <b>Today</b>(${formatted}). Below are the details of the locker:
-              </p>
-
-
-              <p style="font-size: 16px; color: #333; font-weight: bold; margin: 0 0 10px 0;">
-                  Locker Details:
-              </p>
-              <ul style="font-size: 16px; padding-left: 20px; margin: 0 0 15px 0; color: #333;">
-                  <li><strong>Locker Number:</strong> ${lockerNumber}</li>
-                  <li><strong>Original Validity Period:</strong> ${duration === "customize" ? `${formatdate(startDate)} to ${formatdate(endDate)}` : `${duration} Months`}</li>
-              </ul>
-
-
-              <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
-                  If you require a locker in the future, please submit a new request through the Locker Management System or contact us at <strong>[Support Email/Phone]</strong>.
-              </p>
-              <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
-                  We appreciate your cooperation and thank you for using our locker management service.
-              </p>
-              <p style="font-size: 16px; color: #333; margin: 0;">
-                  Best regards,<br />
-                  <strong>DraconX Pvt. Ltd</strong>,<br/>
-                  <strong>"From Vision to Validation, faster"</strong>
-              </p>
-          </div>
-          `;
-            if (email) {
-                try {
-                    await mailSender(email, "Locker Expiration Notification", htmlBody);
-                    // Mark email as sent for this locker
-                    locker.emailSent = true;
-                    await locker.save();
-                } catch (emailError) {
-                    console.error(`Error sending email to ${email}: ${emailError.message}`);
-                }
-            } else {
-                console.warn(`No email found for locker ${locker._id}`);
-            }
-        }
+        const result = await sendExpiryEmails();
+        console.log(
+            `sendExpiryEmails: considered=${result.considered}, sent=${result.sent}`,
+        );
     } catch (err) {
-        console.error(`Error in fetching lockers expiring today: ${err.message}`);
+        console.error(`Error in sendExpiryEmails: ${err.message}`);
     }
 });
 
-cron.schedule('1 0 * * *', async () => { //Runs daily at 12:01 AM
+// Daily at 12:01 AM — mark expired Assignments and their Lockers.
+cron.schedule('1 0 * * *', async () => {
     try {
-        const nowUTC = new Date();
-        nowUTC.setHours(nowUTC.getHours(), nowUTC.getMinutes(), nowUTC.getSeconds(), nowUTC.getMilliseconds()); // Current UTC time
-        const lockersToUpdate = await Locker.find({
-            expiresOn: { $lte: nowUTC },
-            LockerStatus: { $ne: "expired" }
-        });
-
-        for (const locker of lockersToUpdate) {
-            locker.LockerStatus = "expired"; // Set status to "expired"
-            await locker.save(); // Save the updated locker
-            console.log(`Time : ${Date()} and Locker ${locker.LockerNumber} status set to "expired".`);
-        }
+        const result = await markExpiredAssignments();
+        console.log(
+            `markExpiredAssignments: considered=${result.considered}, marked=${result.marked}`,
+        );
     } catch (err) {
-        console.error(`Error in updating locker statuses: ${err.message}`);
+        console.error(`Error in markExpiredAssignments: ${err.message}`);
     }
 });
 
-cron.schedule('2 0 * * *', async () => { // Runs daily at 12:02 AM
+// Daily at 12:02 AM — prune History older than 3 months. Unrelated to
+// Assignment extraction; kept inline pending the broader C10 cron audit.
+cron.schedule('2 0 * * *', async () => {
     try {
         const todayUTC = new Date();
-        todayUTC.setHours(0, 0, 0, 0); // Start of UTC day
+        todayUTC.setHours(0, 0, 0, 0);
         const threeMonthsAgo = new Date(todayUTC);
-        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3); // Subtract 3 months
+        threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
         const result = await History.deleteMany({
-            createdAt: { $lte: threeMonthsAgo }
+            createdAt: { $lte: threeMonthsAgo },
         });
 
-        console.log(`${result.deletedCount} history records older than 3 months deleted.`);
+        console.log(
+            `${result.deletedCount} history records older than 3 months deleted.`,
+        );
     } catch (err) {
         console.error(`Error in deleting old history records: ${err.message}`);
     }

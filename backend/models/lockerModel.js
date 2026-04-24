@@ -127,4 +127,17 @@ lockerSchema.pre('save', function (next) {
     next();
 });
 
+// A2.0-transitional: `currentAssignment` is a Mongoose virtual so code that
+// previously read `locker.employeeName` can migrate to
+// `locker.currentAssignment?.employeeName` incrementally. DEPRECATED — A3
+// makes this semantically ambiguous (one Assignment, many Holders) and
+// A2.0.1 removes this virtual. New code should query `Assignment` directly.
+lockerSchema.virtual('currentAssignment', {
+    ref: 'Assignment',
+    localField: '_id',
+    foreignField: 'lockerId',
+    justOne: true,
+    match: { status: 'active', deletedAt: null },
+});
+
 module.exports = mongoose.model('Locker', lockerSchema);

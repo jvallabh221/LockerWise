@@ -1,36 +1,24 @@
-const path = require('path');
 const mongoose = require('mongoose');
-const migrateMongo = require('migrate-mongo');
-const migrateMongoConfig = require('../../../migrate-mongo-config.js');
+
+// Import the migration module directly. Going through migrate-mongo's CLI
+// API would apply every pending migration in the folder (A1 + A2.0 + future),
+// which couples this test to unrelated migrations and breaks the down-abort
+// branches here. Direct import isolates to just the A1 up/down functions.
+// `npm run verify:migrations` is the end-to-end smoke test for the folder;
+// these integration tests are unit-style checks on one migration.
+const a1 = require(
+    '../../../migrations/20260424150000-building-floor-zone-hierarchy.js'
+);
 
 const MAIN_BUILDING = 'Main Building';
 const DEFAULT_FLOOR = 'Default Floor';
-const MIGRATION_FILE = '20260424150000-building-floor-zone-hierarchy.js';
-
-// Drive migrate-mongo's JS API against the Mongoose-managed memory-server
-// connection from tests/helpers/testDb.js. Bypasses migrate-mongo's own
-// connect/disconnect so we share the one connection Vitest already owns.
-function configureMigrateMongo() {
-    migrateMongo.config.set({
-        ...migrateMongoConfig,
-        migrationsDir: path.resolve(__dirname, '../../../migrations'),
-    });
-}
 
 async function runUp() {
-    configureMigrateMongo();
-    return migrateMongo.up(
-        mongoose.connection.db,
-        mongoose.connection.getClient(),
-    );
+    return a1.up(mongoose.connection.db, mongoose.connection.getClient());
 }
 
 async function runDown() {
-    configureMigrateMongo();
-    return migrateMongo.down(
-        mongoose.connection.db,
-        mongoose.connection.getClient(),
-    );
+    return a1.down(mongoose.connection.db, mongoose.connection.getClient());
 }
 
 async function seedLockersRaw(count) {
@@ -72,8 +60,7 @@ describe('A1 migration: Building/Floor/Zone hierarchy', () => {
 
     it('up backfills existing Lockers with defaults and sets zoneId to null', async () => {
         await seedLockersRaw(3);
-        const applied = await runUp();
-        expect(applied).toContain(MIGRATION_FILE);
+        await runUp();
 
         const db = mongoose.connection.db;
         const buildings = await db.collection('buildings').find().toArray();
@@ -104,11 +91,8 @@ describe('A1 migration: Building/Floor/Zone hierarchy', () => {
     it('up is idempotent at the function level (no duplicate defaults)', async () => {
         await seedLockersRaw(3);
         await runUp();
-
-        // Simulate someone clearing the changelog and re-running up.
-        await mongoose.connection.db
-            .collection('migrations_changelog')
-            .deleteMany({});
+        // Re-run up directly — the in-function guards (upserts, index
+        // existence checks) should make this a no-op.
         await runUp();
 
         const db = mongoose.connection.db;
@@ -144,8 +128,7 @@ describe('A1 migration: Building/Floor/Zone hierarchy', () => {
     it('down reverses cleanly when no manual data was added', async () => {
         await seedLockersRaw(3);
         await runUp();
-        const rolledBack = await runDown();
-        expect(rolledBack).toContain(MIGRATION_FILE);
+        await runDown();
 
         const db = mongoose.connection.db;
         expect(await db.collection('buildings').countDocuments()).toBe(0);

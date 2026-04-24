@@ -98,7 +98,8 @@
 |---|---|---|---|
 | **A0** | Install `migrate-mongo`, commit `migrations/` folder, add `npm run migrate:up` / `:down` / `:status` scripts | — | No |
 | **A1** | Building → Floor/Wing → Zone → Locker hierarchy. Drop global unique index on `lockerNumber`; replace with compound unique on `(building_id, lockerNumber)`. Migrate existing lockers into a default Building/Floor. | A0 | No |
-| **A2.0** | **(NEW)** Extract `Assignment` collection from `Locker` document. Move `employeeName`, `employeeEmail`, `CostToEmployee`, `Duration`, `StartDate`, `EndDate`, `expiresOn` off `Locker`. Leave a transitional read path during migration. | A0 | No |
+| **A2.0** | **(NEW)** Create `Assignment` collection and backfill from `Locker` (copy, not move — all 11 assignment-related fields stay on `Locker` for now). Add deprecated `currentAssignment` virtual on `Locker` as the transitional read path. Rewrite the two assignment-aware cron jobs (expiry-email, mark-expired) to query `Assignment`, since virtuals don't work in queries and A2.0.1 will `$unset` the fields. | A0 | No |
+| **A2.0.1** | **(NEW)** Complete the Assignment extraction: migration `$unset`s the 11 fields from `Locker` docs, schema drops them, all controllers (`lockerController`, `issueController`, affected `adminControllers`) are rewritten to read/write via `Assignment`. Remove the `currentAssignment` virtual once nothing reads it. | A2.0 | No |
 | **A2** | Create `Holder` collection (id, name, email, phone, externalId, metadata). Replace free-text holder fields on `Assignment` with `holderId` ref. Dedupe by email — watch for collisions with existing `User` emails (different collection, but keep logically distinct). | A2.0 | No |
 | **A3** | Shared lockers: many-to-many `Holder` ↔ `Assignment`. One active Assignment can have multiple Holders. | A2 | No |
 | **A4** | Capability-based permissions. New collections: `capabilities`, `role_capabilities`. Seed with current Admin / Staff capability sets. New `requireCapability(cap)` middleware. Fallback shim to legacy `verifyToken([roles])` during rollout. Migrate routes incrementally. Remove shim at end. | A2.0 | **Yes** |
@@ -148,7 +149,7 @@
 ## 7. Execution order
 
 ```
-D0  →  A0  →  C9  →  A1 ∥ A2.0  →  A2 + A3  →  A4  →
+D0  →  A0  →  C9  →  A1 ∥ A2.0  →  A2.0.1  →  A2 + A3  →  A4  →
 B1  →  B2  →  B3 + B4  →  B5  →  B6 + B7  →
 C1 + C2  →  C3a  →  C4  →  C5  →  C6  →  C7 + C8  →
 A5  →  A5.1  →  C3b  →  C10  →  D2  →  D1
@@ -247,8 +248,9 @@ Update as items merge.
 | D0.5 | ☐ | — | — | Deferred — starts before C2 or C7 |
 | A0 | ✅ | #2 | 2026-04-24 | Merged to main |
 | C9 | ✅ | direct-to-main | 2026-04-24 | Rubber-stamp per §5 carve-out; also folded in `verify:migrations` npm alias |
-| A1 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a1-hierarchy` |
-| A2.0 | ☐ | — | — | — |
+| A1 | ✅ | #3 | 2026-04-24 | Merged to main |
+| A2.0 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a2-0-extract-assignment` |
+| A2.0.1 | ☐ | — | — | `$unset` Locker fields, rewrite controllers, remove virtual |
 | A2+A3 | ☐ | — | — | — |
 | A4 | ☐ | — | — | Fallback shim; feature flag |
 | B1 | ☐ | — | — | — |
@@ -296,6 +298,10 @@ Update as items merge.
 | 2026-04-24 | §5 tightened — rubber-stamp items enumerated by ID (C3b, C10, D2, A5.1, doc-only D3); deep-review items named (A4, B5, B6+B7, C3a); feature flags (A4, B5, C3a) default false, user flips manually | Vibes-based "rubber-stamp tier" was ambiguous; explicit lists prevent drift; deep-review naming ensures auth/permission/soft-delete changes never get fast-tracked. |
 | 2026-04-24 | A5.1 added — enforce required `buildingId`/`floorId` on Locker once A5 lands, plus update creation sites | A1 makes refs optional to avoid pulling every Locker-creation controller into this PR; A5.1 closes the loop mechanically after A5's rename settles. |
 | 2026-04-24 | B6 scope extended — convert all A1 unique indexes to `partialFilterExpression: { deletedAt: null }` | Soft-deleted rows holding a unique natural key (e.g. a disabled Building's name) would otherwise block new inserts with the same name; B6 is the right place since it owns soft-delete semantics. |
+| 2026-04-24 | A2.0 split into A2.0 (Assignment create + virtual + cron rewrite) and A2.0.1 (`$unset` Locker fields, rewrite controllers, remove virtual) per §5 two-step rule | Doing both in one PR means the migration drops references and the schema removes fields in the same deploy — violates §5 and complicates rollback (Plan A had ~800 LoC; split gives ~300 + ~600 with each side rolling back independently). |
+| 2026-04-24 | Assignment `status` enum reserves `'reserved'` from the start (unused in A2.0) | C5 soft-reservations and Phase 2 reservations will need it; adding the enum value now avoids a future migration for what is otherwise a one-line schema change. |
+| 2026-04-24 | Cron rewrite (jobs 1 + 2) folded into A2.0, not deferred to A2.0.1 | Mongoose virtuals don't work in `.find()` queries. The moment A2.0.1 `$unset`s `expiresOn`/`emailSent` from Locker, cron queries against those fields would silently find nothing. Rewriting cron in A2.0 eliminates the timing risk at deploy time of A2.0.1. |
+| 2026-04-24 | `currentAssignment` virtual is explicitly removed in A2.0.1's final commit | Compatibility shims are only valuable while something reads them; A3 makes "currentAssignment" ambiguous (M2M Holder ↔ Assignment) so the virtual has a natural end-of-life at A2.0.1. |
 
 ---
 
