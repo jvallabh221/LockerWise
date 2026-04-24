@@ -20,10 +20,22 @@ const lockerSchema = new mongoose.Schema(
             enum: ['occupied', 'available', 'expired'],
             default: 'available',
         },
+        buildingId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Building',
+        },
+        floorId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Floor',
+        },
+        zoneId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Zone',
+            default: null,
+        },
         LockerNumber: {
             type: Number,
-            // required: true,
-            unique: true,
+            // Uniqueness is scoped to buildingId — see compound index below.
         },
         LockerCode: {
             type: String,
@@ -92,5 +104,27 @@ const lockerSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
+
+// Uniqueness of LockerNumber is scoped to Building. A1 replaces the original
+// global unique index; B6 later refines this to a partial filter on
+// { deletedAt: null } so soft-deleted lockers don't block new numbers.
+lockerSchema.index({ buildingId: 1, LockerNumber: 1 }, { unique: true });
+
+// A1-transitional: buildingId/floorId are optional in the schema so existing
+// controllers keep working while A1 backfills old data. Warn (don't block) on
+// Locker creation without a building. A5.1 flips this to required and removes
+// this hook once every creation site sets the ref.
+lockerSchema.pre('save', function (next) {
+    if (this.isNew && !this.buildingId) {
+        console.warn(JSON.stringify({
+            level: 'warn',
+            event: 'locker.created_without_buildingId',
+            lockerNumber: this.LockerNumber,
+            lockerId: this._id ? String(this._id) : undefined,
+            reason: 'A1-transitional — required enforcement comes in A5.1',
+        }));
+    }
+    next();
+});
 
 module.exports = mongoose.model('Locker', lockerSchema);
