@@ -13,6 +13,7 @@ const { withAtomic } = require("../utils/atomic");
 const {
     flattenLocker,
     flattenLockers,
+    mergeAssignmentIntoLocker,
 } = require("../utils/flattenLockerResponse.js");
 
 exports.getAvailableLocker = async (req, res) => {
@@ -35,7 +36,7 @@ exports.getAvailableLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Available locker found",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in fetching Available Lockers: ${err.message}` });
@@ -485,9 +486,11 @@ exports.renewLocker = async (req, res) => {
 exports.getAllLockers = async (req, res) => {
     try {
         const lockers = await Locker.find();
+        const flattened = await flattenLockers(lockers);
 
-        // Enhance expired lockers with next combination
-        const data = lockers.map((locker) => {
+        // Preserve the pre-A2.0.1 expired-locker enhancement (adds
+        // nextLockerCombination to the response for expired entries).
+        const data = flattened.map((locker) => {
             if (locker.LockerStatus === "expired") {
                 const combinations = locker.LockerCodeCombinations || [];
                 const currentCode = locker.LockerCode;
@@ -503,12 +506,12 @@ exports.getAllLockers = async (req, res) => {
                 }
 
                 return {
-                    ...locker.toObject(),
+                    ...locker,
                     nextLockerCombination: nextCombination,
                 };
             }
 
-            return locker.toObject(); // Return normal locker object if not expired
+            return locker;
         });
 
         return res.status(200).json({
@@ -527,12 +530,19 @@ exports.getExpiringIn7daysLockers = async (req, res) => {
         todayUTC.setHours(0, 0, 0, 0); // Start of IST day
 
         const sevenDaysFromNowUTC = new Date(todayUTC);
-        sevenDaysFromNowUTC.setDate(todayUTC.getUTCDate() + 7); // 7 days from now
-        sevenDaysFromNowUTC.setHours(23, 59, 59, 999); // End of IST day
+        sevenDaysFromNowUTC.setDate(todayUTC.getUTCDate() + 7);
+        sevenDaysFromNowUTC.setHours(23, 59, 59, 999);
 
-        const data = await Locker.find({
+        // expiresOn now lives on Assignment (post-A2.0). Query there, then
+        // resolve the Lockers + flatten for the response.
+        const asgns = await Assignment.find({
             expiresOn: { $gte: todayUTC, $lte: sevenDaysFromNowUTC },
+            status: 'active',
+            deletedAt: null,
         });
+        const lockerIds = asgns.map((a) => a.lockerId);
+        const lockers = await Locker.find({ _id: { $in: lockerIds } });
+        const data = await flattenLockers(lockers);
 
         return res.status(200).json({
             message: "Lockers expiring within the next 7 days",
@@ -546,14 +556,19 @@ exports.getExpiringIn7daysLockers = async (req, res) => {
 exports.getExpiringToday = async (req, res) => {
     try {
         const todayUTC = new Date();
-        todayUTC.setHours(0, 0, 0, 0); // Start of UTC day
+        todayUTC.setHours(0, 0, 0, 0);
 
         const endOfTodayUTC = new Date(todayUTC);
-        endOfTodayUTC.setHours(23, 59, 59, 999); // End of UTC day
+        endOfTodayUTC.setHours(23, 59, 59, 999);
 
-        const data = await Locker.find({
+        const asgns = await Assignment.find({
             expiresOn: { $gte: todayUTC, $lte: endOfTodayUTC },
+            status: 'active',
+            deletedAt: null,
         });
+        const lockerIds = asgns.map((a) => a.lockerId);
+        const lockers = await Locker.find({ _id: { $in: lockerIds } });
+        const data = await flattenLockers(lockers);
 
         return res.status(200).json({
             message: "Lockers expiring today",
@@ -572,24 +587,46 @@ exports.deleteLocker = async (req, res) => {
             return res.status(400).json({ message: "Locker number is required" });
         }
 
-        const deletedLocker = await withAtomic(async (session) => {
-            const l = await Locker.findOneAndDelete({ LockerNumber: lockerNumber }).session(session);
+        const flattenedSnapshot = await withAtomic(async (session) => {
+            const l = await Locker.findOne({ LockerNumber: lockerNumber }).session(session);
             if (!l) {
                 const e = new Error("Locker not found");
                 e.status = 400;
                 throw e;
             }
+
+            // Capture the shape-preserving snapshot before mutating anything.
+            // mergeAssignmentIntoLocker is the pure version of flattenLocker;
+            // we query Assignment with the session ourselves so the read is
+            // consistent inside the transaction.
+            const asgn = await Assignment.findOne({
+                lockerId: l._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+            const snapshot = mergeAssignmentIntoLocker(l.toObject(), asgn);
+
+            // End any active Assignment so we don't leave orphans pointing at
+            // a nonexistent Locker. A2.0's migration down has an abort rule
+            // specifically for orphan Assignments; deleteLocker must clean up.
+            await Assignment.updateMany(
+                { lockerId: l._id, status: 'active' },
+                { $set: { status: 'ended', endedReason: 'cancelled', endedAt: new Date() } },
+                { session }
+            );
+
+            await Locker.deleteOne({ _id: l._id }).session(session);
             await Issue.deleteMany({ LockerNumber: lockerNumber }).session(session);
             await History.create(
                 [{ LockerNumber: lockerNumber, comment: "Locker Deleted", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Deleted" }],
                 { session }
             );
-            return l;
+            return snapshot;
         });
 
         return res.status(200).json({
             message: "Locker deleted successfully",
-            data: deletedLocker,
+            data: flattenedSnapshot,
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in deleting Locker: ${err.message}` });

@@ -458,3 +458,193 @@ describe('POST /api/locker/cancelLocker', () => {
         expect(res.status).toBe(400);
     });
 });
+
+describe('POST /api/locker/availableLocker', () => {
+    it('returns a flattened shape for the matched available Locker', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        await createTestLocker({
+            status: 'available',
+            lockerNumber: 4300,
+            lockerType: 'half',
+            gender: 'Male',
+        });
+
+        const res = await request(app)
+            .post('/api/locker/availableLocker')
+            .set(createAuthHeader(staff))
+            .send({ lockerType: 'half', employeeGender: 'Male' });
+
+        expect(res.status).toBe(200);
+        // Response shape: 11 SHAPE_FIELDS + locker-config fields.
+        for (const f of SHAPE_FIELDS) {
+            expect(res.body.data).toHaveProperty(f);
+        }
+        expect(res.body.data.LockerNumber).toBe(4300);
+        // Unassigned locker → all assignment fields are defaults.
+        expect(res.body.data.employeeName).toBe('N/A');
+        expect(res.body.data.employeeEmail).toBe('');
+    });
+});
+
+describe('GET /api/locker/allLockers', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    it('returns flattened locker objects, with assignment fields from Assignment', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const l1 = await createTestLocker({ lockerNumber: 4401, status: 'available' });
+        const l2 = await createTestLocker({ lockerNumber: 4402, status: 'occupied' });
+        await createTestAssignment({
+            lockerId: l2._id,
+            employeeName: 'Assigned',
+            employeeEmail: 'assigned@example.com',
+        });
+
+        const res = await request(app)
+            .get('/api/locker/allLockers')
+            .set(createAuthHeader(staff));
+
+        expect(res.status).toBe(200);
+        const byNumber = Object.fromEntries(
+            res.body.data.map((l) => [l.LockerNumber, l])
+        );
+        expect(byNumber[4401].employeeName).toBe('N/A');
+        expect(byNumber[4402].employeeName).toBe('Assigned');
+        expect(byNumber[4402].employeeEmail).toBe('assigned@example.com');
+    });
+
+    it('attaches nextLockerCombination to expired lockers', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        await Locker.create({
+            LockerNumber: 4403,
+            LockerType: 'full',
+            LockerStatus: 'expired',
+            LockerCode: 'A1',
+            LockerCodeCombinations: ['A1', 'A2', 'A3'],
+            availableForGender: 'Male',
+            buildingId: new mongoose.Types.ObjectId(),
+            floorId: new mongoose.Types.ObjectId(),
+        });
+
+        const res = await request(app)
+            .get('/api/locker/allLockers')
+            .set(createAuthHeader(staff));
+
+        expect(res.status).toBe(200);
+        const expired = res.body.data.find((l) => l.LockerNumber === 4403);
+        expect(expired.nextLockerCombination).toBe('A2');
+    });
+});
+
+describe('GET /api/locker/expiringIn7daysLockers and expiringToday', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    async function setupExpiringLocker({ lockerNumber, expiresOn }) {
+        const locker = await createTestLocker({ lockerNumber, status: 'occupied' });
+        await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: `Holder-${lockerNumber}`,
+            employeeEmail: `h${lockerNumber}@example.com`,
+            expiresOn,
+        });
+        return locker;
+    }
+
+    it('expiringIn7daysLockers returns Lockers whose active Assignment expires in the next 7 days', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const now = new Date();
+        const inThree = new Date(now.getTime() + 3 * 24 * 3600 * 1000);
+        const inTen = new Date(now.getTime() + 10 * 24 * 3600 * 1000);
+
+        await setupExpiringLocker({ lockerNumber: 4501, expiresOn: inThree });
+        await setupExpiringLocker({ lockerNumber: 4502, expiresOn: inTen });
+
+        const res = await request(app)
+            .get('/api/locker/expiringIn7daysLockers')
+            .set(createAuthHeader(admin));
+
+        expect(res.status).toBe(200);
+        const numbers = res.body.data.map((l) => l.LockerNumber);
+        expect(numbers).toContain(4501);
+        expect(numbers).not.toContain(4502);
+        // Shape preserved.
+        const entry = res.body.data.find((l) => l.LockerNumber === 4501);
+        expect(entry.employeeName).toBe('Holder-4501');
+    });
+
+    it('expiringToday returns only Lockers whose Assignment expires today', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const now = new Date();
+        const todayLater = new Date();
+        todayLater.setHours(23, 0, 0, 0);
+        const tomorrow = new Date(now.getTime() + 24 * 3600 * 1000);
+
+        await setupExpiringLocker({ lockerNumber: 4601, expiresOn: todayLater });
+        await setupExpiringLocker({ lockerNumber: 4602, expiresOn: tomorrow });
+
+        const res = await request(app)
+            .get('/api/locker/expiringToday')
+            .set(createAuthHeader(admin));
+
+        expect(res.status).toBe(200);
+        const numbers = res.body.data.map((l) => l.LockerNumber);
+        expect(numbers).toContain(4601);
+        expect(numbers).not.toContain(4602);
+    });
+});
+
+describe('POST /api/locker/deleteLocker', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    it('deletes the Locker, ends its active Assignment, returns the pre-delete flattened shape', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const locker = await createTestLocker({ lockerNumber: 4701, status: 'occupied' });
+        const asgn = await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'Zora',
+            employeeEmail: 'zora@example.com',
+            costToEmployee: 400,
+        });
+
+        const res = await request(app)
+            .post('/api/locker/deleteLocker')
+            .set(createAuthHeader(admin))
+            .send({ lockerNumber: 4701 });
+
+        expect(res.status).toBe(200);
+        // Pre-delete snapshot — the response shows what WAS on the locker.
+        expect(res.body.data.LockerNumber).toBe(4701);
+        expect(res.body.data.employeeName).toBe('Zora');
+        expect(res.body.data.CostToEmployee).toBe(400);
+        for (const f of SHAPE_FIELDS) {
+            expect(res.body.data).toHaveProperty(f);
+        }
+
+        // Locker is gone; Assignment is ended (not deleted — keeps the
+        // history, just not active).
+        const lockerDb = await Locker.findById(locker._id);
+        expect(lockerDb).toBeNull();
+        const asgnDb = await Assignment.findById(asgn._id);
+        expect(asgnDb.status).toBe('ended');
+        expect(asgnDb.endedReason).toBe('cancelled');
+    });
+
+    it('returns 400 when the locker does not exist', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const res = await request(app)
+            .post('/api/locker/deleteLocker')
+            .set(createAuthHeader(admin))
+            .send({ lockerNumber: 9999 });
+
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when lockerNumber is missing', async () => {
+        const { user: admin } = await createTestUser({ role: 'Admin' });
+        const res = await request(app)
+            .post('/api/locker/deleteLocker')
+            .set(createAuthHeader(admin))
+            .send({});
+
+        expect(res.status).toBe(400);
+    });
+});
