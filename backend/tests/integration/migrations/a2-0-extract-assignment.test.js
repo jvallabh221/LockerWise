@@ -2,9 +2,24 @@ const mongoose = require('mongoose');
 const Locker = require('../../../models/lockerModel.js');
 const Assignment = require('../../../models/assignmentModel.js');
 
-// Direct import — same pattern as a1-hierarchy.test.js. Going through
-// migrate-mongo here would apply every pending migration in the folder;
-// isolating to this file's up/down keeps the test independent of siblings.
+// === Migration test pattern (Phase 1 standing convention) ===
+//
+// Every migration integration test in this folder imports the migration
+// module directly rather than driving migrate-mongo's CLI API. Reasons:
+//
+//  - migrate-mongo.up() applies every pending migration in the folder, so
+//    tests for migration N would also run migrations N+1, N+2, ... once
+//    those land. Down only rolls back the most-recent, so migration N's
+//    own down branches never execute in a test context.
+//  - Direct import isolates each test to exactly one migration's up/down
+//    (matched pair), independent of siblings.
+//  - No changelog management needed; tests don't touch migrate-mongo's
+//    bookkeeping.
+//
+// `npm run verify:migrations` drives the full migrate-mongo API end-to-end
+// against memory-server — that's where we prove the folder as a whole
+// round-trips. These integration tests are unit-style checks on one
+// migration's function pair.
 const a20 = require(
     '../../../migrations/20260425000000-extract-assignment-collection.js'
 );
