@@ -75,7 +75,7 @@
   - Doc-only updates to **D3** (API reference) that land outside another item's PR.
 
   All other items ship via a PR on their item branch.
-- **Deep-review items** — these require line-by-line human review before merge regardless of size, and cannot be rubber-stamped: **A4** (capabilities), **B5** (TOTP 2FA), **B6+B7** (soft-delete + typed-confirm), **C3a** (refresh tokens).
+- **Deep-review items** — these require line-by-line human review before merge regardless of size, and cannot be rubber-stamped: **A2.0.1** (controller rewrites touching ~600 LoC across the assignment surface), **A4** (capabilities), **B5** (TOTP 2FA), **B6+B7** (soft-delete + typed-confirm), **C3a** (refresh tokens).
 - **Feature-flagged items** — **A4, B5, C3a** ship with their env flag defaulted to `false`. The user flips the flag to `true` manually after validating in prod; the agent never enables a flag.
 - **One PR per item (or batched pair per §8).** Title format: `[A2.0] Extract Assignment from Locker`. PR body includes: files changed, migration commands to run, manual test steps, changelog line, open questions.
 - **Two-step migrations.** Never drop a field/collection in the same migration that removes references. Pattern: add new → migrate data → deploy → remove old in a later migration.
@@ -191,13 +191,14 @@ When any of these is `false`, the legacy path must still work. Flag removal happ
 
 ## 10. Per-task workflow
 
-1. User says "start <item>" (e.g. "start A2.0").
-2. Agent reads this file. Confirms item is next per §7 or explains why a different order is justified.
-3. Agent inspects the current code relevant to the item.
-4. Agent proposes a plan: schema changes, files to modify, migration approach, test plan, rollback strategy. **Agent waits for approval before writing code.**
-5. On approval: implement, write tests, update API docs (§6 D3), open PR in the correct group branch.
-6. PR description includes: files changed, migration commands, manual test steps, changelog line, open questions.
-7. On merge: update §13 (completion log) with the item marked ✅, date, and PR link.
+1. **Immediately after the previous PR merges:** `git checkout main && git pull origin main`, then verify §13 completion-log freshness. The GitHub merge commit does not update §13 — if the just-merged item still reads 🔄, fix it in commit 1 of the new branch (folded into the plan-doc tightening commit that touches §14 for new decisions).
+2. User says "start <item>" (e.g. "start A2.0").
+3. Agent reads this file. Confirms item is next per §7 or explains why a different order is justified.
+4. Agent inspects the current code relevant to the item.
+5. Agent proposes a plan: schema changes, files to modify, migration approach, test plan, rollback strategy. **Agent waits for approval before writing code.**
+6. On approval: implement, write tests, update API docs (§6 D3), open PR in the correct group branch.
+7. PR description includes: files changed, migration commands, manual test steps, changelog line, open questions.
+8. On merge: step 1 of the next task kicks in.
 
 **Agent must ask before:**
 - Dropping any collection, field, or index.
@@ -235,6 +236,7 @@ These belong to Phase 1.5, Phase 2, or Phase 3. If an agent sees a natural place
 - Non-locker rental types UI (Phase 3 — schema placeholder only in A5)
 - i18n beyond infrastructure (Phase 3)
 - Access-card / smart-device integrations (Phase 3+)
+- Narrow `editLockerDetails` to locker-config-only fields (move assignment edits to `renewLocker` or a dedicated endpoint, remove generic `$set` dump) (Phase 2 follow-up from A2.0.1)
 
 ---
 
@@ -249,8 +251,8 @@ Update as items merge.
 | A0 | ✅ | #2 | 2026-04-24 | Merged to main |
 | C9 | ✅ | direct-to-main | 2026-04-24 | Rubber-stamp per §5 carve-out; also folded in `verify:migrations` npm alias |
 | A1 | ✅ | #3 | 2026-04-24 | Merged to main |
-| A2.0 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a2-0-extract-assignment` |
-| A2.0.1 | ☐ | — | — | `$unset` Locker fields, rewrite controllers, remove virtual |
+| A2.0 | ✅ | #4 | 2026-04-24 | Merged to main |
+| A2.0.1 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a2-0-1-remove-locker-fields`; **deep-review tier** |
 | A2+A3 | ☐ | — | — | — |
 | A4 | ☐ | — | — | Fallback shim; feature flag |
 | B1 | ☐ | — | — | — |
@@ -302,6 +304,9 @@ Update as items merge.
 | 2026-04-24 | Assignment `status` enum reserves `'reserved'` from the start (unused in A2.0) | C5 soft-reservations and Phase 2 reservations will need it; adding the enum value now avoids a future migration for what is otherwise a one-line schema change. |
 | 2026-04-24 | Cron rewrite (jobs 1 + 2) folded into A2.0, not deferred to A2.0.1 | Mongoose virtuals don't work in `.find()` queries. The moment A2.0.1 `$unset`s `expiresOn`/`emailSent` from Locker, cron queries against those fields would silently find nothing. Rewriting cron in A2.0 eliminates the timing risk at deploy time of A2.0.1. |
 | 2026-04-24 | `currentAssignment` virtual is explicitly removed in A2.0.1's final commit | Compatibility shims are only valuable while something reads them; A3 makes "currentAssignment" ambiguous (M2M Holder ↔ Assignment) so the virtual has a natural end-of-life at A2.0.1. |
+| 2026-04-24 | §10 step 1: `git pull main` + §13 freshness check is the first action on every new Phase 1 branch | GitHub's merge commit doesn't update §13 — seen twice (A1 → A2.0 and A2.0 → A2.0.1). Formalizing the drift-detection step prevents the log from lying about what's done. |
+| 2026-04-24 | A2.0.1 upgraded from Normal-PR to deep-review tier (§5) | ~600 LoC across assignment-writing controllers; every rewritten endpoint must preserve response shape. Line-by-line review is the only way to catch silent shape changes. |
+| 2026-04-24 | Narrow `editLockerDetails` to config-only fields — deferred to Phase 2 (§12) | A2.0.1 keeps generic `$set` semantics for shape preservation + narrow-scope discipline; the proper fix is to move assignment edits to `renewLocker` or a dedicated endpoint, which is a UX/API-shape change that belongs after Phase 1. |
 
 ---
 

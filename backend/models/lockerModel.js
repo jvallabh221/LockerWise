@@ -64,43 +64,13 @@ const lockerSchema = new mongoose.Schema(
             enum: ['Male', 'Female'],
             set: enumNormalizer({ male: 'Male', female: 'Female' }),
         },
-        employeeName: {
-            type: String,
-            default: 'N/A',
-        },
-        employeeId: {
-            type: String,
-        },
-        employeeEmail: {
-            type: String,
-        },
-        employeePhone: {
-            type: String,
-        },
-        employeeGender: {
-            type: String,
-            enum: ['Male', 'Female', 'None'],
-        },
-        CostToEmployee: {
-            type: Number,
-            default: 0,
-        },
-        Duration: {
-            type: String,
-        },
-        StartDate: {
-            type: Date,
-        },
-        EndDate: {
-            type: Date,
-        },
-        expiresOn: {
-            type: Date,
-        },
-        emailSent: { // New field to track email notification status
-            type: Boolean,
-            default: false,
-        },
+        // The 11 assignment-related fields (employeeName, employeeId,
+        // employeeEmail, employeePhone, employeeGender, CostToEmployee,
+        // Duration, StartDate, EndDate, expiresOn, emailSent) were removed
+        // from this schema in A2.0.1. They now live on the Assignment
+        // collection — see backend/models/assignmentModel.js. Responses
+        // that used to embed them on the Locker body continue to do so
+        // via backend/utils/flattenLockerResponse.js.
     },
     { timestamps: true }
 );
@@ -127,17 +97,9 @@ lockerSchema.pre('save', function (next) {
     next();
 });
 
-// A2.0-transitional: `currentAssignment` is a Mongoose virtual so code that
-// previously read `locker.employeeName` can migrate to
-// `locker.currentAssignment?.employeeName` incrementally. DEPRECATED — A3
-// makes this semantically ambiguous (one Assignment, many Holders) and
-// A2.0.1 removes this virtual. New code should query `Assignment` directly.
-lockerSchema.virtual('currentAssignment', {
-    ref: 'Assignment',
-    localField: '_id',
-    foreignField: 'lockerId',
-    justOne: true,
-    match: { status: 'active', deletedAt: null },
-});
+// The `currentAssignment` virtual that existed during A2.0 is removed in
+// A2.0.1 — it was an A2.0 → A2.0.1 transitional shim that stopped earning
+// its keep once every consumer migrated to explicit Assignment queries
+// (via backend/utils/flattenLockerResponse.js).
 
 module.exports = mongoose.model('Locker', lockerSchema);

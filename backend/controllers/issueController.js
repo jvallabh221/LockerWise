@@ -4,9 +4,26 @@ const mongoose = require('mongoose');
 const User = require('../models/userModel.js')
 const Issue = require('../models/Issue.js')
 const Locker = require('../models/lockerModel.js')
+const Assignment = require('../models/assignmentModel.js')
 const History = require('../models/History.js')
 const mailSender = require('../utils/mailSender.js')
 const { withAtomic } = require('../utils/atomic');
+
+// Reads LockerHolder + Cost from the CURRENT active Assignment for the
+// given locker. Falls back to defaults if no active Assignment exists
+// (e.g. locker was just cancelled). Used by every History.create call
+// below that pre-A2.0.1 read locker.employeeName / locker.CostToEmployee.
+async function getHolderInfoForHistory(lockerId, session) {
+    const asgn = await Assignment.findOne({
+        lockerId,
+        status: 'active',
+        deletedAt: null,
+    }).session(session);
+    return {
+        LockerHolder: asgn ? asgn.employeeName : 'N/A',
+        Cost: asgn ? asgn.CostToEmployee : 0,
+    };
+}
 
 const generateEmailBody = (type,message) => `
             <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
@@ -95,8 +112,9 @@ exports.raiseLockerIssue = async (req, res) => {
             }
 
             const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+            const { LockerHolder, Cost } = await getHolderInfoForHistory(locker._id, session);
             await History.create(
-                [{ LockerNumber, comment: "Issue Raised", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }],
+                [{ LockerNumber, comment: "Issue Raised", LockerHolder, InitiatedBy: userName, Cost, LockerStatus: stat }],
                 { session }
             );
 
@@ -187,8 +205,9 @@ exports.updateIssue = async (req, res) => {
                     throw e;
                 }
                 const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                const { LockerHolder, Cost } = await getHolderInfoForHistory(locker._id, session);
                 await History.create(
-                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Processed", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Processed", LockerHolder, InitiatedBy: "Admin", Cost, LockerStatus: stat }],
                     { session }
                 );
             }
@@ -229,8 +248,9 @@ exports.resolveIssue = async (req, res) => {
                     throw e;
                 }
                 const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                const { LockerHolder, Cost } = await getHolderInfoForHistory(locker._id, session);
                 await History.create(
-                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Resolved", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Resolved", LockerHolder, InitiatedBy: "Admin", Cost, LockerStatus: stat }],
                     { session }
                 );
             }
@@ -274,8 +294,9 @@ exports.deleteIssue = async (req, res) => {
                     throw e;
                 }
                 const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                const { LockerHolder, Cost } = await getHolderInfoForHistory(locker._id, session);
                 await History.create(
-                    [{ LockerNumber: found.LockerNumber, comment: "Issue Deleted", LockerHolder: locker.employeeName, InitiatedBy: user?.name || "System", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    [{ LockerNumber: found.LockerNumber, comment: "Issue Deleted", LockerHolder, InitiatedBy: user?.name || "System", Cost, LockerStatus: stat }],
                     { session }
                 );
             }

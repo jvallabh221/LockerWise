@@ -3,12 +3,19 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require("../models/userModel.js");
 const Locker = require("../models/lockerModel.js");
+const Assignment = require("../models/assignmentModel.js");
 const mailSender = require("../utils/mailSender.js");
 const History = require("../models/History.js");
 const Issue = require("../models/Issue.js");
 const Price = require("../models/Prices.js");
 const fs = require("fs");
 const { withAtomic } = require("../utils/atomic");
+const {
+    flattenLocker,
+    flattenLockers,
+    mergeAssignmentIntoLocker,
+    ASSIGNMENT_FIELD_SET,
+} = require("../utils/flattenLockerResponse.js");
 
 exports.getAvailableLocker = async (req, res) => {
     try {
@@ -30,7 +37,7 @@ exports.getAvailableLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Available locker found",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in fetching Available Lockers: ${err.message}` });
@@ -89,20 +96,33 @@ exports.allocateLocker = async (req, res) => {
                 e.status = 400;
                 throw e;
             }
+            // Locker-config fields stay on Locker. The 11 assignment fields
+            // (employeeName/Email/Id/Phone/Gender, CostToEmployee, Duration,
+            // StartDate, EndDate, expiresOn, emailSent) now live on the new
+            // Assignment doc created below.
             l.LockerCode = lockerCode;
             l.LockerType = lockerType;
-            l.employeeName = employeeName;
-            l.employeeId = employeeId;
-            l.employeeEmail = employeeEmail;
-            l.employeePhone = employeePhone;
-            l.employeeGender = employeeGender;
-            l.CostToEmployee = costToEmployee;
-            l.Duration = duration;
-            l.StartDate = startDate;
-            l.EndDate = endDate;
             l.LockerStatus = "occupied";
-            l.expiresOn = expiresOn;
             await l.save({ session });
+
+            await Assignment.create(
+                [{
+                    lockerId: l._id,
+                    employeeName,
+                    employeeId,
+                    employeeEmail,
+                    employeePhone,
+                    employeeGender,
+                    CostToEmployee: costToEmployee,
+                    Duration: duration,
+                    StartDate: startDate,
+                    EndDate: endDate,
+                    expiresOn,
+                    emailSent: false,
+                    status: 'active',
+                }],
+                { session }
+            );
 
             const user = await User.findOne({ email: req.user.email }).session(session);
             await History.create(
@@ -162,7 +182,7 @@ exports.allocateLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker allocated successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in allocating Locker: ${err.message}` });
@@ -179,13 +199,23 @@ exports.cancelLockerAllocation = async (req, res) => {
         const trimmedEmail = EmployeeEmail.trim();
 
         const { locker, name, duration, originalStartDate, originalEndDate } = await withAtomic(async (session) => {
+            // Active Assignment is the source of truth; Locker's old fields
+            // are stale copy during the A2.0 → A2.0.1 window.
+            const activeAsgn = await Assignment.findOne({
+                employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
+            if (!activeAsgn) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
+
             const lockerByEmail = await Locker.findOne({
-                $and: [
-                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                    { employeeEmail: { $ne: "" } },
-                    { employeeEmail: { $ne: null } },
-                    { LockerStatus: { $in: ["occupied", "expired"] } }
-                ]
+                _id: activeAsgn.lockerId,
+                LockerStatus: { $in: ["occupied", "expired"] },
             }).session(session);
 
             if (!lockerByEmail) {
@@ -201,20 +231,31 @@ exports.cancelLockerAllocation = async (req, res) => {
             }
 
             const l = lockerByEmail;
-            const capturedName = l.employeeName;
-            const capturedDuration = l.Duration;
-            const capturedStartDate = l.StartDate;
-            const capturedEndDate = l.EndDate;
+            // Capture pre-cancellation values from the Assignment for History
+            // + the cancellation email's "Original Validity Period" line.
+            const capturedName = activeAsgn.employeeName;
+            const capturedCost = activeAsgn.CostToEmployee;
+            const capturedDuration = activeAsgn.Duration;
+            const capturedStartDate = activeAsgn.StartDate;
+            const capturedEndDate = activeAsgn.EndDate;
 
             const user = await User.findOne({ email: req.user.email }).session(session);
 
             await Issue.deleteMany({ LockerNumber: lockerNumber, email: EmployeeEmail }).session(session);
 
             await History.create(
-                [{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: capturedName, InitiatedBy: user?.name || "System", Cost: l.CostToEmployee, LockerStatus: "Available" }],
+                [{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: capturedName, InitiatedBy: user?.name || "System", Cost: capturedCost, LockerStatus: "Available" }],
                 { session }
             );
 
+            // End the Assignment (status='ended', reason='cancelled', endedAt=now).
+            activeAsgn.status = 'ended';
+            activeAsgn.endedReason = 'cancelled';
+            activeAsgn.endedAt = new Date();
+            await activeAsgn.save({ session });
+
+            // Rotate LockerCode to the next combination (preserves pre-A2.0.1
+            // behavior). Config-only update on Locker.
             const oldCode = l.LockerCode;
             const lockerCodeCombinations = l.LockerCodeCombinations || [];
             const idx = lockerCodeCombinations.indexOf(oldCode) || 0;
@@ -223,20 +264,9 @@ exports.cancelLockerAllocation = async (req, res) => {
                 : oldCode;
 
             l.LockerCode = newCode;
-            l.employeeName = "N/A";
-            l.employeeId = "";
-            l.employeeEmail = "";
-            l.employeePhone = "";
-            l.employeeGender = "None";
-            l.CostToEmployee = 0;
-            l.Duration = "";
-            l.StartDate = "";
-            l.EndDate = "";
             l.LockerStatus = "available";
-            l.expiresOn = "";
-            l.emailSent = false;
-
             await l.save({ session });
+
             return {
                 locker: l,
                 name: capturedName,
@@ -297,7 +327,7 @@ exports.cancelLockerAllocation = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker taken back successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in canceling locker: ${err.message}` });
@@ -341,13 +371,22 @@ exports.renewLocker = async (req, res) => {
         }
 
         const { locker, employeeName } = await withAtomic(async (session) => {
+            // Email lookup now hits Assignment (the source of truth post-A2.0).
+            const activeAsgn = await Assignment.findOne({
+                employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
+            if (!activeAsgn) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
+
             const lockerByEmail = await Locker.findOne({
-                $and: [
-                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                    { employeeEmail: { $ne: "" } },
-                    { employeeEmail: { $ne: null } },
-                    { LockerStatus: { $in: ["occupied", "expired"] } }
-                ]
+                _id: activeAsgn.lockerId,
+                LockerStatus: { $in: ["occupied", "expired"] },
             }).session(session);
 
             if (!lockerByEmail) {
@@ -362,18 +401,20 @@ exports.renewLocker = async (req, res) => {
                 throw e;
             }
 
-            const l = lockerByEmail;
-            const name = l.employeeName;
+            const name = activeAsgn.employeeName;
 
-            l.CostToEmployee = costToEmployee;
-            l.Duration = duration;
-            l.StartDate = startDate;
-            l.EndDate = endDate;
-            l.LockerStatus = "occupied";
-            l.emailSent = false;
-            l.expiresOn = expiresOn;
+            // Renew updates the Assignment, not Locker's (removed-in-commit-10) fields.
+            activeAsgn.CostToEmployee = costToEmployee;
+            activeAsgn.Duration = duration;
+            activeAsgn.StartDate = startDate;
+            activeAsgn.EndDate = endDate;
+            activeAsgn.emailSent = false;
+            activeAsgn.expiresOn = expiresOn;
+            await activeAsgn.save({ session });
 
-            await l.save({ session });
+            // Locker status bumps back to occupied if it had expired.
+            lockerByEmail.LockerStatus = "occupied";
+            await lockerByEmail.save({ session });
 
             const user = await User.findOne({ email: req.user.email }).session(session);
 
@@ -382,7 +423,7 @@ exports.renewLocker = async (req, res) => {
                 { session }
             );
 
-            return { locker: l, employeeName: name };
+            return { locker: lockerByEmail, employeeName: name };
         });
 
         // Send email after transaction commits
@@ -436,7 +477,7 @@ exports.renewLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker Renewed successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in Renewing Locker: ${err.message}` });
@@ -446,9 +487,11 @@ exports.renewLocker = async (req, res) => {
 exports.getAllLockers = async (req, res) => {
     try {
         const lockers = await Locker.find();
+        const flattened = await flattenLockers(lockers);
 
-        // Enhance expired lockers with next combination
-        const data = lockers.map((locker) => {
+        // Preserve the pre-A2.0.1 expired-locker enhancement (adds
+        // nextLockerCombination to the response for expired entries).
+        const data = flattened.map((locker) => {
             if (locker.LockerStatus === "expired") {
                 const combinations = locker.LockerCodeCombinations || [];
                 const currentCode = locker.LockerCode;
@@ -464,12 +507,12 @@ exports.getAllLockers = async (req, res) => {
                 }
 
                 return {
-                    ...locker.toObject(),
+                    ...locker,
                     nextLockerCombination: nextCombination,
                 };
             }
 
-            return locker.toObject(); // Return normal locker object if not expired
+            return locker;
         });
 
         return res.status(200).json({
@@ -488,12 +531,19 @@ exports.getExpiringIn7daysLockers = async (req, res) => {
         todayUTC.setHours(0, 0, 0, 0); // Start of IST day
 
         const sevenDaysFromNowUTC = new Date(todayUTC);
-        sevenDaysFromNowUTC.setDate(todayUTC.getUTCDate() + 7); // 7 days from now
-        sevenDaysFromNowUTC.setHours(23, 59, 59, 999); // End of IST day
+        sevenDaysFromNowUTC.setDate(todayUTC.getUTCDate() + 7);
+        sevenDaysFromNowUTC.setHours(23, 59, 59, 999);
 
-        const data = await Locker.find({
+        // expiresOn now lives on Assignment (post-A2.0). Query there, then
+        // resolve the Lockers + flatten for the response.
+        const asgns = await Assignment.find({
             expiresOn: { $gte: todayUTC, $lte: sevenDaysFromNowUTC },
+            status: 'active',
+            deletedAt: null,
         });
+        const lockerIds = asgns.map((a) => a.lockerId);
+        const lockers = await Locker.find({ _id: { $in: lockerIds } });
+        const data = await flattenLockers(lockers);
 
         return res.status(200).json({
             message: "Lockers expiring within the next 7 days",
@@ -507,14 +557,19 @@ exports.getExpiringIn7daysLockers = async (req, res) => {
 exports.getExpiringToday = async (req, res) => {
     try {
         const todayUTC = new Date();
-        todayUTC.setHours(0, 0, 0, 0); // Start of UTC day
+        todayUTC.setHours(0, 0, 0, 0);
 
         const endOfTodayUTC = new Date(todayUTC);
-        endOfTodayUTC.setHours(23, 59, 59, 999); // End of UTC day
+        endOfTodayUTC.setHours(23, 59, 59, 999);
 
-        const data = await Locker.find({
+        const asgns = await Assignment.find({
             expiresOn: { $gte: todayUTC, $lte: endOfTodayUTC },
+            status: 'active',
+            deletedAt: null,
         });
+        const lockerIds = asgns.map((a) => a.lockerId);
+        const lockers = await Locker.find({ _id: { $in: lockerIds } });
+        const data = await flattenLockers(lockers);
 
         return res.status(200).json({
             message: "Lockers expiring today",
@@ -533,24 +588,46 @@ exports.deleteLocker = async (req, res) => {
             return res.status(400).json({ message: "Locker number is required" });
         }
 
-        const deletedLocker = await withAtomic(async (session) => {
-            const l = await Locker.findOneAndDelete({ LockerNumber: lockerNumber }).session(session);
+        const flattenedSnapshot = await withAtomic(async (session) => {
+            const l = await Locker.findOne({ LockerNumber: lockerNumber }).session(session);
             if (!l) {
                 const e = new Error("Locker not found");
                 e.status = 400;
                 throw e;
             }
+
+            // Capture the shape-preserving snapshot before mutating anything.
+            // mergeAssignmentIntoLocker is the pure version of flattenLocker;
+            // we query Assignment with the session ourselves so the read is
+            // consistent inside the transaction.
+            const asgn = await Assignment.findOne({
+                lockerId: l._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+            const snapshot = mergeAssignmentIntoLocker(l.toObject(), asgn);
+
+            // End any active Assignment so we don't leave orphans pointing at
+            // a nonexistent Locker. A2.0's migration down has an abort rule
+            // specifically for orphan Assignments; deleteLocker must clean up.
+            await Assignment.updateMany(
+                { lockerId: l._id, status: 'active' },
+                { $set: { status: 'ended', endedReason: 'cancelled', endedAt: new Date() } },
+                { session }
+            );
+
+            await Locker.deleteOne({ _id: l._id }).session(session);
             await Issue.deleteMany({ LockerNumber: lockerNumber }).session(session);
             await History.create(
                 [{ LockerNumber: lockerNumber, comment: "Locker Deleted", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Deleted" }],
                 { session }
             );
-            return l;
+            return snapshot;
         });
 
         return res.status(200).json({
             message: "Locker deleted successfully",
-            data: deletedLocker,
+            data: flattenedSnapshot,
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in deleting Locker: ${err.message}` });
@@ -578,6 +655,41 @@ exports.editLockerDetails = async (req, res) => {
             return res.status(400).json({ message: "LockerNumber is required" });
         }
 
+        // Split LockerDetails into locker-config vs assignment fields. The
+        // generic $set dump is preserved here for shape-compatibility with
+        // the current API; §12 tracks narrowing this endpoint as a Phase 2
+        // follow-up.
+        const lockerFields = {};
+        const assignmentFields = {};
+        for (const [k, v] of Object.entries(LockerDetails)) {
+            if (k === 'LockerNumber') continue; // the lookup key, not a mutation
+            if (ASSIGNMENT_FIELD_SET.has(k)) assignmentFields[k] = v;
+            else lockerFields[k] = v;
+        }
+
+        // If the payload touches assignment fields but no active Assignment
+        // exists for this locker, reject the whole request — silent drops
+        // would mean the admin's edits vanish without explanation.
+        if (Object.keys(assignmentFields).length > 0) {
+            const lockerForCheck = await Locker.findOne({
+                LockerNumber: LockerDetails.LockerNumber,
+            }).lean();
+            if (!lockerForCheck) {
+                return res.status(400).json({ message: "Locker not found" });
+            }
+            const activeAsgnCheck = await Assignment.findOne({
+                lockerId: lockerForCheck._id,
+                status: 'active',
+                deletedAt: null,
+            }).lean();
+            if (!activeAsgnCheck) {
+                const offending = Object.keys(assignmentFields).join(', ');
+                return res.status(400).json({
+                    message: `Cannot edit assignment fields on an unassigned locker: ${offending}. Allocate the locker first.`,
+                });
+            }
+        }
+
         const locker = await withAtomic(async (session) => {
             const l = await Locker.findOne({ LockerNumber: LockerDetails.LockerNumber }).session(session);
             if (!l) {
@@ -586,11 +698,30 @@ exports.editLockerDetails = async (req, res) => {
                 throw e;
             }
 
-            await Locker.updateOne(
-                { LockerNumber: LockerDetails.LockerNumber },
-                { $set: LockerDetails },
-                { session }
-            );
+            if (Object.keys(lockerFields).length > 0) {
+                await Locker.updateOne(
+                    { _id: l._id },
+                    { $set: lockerFields },
+                    { session }
+                );
+            }
+            if (Object.keys(assignmentFields).length > 0) {
+                await Assignment.updateOne(
+                    { lockerId: l._id, status: 'active', deletedAt: null },
+                    { $set: assignmentFields },
+                    { session }
+                );
+            }
+
+            // Read the post-update Assignment for the History holder/cost —
+            // prefer the incoming payload values when present (preserves
+            // pre-A2.0.1 behavior where History read LockerDetails.employeeName
+            // and l.CostToEmployee).
+            const activeAsgn = await Assignment.findOne({
+                lockerId: l._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
 
             let userName = "Admin";
             if (req.user.role !== "Admin") {
@@ -598,8 +729,17 @@ exports.editLockerDetails = async (req, res) => {
                 userName = user?.name || "System";
             }
             const stat = (l.LockerStatus).charAt(0).toUpperCase() + (l.LockerStatus).slice(1);
+            const holderName =
+                LockerDetails.employeeName !== undefined
+                    ? LockerDetails.employeeName
+                    : (activeAsgn ? activeAsgn.employeeName : 'N/A');
+            const cost =
+                LockerDetails.CostToEmployee !== undefined
+                    ? LockerDetails.CostToEmployee
+                    : (activeAsgn ? activeAsgn.CostToEmployee : 0);
+
             await History.create(
-                [{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: LockerDetails.employeeName, InitiatedBy: userName, Cost: l.CostToEmployee, LockerStatus: stat }],
+                [{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: holderName, InitiatedBy: userName, Cost: cost, LockerStatus: stat }],
                 { session }
             );
             return l;
@@ -652,7 +792,19 @@ exports.editLockerDetails = async (req, res) => {
                 </p>
             </div>
         `;
-        await mailSender(locker.employeeEmail, "Notification of Locker Update", htmlBody);
+        // Send email to whichever employeeEmail we know — prefer payload,
+        // else the (post-update) active Assignment.
+        const emailTo =
+            LockerDetails.employeeEmail !== undefined
+                ? LockerDetails.employeeEmail
+                : (await Assignment.findOne({
+                      lockerId: locker._id,
+                      status: 'active',
+                      deletedAt: null,
+                  }))?.employeeEmail;
+        if (emailTo) {
+            await mailSender(emailTo, "Notification of Locker Update", htmlBody);
+        }
 
         return res.status(200).json({ message: "Locker updated successfully" });
     } catch (err) {
@@ -682,6 +834,17 @@ exports.changeLockerStatus = async (req, res) => {
                 { session }
             );
 
+            // History's LockerHolder / Cost read from the CURRENT active
+            // Assignment (status:'active', deletedAt:null). If no active
+            // Assignment exists (e.g. the locker was just cancelled in a
+            // prior request), fall back to defaults — does NOT read an
+            // ended Assignment's values.
+            const activeAsgn = await Assignment.findOne({
+                lockerId: locker._id,
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
             let userName = "Admin";
             if (req.user.role !== "Admin") {
                 const user = await User.findOne({ email: req.user.email }).session(session);
@@ -689,7 +852,14 @@ exports.changeLockerStatus = async (req, res) => {
             }
             const stat = (LockerStatus).charAt(0).toUpperCase() + (LockerStatus).slice(1);
             await History.create(
-                [{ LockerNumber, comment: "Locker Status Changed", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }],
+                [{
+                    LockerNumber,
+                    comment: "Locker Status Changed",
+                    LockerHolder: activeAsgn ? activeAsgn.employeeName : 'N/A',
+                    InitiatedBy: userName,
+                    Cost: activeAsgn ? activeAsgn.CostToEmployee : 0,
+                    LockerStatus: stat,
+                }],
                 { session }
             );
         });
