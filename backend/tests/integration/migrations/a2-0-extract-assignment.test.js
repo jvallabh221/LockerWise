@@ -182,36 +182,10 @@ describe('A2.0 migration: extract Assignment collection', () => {
         ).rejects.toThrow(/duplicate key/i);
     });
 
-    it('currentAssignment virtual populates the active Assignment on a Locker', async () => {
-        const seeded = await seedLockerRaw();
-        await runUp();
-
-        const locker = await Locker.findById(seeded._id).populate(
-            'currentAssignment',
-        );
-        expect(locker.currentAssignment).toBeTruthy();
-        expect(locker.currentAssignment.employeeName).toBe(
-            seeded.employeeName,
-        );
-        expect(locker.currentAssignment.status).toBe('active');
-    });
-
-    it('currentAssignment virtual does not populate ended Assignments', async () => {
-        const seeded = await seedLockerRaw();
-        await runUp();
-
-        // Manually end the assignment. This would normally abort down — we're
-        // not testing down here, just that the virtual filters ended out.
-        await Assignment.updateOne(
-            { lockerId: seeded._id },
-            { $set: { status: 'ended', endedReason: 'returned', endedAt: new Date() } },
-        );
-
-        const locker = await Locker.findById(seeded._id).populate(
-            'currentAssignment',
-        );
-        expect(locker.currentAssignment).toBeNull();
-    });
+    // Tests for the `currentAssignment` virtual are intentionally removed:
+    // the virtual is gone in A2.0.1's final commit once every consumer
+    // migrated to explicit Assignment queries via flattenLockerResponse.js.
+    // Keeping tests for a removed feature would fail on every run.
 
     it('down reverses cleanly when nothing was modified', async () => {
         await seedLockerRaw();
