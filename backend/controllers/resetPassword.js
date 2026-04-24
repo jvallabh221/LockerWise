@@ -5,6 +5,7 @@ const mailSender = require("../utils/mailSender.js");
 const OTP = require("../models/OTP.js");
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel.js");
+const { withAtomic } = require("../utils/atomic");
 
 function generateOTP() {
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -99,41 +100,28 @@ exports.validateOTP = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { email, newPassword } = req.body;
 
         if (!email || !newPassword) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "Email, and new password are required" });
         }
 
-        const user = await User.findOne({ email }).session(session);
-        if (!user) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ message: "User with this email does not exist" });
-        }
-        const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-        user.password = hashedPassword;
-        await user.save({ session });
-
-        await OTP.deleteOne({ email }).session(session);
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
-
-        return res.status(200).json({
-            message: "Password reset successfully",
+        await withAtomic(async (session) => {
+            const user = await User.findOne({ email }).session(session);
+            if (!user) {
+                const e = new Error("User with this email does not exist");
+                e.status = 404;
+                throw e;
+            }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            user.password = hashedPassword;
+            await user.save({ session });
+            await OTP.deleteOne({ email }).session(session);
         });
+
+        return res.status(200).json({ message: "Password reset successfully" });
     } catch (err) {
-        await session.abortTransaction();
-        return res.status(err.status || 500).json({ message : `Error in resetting password: ${err.message}`});
-    } finally {
-        session.endSession();
+        return res.status(err.status || 500).json({ message: `Error in resetting password: ${err.message}` });
     }
 };

@@ -6,6 +6,7 @@ const User = require('../models/userModel.js')
 const History = require('../models/History.js')
 const bcrypt = require('bcrypt');
 const mailSender = require('../utils/mailSender')
+const { withAtomic } = require('../utils/atomic');
 
 exports.addStaff = async (req, res) => {
     try {
@@ -160,43 +161,34 @@ exports.removeStaff = async (req, res) => {
 };
 
 exports.addLocker = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { LockerType, LockerNumber, LockerCodeCombinations, LockerPrice3Month, LockerPrice6Month, LockerPrice12Month, availableForGender, LockerSerialNumber } = req.body;
-        const [locker] = await Locker.create([{ LockerType, LockerNumber, LockerCodeCombinations, LockerPrice3Month, LockerPrice6Month, LockerPrice12Month, availableForGender, LockerSerialNumber }], { session });
 
-        locker.LockerCode = LockerCodeCombinations[0];
-        await locker.save({ session });
-
-        await History.create([{ LockerNumber: LockerNumber, comment: "Locker Added", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Available" }], { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
-
-        return res.status(201).json({
-            message: "Locker Created Successfully",
-            data: locker
+        const locker = await withAtomic(async (session) => {
+            const [created] = await Locker.create(
+                [{ LockerType, LockerNumber, LockerCodeCombinations, LockerPrice3Month, LockerPrice6Month, LockerPrice12Month, availableForGender, LockerSerialNumber }],
+                { session }
+            );
+            created.LockerCode = LockerCodeCombinations[0];
+            await created.save({ session });
+            await History.create(
+                [{ LockerNumber, comment: "Locker Added", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Available" }],
+                { session }
+            );
+            return created;
         });
+
+        return res.status(201).json({ message: "Locker Created Successfully", data: locker });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in adding locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 }
 
 exports.addMultipleLocker = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const lockersData = req.body;
 
         if (!Array.isArray(lockersData)) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({
                 message: "Invalid input: Expected an array of locker objects"
             });
@@ -209,32 +201,23 @@ exports.addMultipleLocker = async (req, res) => {
             return lockerData;
         });
 
-        const newLockers = await Locker.insertMany(updatedLockersData, { session });
-
-        // Create history records for all lockers
-        const historyRecords = newLockers.map(locker => ({
-            LockerNumber: locker.LockerNumber,
-            comment: "Locker Added",
-            LockerHolder: "N/A",
-            InitiatedBy: "Admin",
-            Cost: 0,
-            LockerStatus: "Available"
-        }));
-
-        await History.insertMany(historyRecords, { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
-
-        return res.status(201).json({
-            message: "Lockers Created Successfully",
-            data: newLockers
+        const newLockers = await withAtomic(async (session) => {
+            const created = await Locker.insertMany(updatedLockersData, { session });
+            const historyRecords = created.map(locker => ({
+                LockerNumber: locker.LockerNumber,
+                comment: "Locker Added",
+                LockerHolder: "N/A",
+                InitiatedBy: "Admin",
+                Cost: 0,
+                LockerStatus: "Available"
+            }));
+            await History.insertMany(historyRecords, { session });
+            return created;
         });
+
+        return res.status(201).json({ message: "Lockers Created Successfully", data: newLockers });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in creating lockers: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 

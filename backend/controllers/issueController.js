@@ -6,6 +6,7 @@ const Issue = require('../models/Issue.js')
 const Locker = require('../models/lockerModel.js')
 const History = require('../models/History.js')
 const mailSender = require('../utils/mailSender.js')
+const { withAtomic } = require('../utils/atomic');
 
 const generateEmailBody = (type,message) => `
             <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
@@ -69,41 +70,38 @@ exports.raiseTechnicalIssue = async (req, res) => {
 };
 
 exports.raiseLockerIssue = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { subject, description, LockerNumber } = req.body;
         let { email } = req.body;
+        if (!email) email = "None";
 
-        const locker = await Locker.findOne({ LockerNumber: LockerNumber }).session(session);
+        const issue = await withAtomic(async (session) => {
+            const locker = await Locker.findOne({ LockerNumber }).session(session);
+            if (!locker) {
+                const e = new Error("Locker not found");
+                e.status = 400;
+                throw e;
+            }
 
-        if (!locker) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker not found" });
-        }
+            const [created] = await Issue.create(
+                [{ subject, description, type: 'locker', LockerNumber, email }],
+                { session }
+            );
 
-        if(!email) {
-            email = "None";
-        }
+            let userName = "Admin";
+            if (req.user.role !== "Admin") {
+                const user = await User.findOne({ email: req.user.email }).session(session);
+                userName = user?.name || "System";
+            }
 
-        // Use array syntax for create() when using sessions
-        const [issue] = await Issue.create([{ subject, description, type: 'locker', LockerNumber, email }], { session });
+            const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+            await History.create(
+                [{ LockerNumber, comment: "Issue Raised", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }],
+                { session }
+            );
 
-        let userName = "Admin";
-        if(req.user.role !== "Admin"){
-            const user = await User.findOne({ email: req.user.email }).session(session);
-            userName = user.name;
-        }
-
-        const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
-
-        // Use array syntax for create() when using sessions
-        await History.create([{ LockerNumber: LockerNumber, comment: "Issue Raised", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }], { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            return created;
+        });
 
         const htmlBody = `
             <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
@@ -133,16 +131,11 @@ exports.raiseLockerIssue = async (req, res) => {
             </div>
         `;
 
-        if(email!=="None")   await mailSender(email, "Confirmation of Issue Reporting", htmlBody);
+        if (email !== "None") await mailSender(email, "Confirmation of Issue Reporting", htmlBody);
 
         return res.status(201).json({ message: "Locker issue raised  successfully", issue });
     } catch (err) {
-        // Rollback transaction on error
-        await session.abortTransaction();
-        return res.status(err.status || 500).json({ message : `Error in raising Issue: ${err.message}`});
-    } finally {
-        // Always end the session
-        session.endSession();
+        return res.status(err.status || 500).json({ message: `Error in raising Issue: ${err.message}` });
     }
 };
 
@@ -175,143 +168,123 @@ exports.updateComment = async (req, res) => {
 };
 
 exports.updateIssue = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { id, status } = req.body;
-        const issue = await Issue.findByIdAndUpdate(id, {status:status}, { session, new: true });
-        
-        if (!issue) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ message: "Issue not found" });
-        }
-        
-        let message = "";
-        
-        issue.type == "technical" ? message = "Your <b>Technical</b> issue is being <b>Processed</b>. We will keep you updated on the progress."
-                                  : message = "Your <b>Locker</b> issue for the Locker Number <strong><u>" + issue.LockerNumber + "</u></strong> is being <b>Processed</b>.<br>We will keep you updated on the progress.";
-         const htmlBody = generateEmailBody(
-            "Update",
-            message
-        );
-        
-        if( issue.type == "locker" ){
-            const locker = await Locker.findOne({ LockerNumber: issue.LockerNumber }).session(session);
-            if (!locker) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(404).json({ message: "Locker not found" });
+
+        const issue = await withAtomic(async (session) => {
+            const updated = await Issue.findByIdAndUpdate(id, { status }, { session, new: true });
+            if (!updated) {
+                const e = new Error("Issue not found");
+                e.status = 404;
+                throw e;
             }
-            const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
-            await History.create([{ LockerNumber: issue.LockerNumber, comment: "Issue Processed", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost:  locker.CostToEmployee, LockerStatus: stat }], { session });
-        }
 
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            if (updated.type === "locker") {
+                const locker = await Locker.findOne({ LockerNumber: updated.LockerNumber }).session(session);
+                if (!locker) {
+                    const e = new Error("Locker not found");
+                    e.status = 404;
+                    throw e;
+                }
+                const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                await History.create(
+                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Processed", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    { session }
+                );
+            }
 
-        if(issue.email!=="None")  await mailSender(issue.email, "Update On Your Issue", htmlBody);
+            return updated;
+        });
+
+        const message = issue.type === "technical"
+            ? "Your <b>Technical</b> issue is being <b>Processed</b>. We will keep you updated on the progress."
+            : "Your <b>Locker</b> issue for the Locker Number <strong><u>" + issue.LockerNumber + "</u></strong> is being <b>Processed</b>.<br>We will keep you updated on the progress.";
+        const htmlBody = generateEmailBody("Update", message);
+
+        if (issue.email !== "None") await mailSender(issue.email, "Update On Your Issue", htmlBody);
 
         return res.status(200).json({ message: "action initiated", issue });
     } catch (err) {
-        // Rollback transaction on error
-        await session.abortTransaction();
-        return res.status(err.status || 500).json({ message : `Error in updating Issue: ${err.message}`});
-    } finally {
-        // Always end the session
-        session.endSession();
+        return res.status(err.status || 500).json({ message: `Error in updating Issue: ${err.message}` });
     }
 };
 
 exports.resolveIssue = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { id, status } = req.body;
-        const issue = await Issue.findByIdAndUpdate(id, {status:status}, { session, new: true });
-        
-        if (!issue) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ message: "Issue not found" });
-        }
-        
-        let message = "";
-        
-        issue.type == "technical" ? message = "Your <b>Technical</b> issue has been <b>Resolved</b>. Thank you for your patience."
-                                  : message = "Your <b>Locker</b> issue for the Locker Number <strong><u>" + issue.LockerNumber + "</u></strong> has been <b>Resolved</b>.<br>Thank you for your patience.";
-         const htmlBody = generateEmailBody(
-            "Update",
-            message
-        );
 
-        if( issue.type == "locker" ){
-            const locker = await Locker.findOne({ LockerNumber: issue.LockerNumber }).session(session);
-            if (!locker) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(404).json({ message: "Locker not found" });
+        const issue = await withAtomic(async (session) => {
+            const updated = await Issue.findByIdAndUpdate(id, { status }, { session, new: true });
+            if (!updated) {
+                const e = new Error("Issue not found");
+                e.status = 404;
+                throw e;
             }
-            const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
-            await History.create([{ LockerNumber: issue.LockerNumber, comment: "Issue Resolved", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost: locker.CostToEmployee, LockerStatus: stat }], { session });
-        }
 
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            if (updated.type === "locker") {
+                const locker = await Locker.findOne({ LockerNumber: updated.LockerNumber }).session(session);
+                if (!locker) {
+                    const e = new Error("Locker not found");
+                    e.status = 404;
+                    throw e;
+                }
+                const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                await History.create(
+                    [{ LockerNumber: updated.LockerNumber, comment: "Issue Resolved", LockerHolder: locker.employeeName, InitiatedBy: "Admin", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    { session }
+                );
+            }
 
-        if(issue.email!=="None")  await mailSender(issue.email, "Issue has been Resolved", htmlBody);
+            return updated;
+        });
+
+        const message = issue.type === "technical"
+            ? "Your <b>Technical</b> issue has been <b>Resolved</b>. Thank you for your patience."
+            : "Your <b>Locker</b> issue for the Locker Number <strong><u>" + issue.LockerNumber + "</u></strong> has been <b>Resolved</b>.<br>Thank you for your patience.";
+        const htmlBody = generateEmailBody("Update", message);
+
+        if (issue.email !== "None") await mailSender(issue.email, "Issue has been Resolved", htmlBody);
         return res.status(200).json({ message: "Issue resolved  successfully", issue });
     } catch (err) {
-        // Rollback transaction on error
-        await session.abortTransaction();
-        return res.status(err.status || 500).json({ message : `Error in resolving Issue: ${err.message}`});
-    } finally {
-        // Always end the session
-        session.endSession();
+        return res.status(err.status || 500).json({ message: `Error in resolving Issue: ${err.message}` });
     }
 };
 
 exports.deleteIssue = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
-        const {id} = req.body;
-        const issue = await Issue.findById(id).session(session);
-        if (!issue) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(404).json({ message: "Issue not found" });
-        }
-        
-        await Issue.findByIdAndDelete(id).session(session);
+        const { id } = req.body;
 
-        const user = await User.findOne({ email: req.user.email }).session(session);
-        
-        if(issue.type == "locker"){
-            const locker = await Locker.findOne({ LockerNumber: issue.LockerNumber }).session(session);
-            if (!locker) {
-                await session.abortTransaction();
-                session.endSession();
-                return res.status(404).json({ message: "Locker not found" });
+        const issue = await withAtomic(async (session) => {
+            const found = await Issue.findById(id).session(session);
+            if (!found) {
+                const e = new Error("Issue not found");
+                e.status = 404;
+                throw e;
             }
-            const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
-            await History.create([{ LockerNumber: issue.LockerNumber, comment: "Issue Deleted", LockerHolder: locker.employeeName, InitiatedBy: user.name, Cost:  locker.CostToEmployee, LockerStatus: stat}], { session });
-        }
-        
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
-        
-        return res.status(200).json({ message: "Issue deleted successfully", issue });
 
+            await Issue.findByIdAndDelete(id).session(session);
+
+            const user = await User.findOne({ email: req.user.email }).session(session);
+
+            if (found.type === "locker") {
+                const locker = await Locker.findOne({ LockerNumber: found.LockerNumber }).session(session);
+                if (!locker) {
+                    const e = new Error("Locker not found");
+                    e.status = 404;
+                    throw e;
+                }
+                const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
+                await History.create(
+                    [{ LockerNumber: found.LockerNumber, comment: "Issue Deleted", LockerHolder: locker.employeeName, InitiatedBy: user?.name || "System", Cost: locker.CostToEmployee, LockerStatus: stat }],
+                    { session }
+                );
+            }
+
+            return found;
+        });
+
+        return res.status(200).json({ message: "Issue deleted successfully", issue });
     } catch (err) {
-        // Rollback transaction on error
-        await session.abortTransaction();
-        return res.status(err.status || 500).json({ message : `Error in deleting Issue: ${err.message}`});
-    } finally {
-        // Always end the session
-        session.endSession();
+        return res.status(err.status || 500).json({ message: `Error in deleting Issue: ${err.message}` });
     }
 };

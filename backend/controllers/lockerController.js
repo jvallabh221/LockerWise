@@ -8,6 +8,7 @@ const History = require("../models/History.js");
 const Issue = require("../models/Issue.js");
 const Price = require("../models/Prices.js");
 const fs = require("fs");
+const { withAtomic } = require("../utils/atomic");
 
 exports.getAvailableLocker = async (req, res) => {
     try {
@@ -45,27 +46,11 @@ function formatdate(date) {
 };
 
 exports.allocateLocker = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { lockerNumber, lockerType, lockerCode, employeeName, employeeId, employeeEmail, employeePhone, employeeGender, costToEmployee, duration, startDate, endDate } = req.body;
 
         if (!lockerNumber) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "lockerNumber is required" });
-        }
-
-        const locker = await Locker.findOne({
-            LockerNumber: lockerNumber,
-            LockerStatus: "available",
-        }).session(session);
-
-        if (!locker) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker is not available or does not exist" });
         }
 
         let expiresOn;
@@ -94,29 +79,38 @@ exports.allocateLocker = async (req, res) => {
             expiresOn = expires.toISOString();
         }
 
-        locker.LockerCode = lockerCode;
-        locker.LockerType = lockerType;
-        locker.employeeName = employeeName;
-        locker.employeeId = employeeId;
-        locker.employeeEmail = employeeEmail;
-        locker.employeePhone = employeePhone;
-        locker.employeeGender = employeeGender;
-        locker.CostToEmployee = costToEmployee;
-        locker.Duration = duration;
-        locker.StartDate = startDate;
-        locker.EndDate = endDate;
-        locker.LockerStatus = "occupied";
+        const locker = await withAtomic(async (session) => {
+            const l = await Locker.findOne({
+                LockerNumber: lockerNumber,
+                LockerStatus: "available",
+            }).session(session);
+            if (!l) {
+                const e = new Error("Locker is not available or does not exist");
+                e.status = 400;
+                throw e;
+            }
+            l.LockerCode = lockerCode;
+            l.LockerType = lockerType;
+            l.employeeName = employeeName;
+            l.employeeId = employeeId;
+            l.employeeEmail = employeeEmail;
+            l.employeePhone = employeePhone;
+            l.employeeGender = employeeGender;
+            l.CostToEmployee = costToEmployee;
+            l.Duration = duration;
+            l.StartDate = startDate;
+            l.EndDate = endDate;
+            l.LockerStatus = "occupied";
+            l.expiresOn = expiresOn;
+            await l.save({ session });
 
-        locker.expiresOn = expiresOn;
-
-        await locker.save({ session });
-
-        const user = await User.findOne({ email: req.user.email }).session(session);
-
-        await History.create([{ LockerNumber: lockerNumber, comment: "Allocated Successfully", LockerHolder: employeeName, InitiatedBy: user.name, Cost: costToEmployee, LockerStatus: "Occupied" }], { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            const user = await User.findOne({ email: req.user.email }).session(session);
+            await History.create(
+                [{ LockerNumber: lockerNumber, comment: "Allocated Successfully", LockerHolder: employeeName, InitiatedBy: user?.name || "System", Cost: costToEmployee, LockerStatus: "Occupied" }],
+                { session }
+            );
+            return l;
+        });
 
         // Send email after transaction commits
         const email = employeeEmail;
@@ -171,86 +165,86 @@ exports.allocateLocker = async (req, res) => {
             data: locker,
         });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in allocating Locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 
 exports.cancelLockerAllocation = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { lockerNumber, EmployeeEmail } = req.body;
         if (!lockerNumber || !EmployeeEmail) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "lockerNumber is required" });
         }
 
-        // First check if this email has any locker (user registered with a locker)
-        // Include both "occupied" (Cancel Locker) and "expired" (Reset from Update Locker)
-        // Use case-insensitive email matching and ensure email is not empty
         const trimmedEmail = EmployeeEmail.trim();
-        const lockerByEmail = await Locker.findOne({
-            $and: [
-                { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                { employeeEmail: { $ne: "" } },
-                { employeeEmail: { $ne: null } },
-                { LockerStatus: { $in: ["occupied", "expired"] } }
-            ]
-        }).session(session);
 
-        if (!lockerByEmail) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "User not registered." });
-        }
+        const { locker, name, duration, originalStartDate, originalEndDate } = await withAtomic(async (session) => {
+            const lockerByEmail = await Locker.findOne({
+                $and: [
+                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+                    { employeeEmail: { $ne: "" } },
+                    { employeeEmail: { $ne: null } },
+                    { LockerStatus: { $in: ["occupied", "expired"] } }
+                ]
+            }).session(session);
 
-        // Email exists; check if the given locker number belongs to this user
-        if (String(lockerByEmail.LockerNumber) !== String(lockerNumber)) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker number is incorrect." });
-        }
+            if (!lockerByEmail) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
 
-        const locker = lockerByEmail;
-        const duration = locker.Duration
-        const name = locker.employeeName
+            if (String(lockerByEmail.LockerNumber) !== String(lockerNumber)) {
+                const e = new Error("Locker number is incorrect.");
+                e.status = 400;
+                throw e;
+            }
 
-        const user = await User.findOne({ email: req.user.email }).session(session);
+            const l = lockerByEmail;
+            const capturedName = l.employeeName;
+            const capturedDuration = l.Duration;
+            const capturedStartDate = l.StartDate;
+            const capturedEndDate = l.EndDate;
 
-        await Issue.deleteMany({ LockerNumber: lockerNumber, email: EmployeeEmail }).session(session);
+            const user = await User.findOne({ email: req.user.email }).session(session);
 
-        await History.create([{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: name, InitiatedBy: user.name, Cost: locker.CostToEmployee, LockerStatus: "Available" }], { session });
+            await Issue.deleteMany({ LockerNumber: lockerNumber, email: EmployeeEmail }).session(session);
 
-        let oldCode = locker.LockerCode;
-        let lockerCodeCombinations = locker.LockerCodeCombinations || [];
-        let idx = lockerCodeCombinations.indexOf(oldCode) || 0;
-        let newCode = lockerCodeCombinations[(idx + 1) % lockerCodeCombinations.length];
+            await History.create(
+                [{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: capturedName, InitiatedBy: user?.name || "System", Cost: l.CostToEmployee, LockerStatus: "Available" }],
+                { session }
+            );
 
-        locker.LockerStatus = "available";
-        locker.LockerCode = newCode;
+            const oldCode = l.LockerCode;
+            const lockerCodeCombinations = l.LockerCodeCombinations || [];
+            const idx = lockerCodeCombinations.indexOf(oldCode) || 0;
+            const newCode = lockerCodeCombinations.length
+                ? lockerCodeCombinations[(idx + 1) % lockerCodeCombinations.length]
+                : oldCode;
 
-        locker.employeeName = "N/A";
-        locker.employeeId = "";
-        locker.employeeEmail = "";
-        locker.employeePhone = "";
-        locker.employeeGender = "None";
-        locker.CostToEmployee = 0;
-        locker.Duration = "";
-        locker.StartDate = "";
-        locker.EndDate = "";
-        locker.LockerStatus = "available";
-        locker.expiresOn = "";
-        locker.emailSent = false;
+            l.LockerCode = newCode;
+            l.employeeName = "N/A";
+            l.employeeId = "";
+            l.employeeEmail = "";
+            l.employeePhone = "";
+            l.employeeGender = "None";
+            l.CostToEmployee = 0;
+            l.Duration = "";
+            l.StartDate = "";
+            l.EndDate = "";
+            l.LockerStatus = "available";
+            l.expiresOn = "";
+            l.emailSent = false;
 
-        await locker.save({ session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            await l.save({ session });
+            return {
+                locker: l,
+                name: capturedName,
+                duration: capturedDuration,
+                originalStartDate: capturedStartDate,
+                originalEndDate: capturedEndDate,
+            };
+        });
 
         // Send email after transaction commits
         const email = EmployeeEmail;
@@ -279,7 +273,7 @@ exports.cancelLockerAllocation = async (req, res) => {
                 <ul style="font-size: 16px; padding-left: 20px; margin: 0 0 15px 0; color: #333;">
                     <li><strong>Locker Number:</strong> ${lockerNumber}</li>
                     <li><strong>Cancellation Date:</strong> ${formatdate(currentDate)}</li>
-                    <li><strong>Original Validity Period:</strong> ${duration === "customize" ? `${formatdate(locker.StartDate)} to ${formatdate(locker.EndDate)}` : `${duration} Months`}</li>
+                    <li><strong>Original Validity Period:</strong> ${duration === "customize" ? `${formatdate(originalStartDate)} to ${formatdate(originalEndDate)}` : `${duration} Months`}</li>
                 </ul>
                 
                 <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
@@ -306,54 +300,19 @@ exports.cancelLockerAllocation = async (req, res) => {
             data: locker,
         });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in canceling locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 
 exports.renewLocker = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { lockerNumber, costToEmployee, duration, startDate, endDate, EmployeeEmail } = req.body;
 
         if (!lockerNumber || !EmployeeEmail) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "lockerNumber is required" });
         }
 
-        // First check if this email has any locker (user registered with a locker)
-        // Include both "occupied" (Renew active locker) and "expired" (Renew from Update Locker)
-        // Use case-insensitive email matching and ensure email is not empty
         const trimmedEmail = EmployeeEmail.trim();
-        const lockerByEmail = await Locker.findOne({
-            $and: [
-                { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                { employeeEmail: { $ne: "" } },
-                { employeeEmail: { $ne: null } },
-                { LockerStatus: { $in: ["occupied", "expired"] } }
-            ]
-        }).session(session);
-
-        if (!lockerByEmail) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "User not registered." });
-        }
-
-        // Email exists; check if the given locker number belongs to this user
-        if (String(lockerByEmail.LockerNumber) !== String(lockerNumber)) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker number is incorrect." });
-        }
-
-        const locker = lockerByEmail;
-        const employeeName = locker.employeeName
 
         let expiresOn;
         if (duration === "3") {
@@ -381,22 +340,50 @@ exports.renewLocker = async (req, res) => {
             expiresOn = expires.toISOString();
         }
 
-        locker.CostToEmployee = costToEmployee;
-        locker.Duration = duration;
-        locker.StartDate = startDate;
-        locker.EndDate = endDate;
-        locker.LockerStatus = "occupied";
-        locker.emailSent = "false";
-        locker.expiresOn = expiresOn;
+        const { locker, employeeName } = await withAtomic(async (session) => {
+            const lockerByEmail = await Locker.findOne({
+                $and: [
+                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+                    { employeeEmail: { $ne: "" } },
+                    { employeeEmail: { $ne: null } },
+                    { LockerStatus: { $in: ["occupied", "expired"] } }
+                ]
+            }).session(session);
 
-        await locker.save({ session });
+            if (!lockerByEmail) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
 
-        const user = await User.findOne({ email: req.user.email }).session(session);
+            if (String(lockerByEmail.LockerNumber) !== String(lockerNumber)) {
+                const e = new Error("Locker number is incorrect.");
+                e.status = 400;
+                throw e;
+            }
 
-        await History.create([{ LockerNumber: lockerNumber, comment: "Locker Renewed", LockerHolder: employeeName, InitiatedBy: user.name, Cost: costToEmployee, LockerStatus: "Occupied" }], { session });
+            const l = lockerByEmail;
+            const name = l.employeeName;
 
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            l.CostToEmployee = costToEmployee;
+            l.Duration = duration;
+            l.StartDate = startDate;
+            l.EndDate = endDate;
+            l.LockerStatus = "occupied";
+            l.emailSent = false;
+            l.expiresOn = expiresOn;
+
+            await l.save({ session });
+
+            const user = await User.findOne({ email: req.user.email }).session(session);
+
+            await History.create(
+                [{ LockerNumber: lockerNumber, comment: "Locker Renewed", LockerHolder: name, InitiatedBy: user?.name || "System", Cost: costToEmployee, LockerStatus: "Occupied" }],
+                { session }
+            );
+
+            return { locker: l, employeeName: name };
+        });
 
         // Send email after transaction commits
         const email = EmployeeEmail;
@@ -452,10 +439,7 @@ exports.renewLocker = async (req, res) => {
             data: locker,
         });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in Renewing Locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 
@@ -542,43 +526,34 @@ exports.getExpiringToday = async (req, res) => {
 };
 
 exports.deleteLocker = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { lockerNumber } = req.body;
 
         if (!lockerNumber) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "Locker number is required" });
         }
 
-        // Find and delete by lockerNumber instead of _id
-        const deletedLocker = await Locker.findOneAndDelete({ LockerNumber: lockerNumber }).session(session);
-
-        if (!deletedLocker) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker not found" });
-        }
-
-        await Issue.deleteMany({ LockerNumber: lockerNumber }).session(session);
-
-        await History.create([{ LockerNumber: lockerNumber, comment: "Locker Deleted", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Deleted" }], { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+        const deletedLocker = await withAtomic(async (session) => {
+            const l = await Locker.findOneAndDelete({ LockerNumber: lockerNumber }).session(session);
+            if (!l) {
+                const e = new Error("Locker not found");
+                e.status = 400;
+                throw e;
+            }
+            await Issue.deleteMany({ LockerNumber: lockerNumber }).session(session);
+            await History.create(
+                [{ LockerNumber: lockerNumber, comment: "Locker Deleted", LockerHolder: "N/A", InitiatedBy: "Admin", Cost: 0, LockerStatus: "Deleted" }],
+                { session }
+            );
+            return l;
+        });
 
         return res.status(200).json({
             message: "Locker deleted successfully",
             data: deletedLocker,
         });
     } catch (err) {
-        await session.abortTransaction();
         return res.status(err.status || 500).json({ message: `Error in deleting Locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 
@@ -596,41 +571,39 @@ exports.getLockerPrices = async (req, res) => {
 };
 
 exports.editLockerDetails = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { LockerDetails } = req.body;
 
         if (!LockerDetails || !LockerDetails.LockerNumber) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "LockerNumber is required" });
         }
-        const locker = await Locker.findOne({ LockerNumber: LockerDetails.LockerNumber }).session(session);
-        if (!locker) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker not found" });
-        }
 
-        // Update locker details
-        await Locker.updateOne(
-            { LockerNumber: LockerDetails.LockerNumber },
-            { $set: LockerDetails },
-            { session }
-        );
+        const locker = await withAtomic(async (session) => {
+            const l = await Locker.findOne({ LockerNumber: LockerDetails.LockerNumber }).session(session);
+            if (!l) {
+                const e = new Error("Locker not found");
+                e.status = 400;
+                throw e;
+            }
 
-        let userName = "Admin";
-        if (req.user.role !== "Admin") {
-            const user = await User.findOne({ email: req.user.email }).session(session);
-            userName = user.name;
-        }
-        const stat = (locker.LockerStatus).charAt(0).toUpperCase() + (locker.LockerStatus).slice(1);
-        await History.create([{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: LockerDetails.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }], { session });
+            await Locker.updateOne(
+                { LockerNumber: LockerDetails.LockerNumber },
+                { $set: LockerDetails },
+                { session }
+            );
 
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            let userName = "Admin";
+            if (req.user.role !== "Admin") {
+                const user = await User.findOne({ email: req.user.email }).session(session);
+                userName = user?.name || "System";
+            }
+            const stat = (l.LockerStatus).charAt(0).toUpperCase() + (l.LockerStatus).slice(1);
+            await History.create(
+                [{ LockerNumber: LockerDetails.LockerNumber, comment: "Locker Details Updated", LockerHolder: LockerDetails.employeeName, InitiatedBy: userName, Cost: l.CostToEmployee, LockerStatus: stat }],
+                { session }
+            );
+            return l;
+        });
 
         // Send email after transaction commits
         const htmlBody = `
@@ -683,78 +656,56 @@ exports.editLockerDetails = async (req, res) => {
 
         return res.status(200).json({ message: "Locker updated successfully" });
     } catch (err) {
-        await session.abortTransaction();
         console.error("Error:", err);
         return res.status(err.status || 500).json({ message: `Error in editing Locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
-
 };
 
 exports.changeLockerStatus = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { LockerNumber, LockerStatus } = req.body;
 
         if (!LockerNumber) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ message: "LockerNumber is required" });
         }
 
-        const locker = await Locker.findOne({ LockerNumber: LockerNumber }).session(session);
+        await withAtomic(async (session) => {
+            const locker = await Locker.findOne({ LockerNumber }).session(session);
+            if (!locker) {
+                const e = new Error("Locker not found");
+                e.status = 400;
+                throw e;
+            }
+            await Locker.updateOne(
+                { LockerNumber },
+                { $set: { LockerStatus } },
+                { session }
+            );
 
-        if (!locker) {
-            await session.abortTransaction();
-            session.endSession();
-            return res.status(400).json({ message: "Locker not found" });
-        }
-
-        // Update locker details
-        await Locker.updateOne(
-            { LockerNumber: LockerNumber },
-            { $set: { LockerStatus } },
-            { session }
-        );
-
-        let userName = "Admin";
-        if (req.user.role !== "Admin") {
-            const user = await User.findOne({ email: req.user.email }).session(session);
-            userName = user.name;
-        }
-        const stat = (LockerStatus).charAt(0).toUpperCase() + (LockerStatus).slice(1);
-        await History.create([{ LockerNumber: LockerNumber, comment: "Locker Status Changed", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }], { session });
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
+            let userName = "Admin";
+            if (req.user.role !== "Admin") {
+                const user = await User.findOne({ email: req.user.email }).session(session);
+                userName = user?.name || "System";
+            }
+            const stat = (LockerStatus).charAt(0).toUpperCase() + (LockerStatus).slice(1);
+            await History.create(
+                [{ LockerNumber, comment: "Locker Status Changed", LockerHolder: locker.employeeName, InitiatedBy: userName, Cost: locker.CostToEmployee, LockerStatus: stat }],
+                { session }
+            );
+        });
 
         return res.status(200).json({ message: "Locker updated successfully" });
     } catch (err) {
-        await session.abortTransaction();
         console.error("Error:", err);
         return res.status(err.status || 500).json({ message: `Error in editing Locker: ${err.message}` });
-    } finally {
-        session.endSession();
     }
 };
 
 exports.updateMultipleLockerPrices = async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
-        const { LockerPrice3Month,
-            LockerPrice6Month,
-            LockerPrice12Month,
-            availableForGender,
-            LockerType } = req.body;
+        const { LockerPrice3Month, LockerPrice6Month, LockerPrice12Month, availableForGender, LockerType } = req.body;
 
         if (!availableForGender || !['male', 'female'].includes(availableForGender.toLowerCase())) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ error: 'Invalid gender. Must be "male" or "female".' });
         }
 
@@ -764,35 +715,29 @@ exports.updateMultipleLockerPrices = async (req, res) => {
         if (LockerPrice12Month) updateData['LockerPrice12Month'] = LockerPrice12Month;
 
         if (Object.keys(updateData).length === 0) {
-            await session.abortTransaction();
-            session.endSession();
             return res.status(400).json({ error: 'At least one price must be provided (3, 6, or 12 months).' });
         }
 
-        const result = await Locker.updateMany(
-            { availableForGender: availableForGender, LockerType: LockerType },
-            { $set: updateData },
-            { session }
-        );
+        const result = await withAtomic(async (session) => {
+            const r = await Locker.updateMany(
+                { availableForGender, LockerType },
+                { $set: updateData },
+                { session }
+            );
+            await Price.updateOne(
+                { availableForGender, LockerType },
+                { $set: updateData },
+                { upsert: true, session }
+            );
+            return r;
+        });
 
-        await Price.updateOne(
-            { availableForGender: availableForGender, LockerType: LockerType },
-            { $set: updateData },
-            { upsert: true, session }
-        );
-
-        // Commit transaction if all operations succeed
-        await session.commitTransaction();
-
-        res.status(200).json({
+        return res.status(200).json({
             message: 'Locker prices updated successfully.',
             updatedCount: result.nModified
-        })
+        });
     } catch (error) {
-        await session.abortTransaction();
         console.error('Error updating locker prices:', error);
-        res.status(error.status || 500).json({ error: 'Internal server error' });
-    } finally {
-        session.endSession();
+        return res.status(error.status || 500).json({ error: 'Internal server error' });
     }
 };
