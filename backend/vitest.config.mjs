@@ -8,8 +8,12 @@ export default defineConfig({
         // expect, beforeAll, etc.) let tests stay in CJS without ESM interop.
         globals: true,
         setupFiles: ['tests/helpers/testDb.js'],
-        testTimeout: 30000, // mongodb-memory-server first boot can be slow
-        hookTimeout: 30000,
+        testTimeout: 30000,
+        // hookTimeout covers beforeAll, which calls MongoMemoryServer.create().
+        // The very first run (fresh machine, fresh CI) downloads a ~600MB Mongo
+        // binary. Subsequent runs hit the cache and take ~7s. 5-min cap keeps
+        // CI green on cold starts without masking a genuinely stuck test.
+        hookTimeout: 300000,
         // Each test file spins up its own MongoMemoryServer in the setup file;
         // running files in parallel races on binary extraction and port binding,
         // especially on Windows. Sequential file execution keeps startup reliable.
