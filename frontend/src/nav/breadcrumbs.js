@@ -26,7 +26,6 @@ const ROUTES = {
     "/add_single_staff": [D("Dashboard", "/dashboard"), D("Add staff")],
     "/view_staff_details": [D("Dashboard", "/dashboard"), D("Staff", "/staff_management"), D("Staff details")],
     "/edit_staff_details": [D("Dashboard", "/dashboard"), D("Staff", "/staff_management"), D("Edit staff")],
-    "/testing": [D("Dashboard", "/dashboard"), D("Testing")],
     "/available_lockers": [D("Dashboard", "/dashboard"), D("Available lockers")],
     "/assign_locker": [D("Dashboard", "/dashboard"), D("Assign locker")],
     "/renew_locker": [D("Dashboard", "/dashboard"), D("Renew locker")],

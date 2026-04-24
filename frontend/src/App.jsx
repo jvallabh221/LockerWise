@@ -14,7 +14,6 @@ const Home = lazy(() => import("./components/Home"));
 const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
 const ResetPassword = lazy(() => import("./components/ResetPassword"));
 const Dashboard = lazy(() => import("./components/Dashboard"));
-const Testing = lazy(() => import("./components/Testing"));
 const LockerManagement = lazy(() => import("./components/LockerManagement"));
 const AddSingleLocker = lazy(() => import("./components/AddSingleLocker"));
 const AvailableLockers = lazy(() => import("./components/AvailableLockers"));
@@ -84,7 +83,6 @@ const App = () => {
                             <Route path="/add_single_staff" element={<ProtectedRoutes allowedRoles="Admin"><AddSingleStaff /></ProtectedRoutes>} />
                             <Route path="/view_staff_details" element={<ProtectedRoutes allowedRoles="Admin"><ViewStaffDetails /></ProtectedRoutes>} />
                             <Route path="/edit_staff_details" element={<ProtectedRoutes allowedRoles="Admin"><EditStaffDetails /></ProtectedRoutes>} />
-                            <Route path="/testing" element={<ProtectedRoutes allowedRoles="Admin"><Testing /></ProtectedRoutes>} />
 
                             {/* STAFF ROUTES */}
                             <Route path="/available_lockers" element={<ProtectedRoutes allowedRoles="Staff"><AvailableLockers /></ProtectedRoutes>} />

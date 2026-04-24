@@ -66,7 +66,7 @@
 
 ## 5. Conventions & constraints (every PR)
 
-- **Branch per PR:** name as `phase1-<item>-<short-slug>` (e.g. `phase1-a0-migrate-mongo`, `phase1-a1-hierarchy`, `phase1-b5-totp-2fa`). Never commit to `main` directly.
+- **Branch per PR:** name as `phase1-<item>-<short-slug>` (e.g. `phase1-a0-migrate-mongo`, `phase1-a1-hierarchy`, `phase1-b5-totp-2fa`). Never commit to `main` directly, **except** at the user's explicit direction for truly trivial rubber-stamp items (dead-code removal, doc-only fixes). Schema, auth, security, and infra changes always go through a PR regardless of size.
 - **One PR per item (or batched pair per §8).** Title format: `[A2.0] Extract Assignment from Locker`. PR body includes: files changed, migration commands to run, manual test steps, changelog line, open questions.
 - **Two-step migrations.** Never drop a field/collection in the same migration that removes references. Pattern: add new → migrate data → deploy → remove old in a later migration.
 - **Every new collection gets** `_id`, `createdAt`, `updatedAt`, `deletedAt` (for soft-delete) — use Mongoose `timestamps: true`.
@@ -234,8 +234,8 @@ Update as items merge.
 |---|---|---|---|---|
 | D0 | ✅ | #1 | 2026-04-24 | Merged to main |
 | D0.5 | ☐ | — | — | Deferred — starts before C2 or C7 |
-| A0 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a0-migrate-mongo` |
-| C9 | ☐ | — | — | — |
+| A0 | ✅ | #2 | 2026-04-24 | Merged to main |
+| C9 | ✅ | direct-to-main | 2026-04-24 | Rubber-stamp per §5 carve-out; also folded in `verify:migrations` npm alias |
 | A1 | ☐ | — | — | — |
 | A2.0 | ☐ | — | — | — |
 | A2+A3 | ☐ | — | — | — |
@@ -279,6 +279,8 @@ Update as items merge.
 | 2026-04-24 | D0.5 added — frontend test scaffold deferred until before C2 or C7 | A1–A4 are backend-only; scaffolding jsdom + Testing Library before they're needed is YAGNI. |
 | 2026-04-24 | Branch-per-PR replaces branch-per-group (§5) — name as `phase1-<item>-<short-slug>` | Group-scoped branches don't match GitHub's one-branch-one-PR flow; item-scoped branches rebase cleanly and each PR has an unambiguous home. |
 | 2026-04-24 | A0: migrations verified against `mongodb-memory-server` via `backend/scripts/verifyMigrations.js`, never prod | Memory-server works on any machine including CI, needs no local Mongo install, and eliminates the "accidentally wrote to prod's `migrations_changelog`" footgun. Reused by every Phase 1 migration PR. |
+| 2026-04-24 | §5 rubber-stamp carve-out: trivial items (C9, doc-only D3) may push direct to main at user's direction | Full PR + branch + review overhead for a 5-line dead-code removal is ceremony without value. Schema/auth/security/infra always stay on the PR path — this carve-out is narrow by design. |
+| 2026-04-24 | `npm run verify:migrations` is the canonical verification invocation (replaces raw `node scripts/verifyMigrations.js`) | Single source of truth; survives path changes; discoverable via `npm run` listing. README and all future migration PRs reference the npm script form. |
 
 ---
 

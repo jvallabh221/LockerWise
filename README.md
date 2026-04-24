@@ -76,7 +76,7 @@ shell with the correct `DBURL` set. Typical targets:
 removes references to it. Pattern: add new → migrate data → deploy → remove
 old in a later migration.
 
-**Verification:** `node scripts/verifyMigrations.js` drives the full
+**Verification:** `npm run verify:migrations` drives the full
 status → up → status → down → status cycle against an ephemeral in-memory
 MongoDB. Every migration PR in Phase 1 runs this script and quotes its output
 in the PR description. The script never connects to a real database.
