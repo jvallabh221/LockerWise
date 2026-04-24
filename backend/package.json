@@ -7,6 +7,10 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed:admin": "node scripts/createAdmin.js",
+    "migrate:status": "migrate-mongo status",
+    "migrate:up": "migrate-mongo up",
+    "migrate:down": "migrate-mongo down",
+    "migrate:create": "migrate-mongo create",
     "test": "cross-env NODE_ENV=test vitest run",
     "test:watch": "cross-env NODE_ENV=test vitest",
     "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
@@ -34,6 +38,7 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",
     "cross-env": "^7.0.3",
+    "migrate-mongo": "^11.0.0",
     "mongodb-memory-server": "^10.1.2",
     "supertest": "^7.0.0",
     "vitest": "^2.1.9"
