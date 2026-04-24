@@ -248,8 +248,9 @@ Update as items merge.
 | D0.5 | ☐ | — | — | Deferred — starts before C2 or C7 |
 | A0 | ✅ | #2 | 2026-04-24 | Merged to main |
 | C9 | ✅ | direct-to-main | 2026-04-24 | Rubber-stamp per §5 carve-out; also folded in `verify:migrations` npm alias |
-| A1 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a1-hierarchy` |
-| A2.0 | ☐ | — | — | — |
+| A1 | ✅ | #3 | 2026-04-24 | Merged to main |
+| A2.0 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a2-0-extract-assignment` |
+| A2.0.1 | ☐ | — | — | `$unset` Locker fields, rewrite controllers, remove virtual |
 | A2+A3 | ☐ | — | — | — |
 | A4 | ☐ | — | — | Fallback shim; feature flag |
 | B1 | ☐ | — | — | — |
