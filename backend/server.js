@@ -1,41 +1,12 @@
-const express = require('express')
-const path = require('path');
-const fs = require('fs');
-const dbConnect = require('./utils/databaseConnect.js')
-const cors = require('cors');
-const userroute = require('./routes/authRoutes.js')
-const adminRoute = require('./routes/adminRoutes.js')
-const resetPasswordRoute = require('./routes/resetPasswordRoute.js')
-const lockerRoute = require('./routes/lockerRoutes.js')
-const issueRoute = require('./routes/issueRoute.js')
-const profileRoute = require('./routes/profileRoutes.js')
-const contactRoute = require('./routes/contactRoute.js')
 require('dotenv').config();
-const mailSender = require('./utils/mailSender.js')
 const cron = require('node-cron');
-const Locker = require('./models/lockerModel.js')
-const app = express();
-const compression = require('compression');
+const createApp = require('./createApp.js');
+const dbConnect = require('./utils/databaseConnect.js');
+const mailSender = require('./utils/mailSender.js');
+const Locker = require('./models/lockerModel.js');
 const History = require('./models/History.js');
 
-app.use(compression());
-app.use(express.json());
-const defaultOrigins = [
-    "https://lockerwise-app.lockerwise.com",
-    "https://frontend-test-ten-pi.vercel.app",
-    "http://localhost:5173",
-];
-
-const corsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
-    : defaultOrigins;
-
-app.use(cors({
-    origin: corsOrigins,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+const app = createApp();
 
 async function startServer() {
     try {
@@ -48,29 +19,6 @@ async function startServer() {
         console.error(`Error Connecting To DB: ${error.message}`);
     }
 }
-
-app.use('/api/user', userroute);
-app.use('/api/admin', adminRoute);
-app.use('/api/resetPassword', resetPasswordRoute);
-app.use('/api/locker', lockerRoute);
-app.use('/api/issue', issueRoute);
-app.use('/api/profile', profileRoute);
-app.use('/api/contact', contactRoute);
-
-// Serve built frontend (single-service deploy)
-const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
-if (fs.existsSync(frontendDist)) {
-    app.use(express.static(frontendDist));
-    app.get(/^\/(?!api\/).*/, (req, res) => {
-        res.sendFile(path.join(frontendDist, 'index.html'));
-    });
-} else {
-    app.get('/', (req, res) => {
-        res.send('Welcome to the backend! (frontend build not found)');
-    });
-}
-
-startServer();
 
 function formatdate(date) {
     const d = new Date(date);
@@ -106,16 +54,16 @@ cron.schedule('0 0 * * *', async () => { // Runs daily at 12:00 AM
             const formatted = formatdate(currentDate)
             const htmlBody = `
               <div style="font-family: Arial, sans-serif; color: #333; padding: 20px; line-height: 1.6;">
-    
+
               <div style="text-align: center; margin-bottom: 20px;">
-                  <img 
-                  src="${process.env.IMG_LINK}" 
-                  alt="Company Logo" 
-                  style="width: 500px; height: auto;" 
+                  <img
+                  src="${process.env.IMG_LINK}"
+                  alt="Company Logo"
+                  style="width: 500px; height: auto;"
                   />
               </div>
 
-              
+
               <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
                   Dear ${name},
               </p>
@@ -123,7 +71,7 @@ cron.schedule('0 0 * * *', async () => { // Runs daily at 12:00 AM
                   We want to notify you that the locker assigned to you is expiring <b>Today</b>(${formatted}). Below are the details of the locker:
               </p>
 
-              
+
               <p style="font-size: 16px; color: #333; font-weight: bold; margin: 0 0 10px 0;">
                   Locker Details:
               </p>
@@ -132,7 +80,7 @@ cron.schedule('0 0 * * *', async () => { // Runs daily at 12:00 AM
                   <li><strong>Original Validity Period:</strong> ${duration === "customize" ? `${formatdate(startDate)} to ${formatdate(endDate)}` : `${duration} Months`}</li>
               </ul>
 
-              
+
               <p style="font-size: 16px; color: #333; margin: 0 0 15px 0;">
                   If you require a locker in the future, please submit a new request through the Locker Management System or contact us at <strong>[Support Email/Phone]</strong>.
               </p>
@@ -141,7 +89,7 @@ cron.schedule('0 0 * * *', async () => { // Runs daily at 12:00 AM
               </p>
               <p style="font-size: 16px; color: #333; margin: 0;">
                   Best regards,<br />
-                  <strong>DraconX Pvt. Ltd</strong>,<br/>  
+                  <strong>DraconX Pvt. Ltd</strong>,<br/>
                   <strong>"From Vision to Validation, faster"</strong>
               </p>
           </div>
@@ -199,3 +147,5 @@ cron.schedule('2 0 * * *', async () => { // Runs daily at 12:02 AM
         console.error(`Error in deleting old history records: ${err.message}`);
     }
 });
+
+startServer();
