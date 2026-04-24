@@ -66,7 +66,17 @@
 
 ## 5. Conventions & constraints (every PR)
 
-- **Branch per PR:** name as `phase1-<item>-<short-slug>` (e.g. `phase1-a0-migrate-mongo`, `phase1-a1-hierarchy`, `phase1-b5-totp-2fa`). Never commit to `main` directly, **except** at the user's explicit direction for truly trivial rubber-stamp items (dead-code removal, doc-only fixes). Schema, auth, security, and infra changes always go through a PR regardless of size.
+- **Branch per PR:** name as `phase1-<item>-<short-slug>` (e.g. `phase1-a1-hierarchy`). Never commit to `main` directly, **except** for these specific rubber-stamp items at the user's explicit direction:
+  - **C9** (done) — dead-code removal.
+  - **C3b** — form-draft persistence, localStorage only, no schema.
+  - **C10** — cron job TZ cleanup, pure code edit.
+  - **D2** — staging env config file, doc-centric.
+  - **A5.1** — enforce required refs after A5, mechanical.
+  - Doc-only updates to **D3** (API reference) that land outside another item's PR.
+
+  All other items ship via a PR on their item branch.
+- **Deep-review items** — these require line-by-line human review before merge regardless of size, and cannot be rubber-stamped: **A4** (capabilities), **B5** (TOTP 2FA), **B6+B7** (soft-delete + typed-confirm), **C3a** (refresh tokens).
+- **Feature-flagged items** — **A4, B5, C3a** ship with their env flag defaulted to `false`. The user flips the flag to `true` manually after validating in prod; the agent never enables a flag.
 - **One PR per item (or batched pair per §8).** Title format: `[A2.0] Extract Assignment from Locker`. PR body includes: files changed, migration commands to run, manual test steps, changelog line, open questions.
 - **Two-step migrations.** Never drop a field/collection in the same migration that removes references. Pattern: add new → migrate data → deploy → remove old in a later migration.
 - **Every new collection gets** `_id`, `createdAt`, `updatedAt`, `deletedAt` (for soft-delete) — use Mongoose `timestamps: true`.
@@ -93,6 +103,7 @@
 | **A3** | Shared lockers: many-to-many `Holder` ↔ `Assignment`. One active Assignment can have multiple Holders. | A2 | No |
 | **A4** | Capability-based permissions. New collections: `capabilities`, `role_capabilities`. Seed with current Admin / Staff capability sets. New `requireCapability(cap)` middleware. Fallback shim to legacy `verifyToken([roles])` during rollout. Migrate routes incrementally. Remove shim at end. | A2.0 | **Yes** |
 | **A5** | Generalize `Locker` → `RentableAsset` via Mongoose discriminators. `assetType` enum: `locker` (only type in Phase 1), placeholder shape for `lock`/`equipment`/`parking`/`room`. **No UI for other types in Phase 1.** | A1, A2.0 | No |
+| **A5.1** | **(NEW)** Enforce required `buildingId` and `floorId` on the Locker/RentableAsset schema. Update all Locker-creation sites in controllers to set refs explicitly. Remove the A1-transitional pre-save `console.warn`. Rubber-stamp per §5 — mechanical, no user-facing change. | A5 | No |
 
 ### Group B — Security & audit
 
@@ -103,7 +114,7 @@
 | **B3** | `login_events` collection. Log IP, best-effort geo (via IP lookup service — pick one, document it), user-agent on all login attempts (success + failure). | — | No |
 | **B4** | Rate limiting on `/user/login`: 5 attempts per 15 min per IP, exponential backoff, account lockout after 10 failed attempts in 1 hour. Use `express-rate-limit` + a store. | B3 | No |
 | **B5** | TOTP-based 2FA. **Before starting: read `models/OTP.js` and decide if it is reusable or if 2FA gets its own collection (`totp_secrets`).** Required for Admin, optional for Staff. Use `otplib`. Encrypt stored secret. | A4 | **Yes** |
-| **B6** | Soft-delete via `deletedAt` column on `Locker` (→ `RentableAsset` after A5), `Holder`, `User` (staff), `Issue`, `Assignment`. Global query filter `{ deletedAt: null }` by default. 30-day restore admin UI. | A2.0, A2 | No |
+| **B6** | Soft-delete via `deletedAt` column on `Locker` (→ `RentableAsset` after A5), `Holder`, `User` (staff), `Issue`, `Assignment`. Global query filter `{ deletedAt: null }` by default. 30-day restore admin UI. **Also converts all unique indexes introduced in A1 (`buildings.name`, `floors.(buildingId, name)`, `zones.(floorId, name)`, `lockers.(buildingId, LockerNumber)`) to use `partialFilterExpression: { deletedAt: null }` so soft-deleted rows do not block new inserts with the same natural key.** | A1, A2.0, A2 | No |
 | **B7** | Typed-confirm UI pattern on destructive actions: user types the entity identifier or `DELETE` before the button enables. Applies to delete locker, bulk ops, clear history. | B6 | No |
 
 ### Group C — Workflow fixes
@@ -140,7 +151,7 @@
 D0  →  A0  →  C9  →  A1 ∥ A2.0  →  A2 + A3  →  A4  →
 B1  →  B2  →  B3 + B4  →  B5  →  B6 + B7  →
 C1 + C2  →  C3a  →  C4  →  C5  →  C6  →  C7 + C8  →
-A5  →  C3b  →  C10  →  D2  →  D1
+A5  →  A5.1  →  C3b  →  C10  →  D2  →  D1
 ```
 
 - `D3` runs continuously, woven into every endpoint-touching PR.
@@ -236,7 +247,7 @@ Update as items merge.
 | D0.5 | ☐ | — | — | Deferred — starts before C2 or C7 |
 | A0 | ✅ | #2 | 2026-04-24 | Merged to main |
 | C9 | ✅ | direct-to-main | 2026-04-24 | Rubber-stamp per §5 carve-out; also folded in `verify:migrations` npm alias |
-| A1 | ☐ | — | — | — |
+| A1 | 🔄 in-progress | (PR link TBD) | 2026-04-24 | Branch `phase1-a1-hierarchy` |
 | A2.0 | ☐ | — | — | — |
 | A2+A3 | ☐ | — | — | — |
 | A4 | ☐ | — | — | Fallback shim; feature flag |
@@ -252,6 +263,7 @@ Update as items merge.
 | C6 | ☐ | — | — | — |
 | C7+C8 | ☐ | — | — | — |
 | A5 | ☐ | — | — | — |
+| A5.1 | ☐ | — | — | Enforce required `buildingId`/`floorId`; rubber-stamp after A5 |
 | C3b | ☐ | — | — | — |
 | C10 | ☐ | — | — | — |
 | D2 | ☐ | — | — | — |
@@ -281,6 +293,9 @@ Update as items merge.
 | 2026-04-24 | A0: migrations verified against `mongodb-memory-server` via `backend/scripts/verifyMigrations.js`, never prod | Memory-server works on any machine including CI, needs no local Mongo install, and eliminates the "accidentally wrote to prod's `migrations_changelog`" footgun. Reused by every Phase 1 migration PR. |
 | 2026-04-24 | §5 rubber-stamp carve-out: trivial items (C9, doc-only D3) may push direct to main at user's direction | Full PR + branch + review overhead for a 5-line dead-code removal is ceremony without value. Schema/auth/security/infra always stay on the PR path — this carve-out is narrow by design. |
 | 2026-04-24 | `npm run verify:migrations` is the canonical verification invocation (replaces raw `node scripts/verifyMigrations.js`) | Single source of truth; survives path changes; discoverable via `npm run` listing. README and all future migration PRs reference the npm script form. |
+| 2026-04-24 | §5 tightened — rubber-stamp items enumerated by ID (C3b, C10, D2, A5.1, doc-only D3); deep-review items named (A4, B5, B6+B7, C3a); feature flags (A4, B5, C3a) default false, user flips manually | Vibes-based "rubber-stamp tier" was ambiguous; explicit lists prevent drift; deep-review naming ensures auth/permission/soft-delete changes never get fast-tracked. |
+| 2026-04-24 | A5.1 added — enforce required `buildingId`/`floorId` on Locker once A5 lands, plus update creation sites | A1 makes refs optional to avoid pulling every Locker-creation controller into this PR; A5.1 closes the loop mechanically after A5's rename settles. |
+| 2026-04-24 | B6 scope extended — convert all A1 unique indexes to `partialFilterExpression: { deletedAt: null }` | Soft-deleted rows holding a unique natural key (e.g. a disabled Building's name) would otherwise block new inserts with the same name; B6 is the right place since it owns soft-delete semantics. |
 
 ---
 
