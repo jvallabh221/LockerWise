@@ -359,13 +359,22 @@ exports.renewLocker = async (req, res) => {
         }
 
         const { locker, employeeName } = await withAtomic(async (session) => {
+            // Email lookup now hits Assignment (the source of truth post-A2.0).
+            const activeAsgn = await Assignment.findOne({
+                employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
+            if (!activeAsgn) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
+
             const lockerByEmail = await Locker.findOne({
-                $and: [
-                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                    { employeeEmail: { $ne: "" } },
-                    { employeeEmail: { $ne: null } },
-                    { LockerStatus: { $in: ["occupied", "expired"] } }
-                ]
+                _id: activeAsgn.lockerId,
+                LockerStatus: { $in: ["occupied", "expired"] },
             }).session(session);
 
             if (!lockerByEmail) {
@@ -380,18 +389,20 @@ exports.renewLocker = async (req, res) => {
                 throw e;
             }
 
-            const l = lockerByEmail;
-            const name = l.employeeName;
+            const name = activeAsgn.employeeName;
 
-            l.CostToEmployee = costToEmployee;
-            l.Duration = duration;
-            l.StartDate = startDate;
-            l.EndDate = endDate;
-            l.LockerStatus = "occupied";
-            l.emailSent = false;
-            l.expiresOn = expiresOn;
+            // Renew updates the Assignment, not Locker's (removed-in-commit-10) fields.
+            activeAsgn.CostToEmployee = costToEmployee;
+            activeAsgn.Duration = duration;
+            activeAsgn.StartDate = startDate;
+            activeAsgn.EndDate = endDate;
+            activeAsgn.emailSent = false;
+            activeAsgn.expiresOn = expiresOn;
+            await activeAsgn.save({ session });
 
-            await l.save({ session });
+            // Locker status bumps back to occupied if it had expired.
+            lockerByEmail.LockerStatus = "occupied";
+            await lockerByEmail.save({ session });
 
             const user = await User.findOne({ email: req.user.email }).session(session);
 
@@ -400,7 +411,7 @@ exports.renewLocker = async (req, res) => {
                 { session }
             );
 
-            return { locker: l, employeeName: name };
+            return { locker: lockerByEmail, employeeName: name };
         });
 
         // Send email after transaction commits
@@ -454,7 +465,7 @@ exports.renewLocker = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker Renewed successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in Renewing Locker: ${err.message}` });

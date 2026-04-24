@@ -199,3 +199,132 @@ describe('POST /api/locker/allocateLocker', () => {
         expect(res.status).toBe(401);
     });
 });
+
+describe('PUT /api/locker/renewLocker', () => {
+    async function callRenew(staffUser, body) {
+        return request(app)
+            .put('/api/locker/renewLocker')
+            .set(createAuthHeader(staffUser))
+            .send(body);
+    }
+
+    async function setupAssignedLocker(overrides = {}) {
+        const { createTestAssignment } = require('../../helpers/fixtures.js');
+        const locker = await createTestLocker({
+            status: 'occupied',
+            lockerNumber: overrides.lockerNumber ?? 4100,
+        });
+        const asgn = await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: overrides.employeeName ?? 'Alice',
+            employeeEmail: overrides.employeeEmail ?? 'alice@example.com',
+            costToEmployee: overrides.costToEmployee ?? 100,
+            duration: overrides.duration ?? '3',
+            emailSent: overrides.emailSent ?? true,
+        });
+        return { locker, asgn };
+    }
+
+    it('updates the active Assignment, preserves shape, sets emailSent=false', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const { locker, asgn } = await setupAssignedLocker({ lockerNumber: 4101 });
+
+        const res = await callRenew(staff, {
+            lockerNumber: 4101,
+            EmployeeEmail: 'alice@example.com',
+            costToEmployee: 250,
+            duration: '6',
+            startDate: '2026-05-01',
+            endDate: '2026-11-01',
+        });
+
+        expect(res.status).toBe(200);
+        for (const f of SHAPE_FIELDS) {
+            expect(res.body.data).toHaveProperty(f);
+        }
+        expect(res.body.data.employeeName).toBe('Alice');
+        expect(res.body.data.CostToEmployee).toBe(250);
+        expect(res.body.data.Duration).toBe('6');
+        expect(res.body.data.emailSent).toBe(false);
+
+        const asgnDb = await Assignment.findById(asgn._id);
+        expect(asgnDb.CostToEmployee).toBe(250);
+        expect(asgnDb.Duration).toBe('6');
+        expect(asgnDb.emailSent).toBe(false);
+        expect(asgnDb.status).toBe('active');
+
+        // Locker status reset to occupied (important if it had been 'expired').
+        const lockerDb = await Locker.findById(locker._id).lean();
+        expect(lockerDb.LockerStatus).toBe('occupied');
+    });
+
+    it('renews an expired locker back to occupied status', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const { locker } = await setupAssignedLocker({
+            lockerNumber: 4102,
+            employeeEmail: 'bob@example.com',
+        });
+        // Simulate the expiry cron having flipped the Locker to 'expired'.
+        await Locker.updateOne({ _id: locker._id }, { LockerStatus: 'expired' });
+
+        const res = await callRenew(staff, {
+            lockerNumber: 4102,
+            EmployeeEmail: 'bob@example.com',
+            costToEmployee: 200,
+            duration: '12',
+        });
+
+        expect(res.status).toBe(200);
+        const lockerDb = await Locker.findById(locker._id).lean();
+        expect(lockerDb.LockerStatus).toBe('occupied');
+    });
+
+    it('returns 400 when the holder email is not on any active Assignment', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const res = await callRenew(staff, {
+            lockerNumber: 4103,
+            EmployeeEmail: 'nonexistent@example.com',
+            costToEmployee: 100,
+            duration: '3',
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when lockerNumber does not match the Assignment lockup', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        await setupAssignedLocker({
+            lockerNumber: 4104,
+            employeeEmail: 'carol@example.com',
+        });
+
+        const res = await callRenew(staff, {
+            lockerNumber: 9999,
+            EmployeeEmail: 'carol@example.com',
+            costToEmployee: 100,
+            duration: '3',
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it('writes a History "Locker Renewed" entry with the updated cost', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff', name: 'Staff2' });
+        await setupAssignedLocker({
+            lockerNumber: 4105,
+            employeeEmail: 'dave@example.com',
+            employeeName: 'Dave',
+        });
+
+        await callRenew(staff, {
+            lockerNumber: 4105,
+            EmployeeEmail: 'dave@example.com',
+            costToEmployee: 300,
+            duration: '12',
+        });
+
+        const history = await History.findOne({ LockerNumber: 4105, comment: 'Locker Renewed' });
+        expect(history).toBeTruthy();
+        expect(history.LockerHolder).toBe('Dave');
+        expect(history.Cost).toBe(300);
+        expect(history.InitiatedBy).toBe('Staff2');
+    });
+});
