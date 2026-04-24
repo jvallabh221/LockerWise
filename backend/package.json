@@ -2,11 +2,14 @@
   "name": "LockerManagementSystem",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "dev": "nodemon app.js",
-    "start": "node app.js",
-    "seed:admin": "node scripts/createAdmin.js"
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "seed:admin": "node scripts/createAdmin.js",
+    "test": "cross-env NODE_ENV=test vitest run",
+    "test:watch": "cross-env NODE_ENV=test vitest",
+    "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -27,5 +30,12 @@
     "nodemailer": "^6.9.15",
     "nodemon": "^3.1.7",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "cross-env": "^7.0.3",
+    "mongodb-memory-server": "^10.1.2",
+    "supertest": "^7.0.0",
+    "vitest": "^2.1.9"
   }
 }
