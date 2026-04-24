@@ -328,3 +328,133 @@ describe('PUT /api/locker/renewLocker', () => {
         expect(history.InitiatedBy).toBe('Staff2');
     });
 });
+
+describe('POST /api/locker/cancelLocker', () => {
+    const { createTestAssignment } = require('../../helpers/fixtures.js');
+
+    async function callCancel(staffUser, body) {
+        return request(app)
+            .post('/api/locker/cancelLocker')
+            .set(createAuthHeader(staffUser))
+            .send(body);
+    }
+
+    async function setupAssignedLocker(overrides = {}) {
+        const locker = await createTestLocker({
+            status: 'occupied',
+            lockerNumber: overrides.lockerNumber ?? 4200,
+        });
+        const asgn = await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: overrides.employeeName ?? 'Alice',
+            employeeEmail: overrides.employeeEmail ?? 'alice@example.com',
+            costToEmployee: overrides.costToEmployee ?? 150,
+        });
+        return { locker, asgn };
+    }
+
+    it('ends the active Assignment, sets Locker to available, returns default-shaped response', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const { locker, asgn } = await setupAssignedLocker({ lockerNumber: 4201 });
+
+        const res = await callCancel(staff, {
+            lockerNumber: 4201,
+            EmployeeEmail: 'alice@example.com',
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body.message).toBe('Locker taken back successfully');
+        // After cancel, flatten returns defaults — matches pre-A2.0.1 reset behavior.
+        expect(res.body.data.employeeName).toBe('N/A');
+        expect(res.body.data.employeeEmail).toBe('');
+        expect(res.body.data.employeeGender).toBe('None');
+        expect(res.body.data.CostToEmployee).toBe(0);
+        expect(res.body.data.Duration).toBe('');
+        expect(res.body.data.StartDate).toBe('');
+        expect(res.body.data.emailSent).toBe(false);
+        // All 11 fields present in the response.
+        for (const f of SHAPE_FIELDS) {
+            expect(res.body.data).toHaveProperty(f);
+        }
+
+        const asgnDb = await Assignment.findById(asgn._id);
+        expect(asgnDb.status).toBe('ended');
+        expect(asgnDb.endedReason).toBe('cancelled');
+        expect(asgnDb.endedAt).toBeInstanceOf(Date);
+
+        const lockerDb = await Locker.findById(locker._id).lean();
+        expect(lockerDb.LockerStatus).toBe('available');
+    });
+
+    it('rotates LockerCode to the next combination', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const locker = await Locker.create({
+            LockerNumber: 4202,
+            LockerType: 'full',
+            LockerStatus: 'occupied',
+            LockerCode: 'A1',
+            LockerCodeCombinations: ['A1', 'A2', 'A3'],
+            availableForGender: 'Female',
+            buildingId: new mongoose.Types.ObjectId(),
+            floorId: new mongoose.Types.ObjectId(),
+        });
+        await createTestAssignment({
+            lockerId: locker._id,
+            employeeName: 'Bob',
+            employeeEmail: 'bob@example.com',
+        });
+
+        await callCancel(staff, {
+            lockerNumber: 4202,
+            EmployeeEmail: 'bob@example.com',
+        });
+
+        const reloaded = await Locker.findById(locker._id);
+        expect(reloaded.LockerCode).toBe('A2');
+    });
+
+    it('writes a History "Allotment Cancelled" entry with the pre-cancellation cost', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff', name: 'Staff3' });
+        await setupAssignedLocker({
+            lockerNumber: 4203,
+            employeeEmail: 'carol@example.com',
+            employeeName: 'Carol',
+            costToEmployee: 250,
+        });
+
+        await callCancel(staff, {
+            lockerNumber: 4203,
+            EmployeeEmail: 'carol@example.com',
+        });
+
+        const history = await History.findOne({ LockerNumber: 4203, comment: 'Allotment Cancelled' });
+        expect(history).toBeTruthy();
+        expect(history.LockerHolder).toBe('Carol');
+        expect(history.Cost).toBe(250);
+        expect(history.InitiatedBy).toBe('Staff3');
+        expect(history.LockerStatus).toBe('Available');
+    });
+
+    it('returns 400 when holder email has no active Assignment', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        const res = await callCancel(staff, {
+            lockerNumber: 4204,
+            EmployeeEmail: 'nobody@example.com',
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it('returns 400 when lockerNumber does not match', async () => {
+        const { user: staff } = await createTestUser({ role: 'Staff' });
+        await setupAssignedLocker({
+            lockerNumber: 4205,
+            employeeEmail: 'eve@example.com',
+        });
+
+        const res = await callCancel(staff, {
+            lockerNumber: 9999,
+            EmployeeEmail: 'eve@example.com',
+        });
+        expect(res.status).toBe(400);
+    });
+});

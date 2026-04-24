@@ -197,13 +197,23 @@ exports.cancelLockerAllocation = async (req, res) => {
         const trimmedEmail = EmployeeEmail.trim();
 
         const { locker, name, duration, originalStartDate, originalEndDate } = await withAtomic(async (session) => {
+            // Active Assignment is the source of truth; Locker's old fields
+            // are stale copy during the A2.0 → A2.0.1 window.
+            const activeAsgn = await Assignment.findOne({
+                employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
+                status: 'active',
+                deletedAt: null,
+            }).session(session);
+
+            if (!activeAsgn) {
+                const e = new Error("User not registered.");
+                e.status = 400;
+                throw e;
+            }
+
             const lockerByEmail = await Locker.findOne({
-                $and: [
-                    { employeeEmail: { $regex: new RegExp(`^${trimmedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
-                    { employeeEmail: { $ne: "" } },
-                    { employeeEmail: { $ne: null } },
-                    { LockerStatus: { $in: ["occupied", "expired"] } }
-                ]
+                _id: activeAsgn.lockerId,
+                LockerStatus: { $in: ["occupied", "expired"] },
             }).session(session);
 
             if (!lockerByEmail) {
@@ -219,20 +229,31 @@ exports.cancelLockerAllocation = async (req, res) => {
             }
 
             const l = lockerByEmail;
-            const capturedName = l.employeeName;
-            const capturedDuration = l.Duration;
-            const capturedStartDate = l.StartDate;
-            const capturedEndDate = l.EndDate;
+            // Capture pre-cancellation values from the Assignment for History
+            // + the cancellation email's "Original Validity Period" line.
+            const capturedName = activeAsgn.employeeName;
+            const capturedCost = activeAsgn.CostToEmployee;
+            const capturedDuration = activeAsgn.Duration;
+            const capturedStartDate = activeAsgn.StartDate;
+            const capturedEndDate = activeAsgn.EndDate;
 
             const user = await User.findOne({ email: req.user.email }).session(session);
 
             await Issue.deleteMany({ LockerNumber: lockerNumber, email: EmployeeEmail }).session(session);
 
             await History.create(
-                [{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: capturedName, InitiatedBy: user?.name || "System", Cost: l.CostToEmployee, LockerStatus: "Available" }],
+                [{ LockerNumber: lockerNumber, comment: "Allotment Cancelled", LockerHolder: capturedName, InitiatedBy: user?.name || "System", Cost: capturedCost, LockerStatus: "Available" }],
                 { session }
             );
 
+            // End the Assignment (status='ended', reason='cancelled', endedAt=now).
+            activeAsgn.status = 'ended';
+            activeAsgn.endedReason = 'cancelled';
+            activeAsgn.endedAt = new Date();
+            await activeAsgn.save({ session });
+
+            // Rotate LockerCode to the next combination (preserves pre-A2.0.1
+            // behavior). Config-only update on Locker.
             const oldCode = l.LockerCode;
             const lockerCodeCombinations = l.LockerCodeCombinations || [];
             const idx = lockerCodeCombinations.indexOf(oldCode) || 0;
@@ -241,20 +262,9 @@ exports.cancelLockerAllocation = async (req, res) => {
                 : oldCode;
 
             l.LockerCode = newCode;
-            l.employeeName = "N/A";
-            l.employeeId = "";
-            l.employeeEmail = "";
-            l.employeePhone = "";
-            l.employeeGender = "None";
-            l.CostToEmployee = 0;
-            l.Duration = "";
-            l.StartDate = "";
-            l.EndDate = "";
             l.LockerStatus = "available";
-            l.expiresOn = "";
-            l.emailSent = false;
-
             await l.save({ session });
+
             return {
                 locker: l,
                 name: capturedName,
@@ -315,7 +325,7 @@ exports.cancelLockerAllocation = async (req, res) => {
 
         return res.status(200).json({
             message: "Locker taken back successfully",
-            data: locker,
+            data: await flattenLocker(locker),
         });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in canceling locker: ${err.message}` });
