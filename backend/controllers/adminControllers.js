@@ -7,6 +7,10 @@ const History = require('../models/History.js')
 const bcrypt = require('bcrypt');
 const mailSender = require('../utils/mailSender')
 const { withAtomic } = require('../utils/atomic');
+const {
+    flattenLocker,
+    flattenLockers,
+} = require('../utils/flattenLockerResponse.js');
 
 exports.addStaff = async (req, res) => {
     try {
@@ -178,7 +182,10 @@ exports.addLocker = async (req, res) => {
             return created;
         });
 
-        return res.status(201).json({ message: "Locker Created Successfully", data: locker });
+        // New Lockers have no Assignment. flattenLocker returns the locker
+        // shape with default assignment values — matches pre-A2.0.1's
+        // "unassigned locker" response.
+        return res.status(201).json({ message: "Locker Created Successfully", data: await flattenLocker(locker) });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in adding locker: ${err.message}` });
     }
@@ -215,7 +222,7 @@ exports.addMultipleLocker = async (req, res) => {
             return created;
         });
 
-        return res.status(201).json({ message: "Lockers Created Successfully", data: newLockers });
+        return res.status(201).json({ message: "Lockers Created Successfully", data: await flattenLockers(newLockers) });
     } catch (err) {
         return res.status(err.status || 500).json({ message: `Error in creating lockers: ${err.message}` });
     }
