@@ -41,16 +41,16 @@ const ResetPassword = () => {
         <div className="min-h-screen lw-page flex items-center justify-center py-10 px-4">
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-6">
-                    <Link to="/" className="text-ink-900 hover:text-brass-500 transition-colors">
+                    <Link to="/" className="text-[var(--text)] hover:text-brass-500 transition-colors">
                         <Wordmark size="md" />
                     </Link>
                 </div>
 
-                <div className="bg-white border border-ink-100 rounded-xl shadow-paper p-8">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-8">
                     <div className="mx-auto w-12 h-12 rounded-full bg-brass-50 text-brass-500 flex items-center justify-center mb-4">
                         <KeyRound className="w-5 h-5" />
                     </div>
-                    <h1 className="font-display text-2xl text-ink-900 font-semibold leading-tight text-center">
+                    <h1 className="font-display text-2xl text-[var(--text)] font-semibold leading-tight text-center">
                         Set a new password
                     </h1>
                     <p className="mt-2 text-sm text-slate-500 leading-relaxed text-center">
@@ -74,7 +74,7 @@ const ResetPassword = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword((p) => !p)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-ink-900 hover:bg-cream-200 transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     aria-label="Toggle password visibility"
                                 >
                                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -98,7 +98,7 @@ const ResetPassword = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword((p) => !p)}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-ink-900 hover:bg-cream-200 transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     aria-label="Toggle password visibility"
                                 >
                                     {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

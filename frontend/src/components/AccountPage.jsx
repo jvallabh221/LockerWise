@@ -14,7 +14,7 @@ const AccountField = ({
     placeholder,
     inputRef,
 }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-ink-100 first:border-t-0">
+    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-6 py-5 border-t border-[var(--border)] first:border-t-0">
         <label htmlFor={id} className="sm:col-span-3 lw-label sm:pt-2">
             {label}
         </label>
@@ -28,12 +28,12 @@ const AccountField = ({
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`flex-1 ${editable ? "lw-input" : "lw-input cursor-default"} ${!editable ? "text-ink-900" : ""}`}
+                className={`flex-1 ${editable ? "lw-input" : "lw-input cursor-default"} ${!editable ? "text-[var(--text)]" : ""}`}
             />
             <button
                 type="button"
                 onClick={onToggle}
-                className="flex-shrink-0 w-9 h-9 border border-ink-100 bg-white hover:bg-cream-200 hover:border-ink-200 text-ink-900 rounded-md transition-colors flex items-center justify-center"
+                className="flex-shrink-0 w-9 h-9 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] text-[var(--text)] rounded-md transition-colors flex items-center justify-center"
                 aria-label={editable ? "Cancel" : "Edit"}
             >
                 {editable ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
@@ -99,7 +99,7 @@ const AccountPage = () => {
         <Layout>
             <section className="w-full max-w-4xl mx-auto px-6 py-10">
                 <div className="lw-section-num mb-2">Account / Profile</div>
-                <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
+                <h1 className="font-display text-3xl sm:text-4xl text-[var(--text)] font-semibold leading-tight tracking-tight">
                     Your record, <span className="text-brass-500">on file.</span>
                 </h1>
                 <div className="lw-rule-brass w-16 mt-5 mb-2" />
@@ -107,7 +107,7 @@ const AccountPage = () => {
                     Review and update your account's personal information. Click the edit icon to change a field.
                 </p>
 
-                <form onSubmit={handleSubmit} className="mt-10 border border-ink-100 bg-white p-8">
+                <form onSubmit={handleSubmit} className="mt-10 border border-[var(--border)] bg-[var(--surface)] p-8">
                     <div className="lw-eyebrow mb-2">01 / Personal details</div>
 
                     <AccountField
@@ -157,7 +157,7 @@ const AccountPage = () => {
 
                     <div className="mt-8 flex items-center justify-between">
                         <div className="lw-eyebrow text-slate-500">
-                            Role: <span className="text-ink-900">{loginDetails?.role || "—"}</span>
+                            Role: <span className="text-[var(--text)]">{loginDetails?.role || "—"}</span>
                         </div>
                         <button
                             type="submit"

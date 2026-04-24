@@ -33,7 +33,7 @@ const EditableField = ({ id, label, type = "text", value, onChange, editable, on
             <button
                 type="button"
                 onClick={onToggle}
-                className="flex-shrink-0 w-9 h-9 border border-ink-100 bg-white hover:bg-cream-200 hover:border-ink-200 text-ink-900 rounded-md transition-colors flex items-center justify-center"
+                className="flex-shrink-0 w-9 h-9 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] text-[var(--text)] rounded-md transition-colors flex items-center justify-center"
                 aria-label={editable ? "Cancel" : "Edit"}
             >
                 {editable ? <X className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}

@@ -8,14 +8,14 @@ const Unauthorize = () => {
         <div className="lw-page lw-grain min-h-screen flex flex-col">
             <DashNav />
             <main className="flex-1 flex items-center justify-center px-6">
-                <div className="max-w-lg w-full border border-ink-100 bg-white rounded-xl shadow-paper p-10">
+                <div className="max-w-lg w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-10">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-lg bg-error-500 text-white flex items-center justify-center">
                             <Lock className="w-5 h-5" />
                         </div>
                         <div className="lw-section-num text-error-600">Access denied</div>
                     </div>
-                    <h1 className="font-display text-4xl text-ink-900 leading-tight">
+                    <h1 className="font-display text-4xl text-[var(--text)] leading-tight">
                         You don't have <span className="text-error-600">permission</span> to view this page.
                     </h1>
                     <div className="lw-rule-brass w-16 mt-5 mb-5" />
@@ -32,7 +32,7 @@ const Unauthorize = () => {
                         </Link>
                         <Link
                             to="/"
-                            className="inline-flex items-center px-5 py-2.5 bg-white text-ink-900 border border-ink-100 hover:bg-cream-200 hover:border-ink-200 font-medium text-sm rounded-md transition-colors"
+                            className="inline-flex items-center px-5 py-2.5 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] font-medium text-sm rounded-md transition-colors"
                         >
                             Home
                         </Link>

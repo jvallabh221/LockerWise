@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "../context/ThemeProvider";
 import Layout from "./Layout";
 import { Loader, RotateCcw } from "lucide-react";
 import { LockerContext } from "../context/LockerProvider";
@@ -14,6 +15,7 @@ import {
 } from "./ui/FormShell";
 
 const UpdateLockerFeature = () => {
+    const { effective } = useTheme();
     const { cancelLocker, setCancelSuccess } = useContext(LockerContext);
     const navigate = useNavigate();
     const location = useLocation();
@@ -77,7 +79,7 @@ const UpdateLockerFeature = () => {
                     </form>
                 </FormCard>
             </PageShell>
-            <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+            <ToastContainer position="top-right" autoClose={3000} theme={effective === "dark" ? "dark" : "colored"} />
         </Layout>
     );
 };

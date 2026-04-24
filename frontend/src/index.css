@@ -2,44 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ------------------------------------------------------------------ */
-/*  LockerWise — Brand Guidelines v2                                   */
-/*  Modern institutional SaaS: navy + accent blue + cool neutrals      */
-/* ------------------------------------------------------------------ */
+/* ==================================================================== */
+/*  LockerWise — Design Tokens (canonical)                              */
+/*                                                                      */
+/*  Single source of truth. Spec §4.                                    */
+/*  Dark mode overrides live on html[data-theme="dark"] (§11).          */
+/* ==================================================================== */
 
 @layer base {
     :root {
-        /* Brand */
-        --lw-navy-900:     #0B1D3F;
-        --lw-navy-700:     #1A3461;
-        --lw-navy-500:     #243E72;
+        /* -------------------------------------------------- 4.1 Brand */
+        --brand-900: #0B1D3F;     /* primary navy — logo, H1, sidebar */
+        --brand-800: #12274F;
+        --brand-700: #1A3461;     /* secondary navy — hover states */
+        --brand-600: #25477A;
+        --brand-500: #0EA5E9;     /* sky accent — CTAs, focus, links */
+        --brand-400: #38BDF8;
+        --brand-300: #7DD3FC;
+        --brand-100: #E0F2FE;     /* sky tint — active item bg */
 
-        /* Accent */
-        --lw-accent:       #0EA5E9;
+        /* ---------------------------------------- 4.2 Light surfaces */
+        --bg:            #F7F8FC;
+        --surface:       #FFFFFF;
+        --surface-2:     #FBFCFE;
+        --border:        #DDE2EF;
+        --border-strong: #C6CEDF;
+        --text:          #0B1D3F;
+        --text-2:        #475171;
+        --text-3:        #7A84A3;
+
+        /* ------------------------------------------- 4.4 Semantic */
+        --success:    #10B981;    --success-bg: #ECFDF5;
+        --warning:    #F59E0B;    --warning-bg: #FFFBEB;
+        --error:      #EF4444;    --error-bg:   #FEF2F2;
+        --info:       #0EA5E9;    --info-bg:    #F0F9FF;
+
+        /* -------------------------------------- 4.5 Typography */
+        --f-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --f-body:    'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --f-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+        /* ----------------------------------------- 4.7 Radii */
+        --r-xs:  4px;
+        --r-sm:  6px;
+        --r-md:  8px;
+        --r-lg:  12px;
+        --r-xl:  16px;
+        --r-2xl: 24px;
+
+        /* --------------------------------------- 4.8 Shadows (light) */
+        --sh-xs: 0 1px 2px rgba(11, 29, 63, 0.04);
+        --sh-sm: 0 1px 2px rgba(11, 29, 63, 0.06), 0 1px 3px rgba(11, 29, 63, 0.08);
+        --sh-md: 0 4px 8px -2px rgba(11, 29, 63, 0.06), 0 2px 4px -1px rgba(11, 29, 63, 0.04);
+        --sh-lg: 0 12px 24px -6px rgba(11, 29, 63, 0.10), 0 4px 8px -2px rgba(11, 29, 63, 0.05);
+        --sh-xl: 0 24px 48px -12px rgba(11, 29, 63, 0.16);
+
+        /* ------------------------------------------ 4.9 Motion */
+        --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+        --duration-1: 120ms;
+        --duration-2: 200ms;
+        --duration-3: 320ms;
+
+        /* --------------------------------------- Focus ring */
+        --ring:       0 0 0 3px rgba(14, 165, 233, 0.15);
+        --ring-error: 0 0 0 3px rgba(239, 68, 68, 0.15);
+
+        /* App shell */
+        --topbar-h: 60px;
+
+        /* ==================================================== */
+        /*  Back-compat aliases — existing --lw-* references     */
+        /*  keep working; all point at canonical tokens above.   */
+        /* ==================================================== */
+        --lw-navy-900:     var(--brand-900);
+        --lw-navy-700:     var(--brand-700);
+        --lw-navy-500:     #243E72;
+        --lw-accent:       var(--brand-500);
         --lw-accent-light: #BAE6FD;
         --lw-accent-dark:  #0369A1;
 
-        /* Neutrals */
-        --lw-bg:           #F4F6FB;
-        --lw-surface:      #FFFFFF;
-        --lw-surface-alt:  #F9FAFC;
-        --lw-border:       #DDE3F0;
+        --lw-bg:           var(--bg);
+        --lw-surface:      var(--surface);
+        --lw-surface-alt:  var(--surface-2);
+        --lw-border:       var(--border);
         --lw-border-soft:  #E9EDF5;
-        --lw-text:         #0B1D3F;
-        --lw-text-muted:   #4D5D80;
-        --lw-text-subtle:  #8C9BBA;
+        --lw-text:         var(--text);
+        --lw-text-muted:   var(--text-2);
+        --lw-text-subtle:  var(--text-3);
 
-        /* Semantic */
-        --lw-success:      #10B981;
-        --lw-warning:      #F59E0B;
-        --lw-error:        #EF4444;
+        --lw-success:      var(--success);
+        --lw-warning:      var(--warning);
+        --lw-error:        var(--error);
 
-        /* Back-compat aliases (old tokens, now pointing at v2) */
-        --lw-ink:          var(--lw-navy-900);
-        --lw-cream:        var(--lw-surface);
-        --lw-cream-paper:  var(--lw-bg);
-        --lw-brass:        var(--lw-accent);
-        --lw-slate:        var(--lw-text-muted);
+        --lw-ink:          var(--brand-900);
+        --lw-cream:        var(--surface);
+        --lw-cream-paper:  var(--bg);
+        --lw-brass:        var(--brand-500);
+        --lw-slate:        var(--text-2);
+
+        --lw-font-display: var(--f-display);
+        --lw-font-body:    var(--f-body);
+        --lw-font-mono:    var(--f-mono);
+    }
+
+    /* -------------------------------------------------------------- */
+    /*  §4.3 Dark surfaces + §4.4 semantic tints on surface             */
+    /* -------------------------------------------------------------- */
+    html[data-theme="dark"] {
+        color-scheme: dark;
+
+        --bg:            #080E1D;
+        --surface:       #0F1A2E;
+        --surface-2:     #152340;
+        --border:        #243352;
+        --border-strong: #2E406A;
+        --text:          #E8EBF4;
+        --text-2:        #A5AFCB;
+        --text-3:        #6D7896;
+
+        --success-bg: color-mix(in srgb, var(--success) 15%, var(--surface));
+        --warning-bg: color-mix(in srgb, var(--warning) 15%, var(--surface));
+        --error-bg:   color-mix(in srgb, var(--error) 15%, var(--surface));
+        --info-bg:    color-mix(in srgb, var(--info) 15%, var(--surface));
+
+        /* §4.8 — deeper, black-based shadows */
+        --sh-xs: 0 1px 2px rgba(0, 0, 0, 0.28);
+        --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.32), 0 2px 6px rgba(0, 0, 0, 0.22);
+        --sh-md: 0 4px 12px -2px rgba(0, 0, 0, 0.38), 0 2px 4px rgba(0, 0, 0, 0.22);
+        --sh-lg: 0 12px 28px -6px rgba(0, 0, 0, 0.45), 0 6px 12px rgba(0, 0, 0, 0.28);
+        --sh-xl: 0 24px 56px -12px rgba(0, 0, 0, 0.55);
+
+        /* §6 — active nav item sky tint */
+        --brand-100: rgba(14, 165, 233, 0.12);
+
+        --lw-border-soft: #243352;
+        --lw-accent-dark: #7DD3FC;
     }
 
     html, body, #root {
@@ -47,9 +144,9 @@
     }
 
     body {
-        font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
-        color: var(--lw-text);
-        background-color: var(--lw-bg);
+        font-family: var(--f-body);
+        color: var(--text);
+        background-color: var(--bg);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         text-rendering: optimizeLegibility;
@@ -57,46 +154,44 @@
     }
 
     h1, h2, h3, h4, h5 {
-        font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-        color: var(--lw-text);
+        font-family: var(--f-display);
+        color: var(--text);
         letter-spacing: -0.01em;
         font-weight: 600;
     }
 
     ::selection {
-        background: var(--lw-accent);
+        background: var(--brand-500);
         color: #FFFFFF;
     }
 
-    /* Consistent focus ring for any interactive element */
+    /* Spec §4.9: focus ring is sky at 15% alpha (was 28%). */
     :focus-visible {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.28);
-        border-radius: 6px;
+        box-shadow: var(--ring);
+        border-radius: var(--r-sm);
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Components — standardized utility classes (back-compat names)      */
-/* ------------------------------------------------------------------ */
+/* ==================================================================== */
+/*  Components — utility classes (back-compat names retained)           */
+/* ==================================================================== */
 
 @layer components {
 
-    /* Page surface — was a warm cream with grain; now cool neutral */
     .lw-page {
         min-height: 100%;
-        background-color: var(--lw-bg);
+        background-color: var(--bg);
     }
 
-    /* Grain overlay retained as a no-op so Layout.jsx doesn't break.
-       In v2 we prefer clean surfaces — intentionally empty. */
+    /* Retained as a no-op so Layout.jsx doesn't break — v2 prefers
+       clean surfaces, no grain overlay. */
     .lw-grain {
         position: relative;
     }
 
-    /* Small label above section titles — premium SaaS micro-label */
     .lw-section-num {
-        font-family: 'DM Mono', ui-monospace, Menlo, monospace;
+        font-family: var(--f-mono);
         font-size: 0.7rem;
         letter-spacing: 0.06em;
         text-transform: uppercase;
@@ -105,137 +200,181 @@
     }
 
     .lw-eyebrow {
-        font-family: 'DM Mono', ui-monospace, Menlo, monospace;
+        font-family: var(--f-mono);
         font-size: 0.68rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: var(--lw-text-muted);
+        color: var(--text-2);
         font-weight: 500;
     }
 
-    /* Horizontal rules — both names retained, both draw the same
-       subtle divider in v2 (accent rule was editorial and loud). */
-    .lw-rule,
-    .lw-rule-brass {
+    .lw-rule {
         height: 1px;
-        background-color: var(--lw-border);
+        background-color: var(--border);
     }
 
-    /* Legacy modifier used by some pages — now just a subtle 2px accent
-       underline, used sparingly under page titles. */
     .lw-rule-brass {
         height: 2px;
-        background: linear-gradient(90deg, var(--lw-accent) 0%, var(--lw-accent-light) 100%);
+        background: linear-gradient(90deg, var(--brand-500) 0%, #BAE6FD 100%);
         border-radius: 2px;
     }
 
-    /* Primary surface container — the SaaS "card" */
     .lw-card {
-        background-color: var(--lw-surface);
-        border: 1px solid var(--lw-border);
-        border-radius: 12px;
-        box-shadow: 0 1px 2px rgba(11, 29, 63, 0.04), 0 4px 12px rgba(11, 29, 63, 0.06);
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        box-shadow: var(--sh-sm);
     }
 
-    /* Form inputs — bordered, rounded, accessible */
     .lw-input {
         width: 100%;
-        background: var(--lw-surface);
-        border: 1px solid var(--lw-border);
-        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--r-md);
         padding: 0.625rem 0.875rem;
-        font-family: 'DM Sans', sans-serif;
+        font-family: var(--f-body);
         font-size: 0.9375rem;
-        color: var(--lw-text);
+        color: var(--text);
         outline: none;
-        transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+        transition:
+            border-color var(--duration-1) var(--ease),
+            box-shadow   var(--duration-1) var(--ease),
+            background-color var(--duration-1) var(--ease);
         appearance: none;
     }
     .lw-input:hover {
-        border-color: var(--lw-text-subtle);
+        border-color: var(--text-3);
     }
     .lw-input:focus {
-        border-color: var(--lw-accent);
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.18);
+        border-color: var(--brand-500);
+        box-shadow: var(--ring);
     }
     .lw-input:disabled {
-        background-color: var(--lw-surface-alt);
-        color: var(--lw-text-muted);
+        background-color: var(--bg);
+        color: var(--text-2);
+        opacity: 0.6;
         cursor: not-allowed;
     }
     .lw-input::placeholder {
-        color: var(--lw-text-subtle);
+        color: var(--text-3);
     }
     .lw-input[aria-invalid="true"],
     .lw-input.is-error {
-        border-color: var(--lw-error);
+        border-color: var(--error);
     }
     .lw-input[aria-invalid="true"]:focus,
     .lw-input.is-error:focus {
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+        box-shadow: var(--ring-error);
     }
 
-    /* textarea + select inherit .lw-input fine; ensure select shows arrow */
     select.lw-input {
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%234D5D80'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/></svg>");
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23475171'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/></svg>");
         background-repeat: no-repeat;
         background-position: right 0.625rem center;
         background-size: 1rem 1rem;
         padding-right: 2.25rem;
     }
 
-    /* Form label — compact, uppercase micro-label */
     .lw-label {
-        font-family: 'DM Sans', sans-serif;
+        font-family: var(--f-body);
         font-size: 0.75rem;
         font-weight: 500;
         letter-spacing: 0.02em;
-        color: var(--lw-text-muted);
+        color: var(--text-2);
         display: block;
         margin-bottom: 0.375rem;
     }
 
-    /* Small helper text under inputs */
     .lw-hint {
         font-size: 0.75rem;
-        color: var(--lw-text-muted);
+        color: var(--text-2);
         margin-top: 0.375rem;
     }
 
-    /* Compact KPI stat tile */
     .lw-stat {
-        background-color: var(--lw-surface);
-        border: 1px solid var(--lw-border);
-        border-radius: 12px;
+        background-color: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
         padding: 1.25rem 1.5rem;
     }
 
-    /* Divider line used inside cards */
     .lw-divider {
         height: 1px;
-        background-color: var(--lw-border);
+        background-color: var(--border);
     }
 
-    /* Tag / pill base — use Badge component for status; this is a neutral chip */
     .lw-chip {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
         padding: 0.125rem 0.5rem;
         border-radius: 999px;
-        background-color: var(--lw-surface-alt);
-        border: 1px solid var(--lw-border);
+        background-color: var(--surface-2);
+        border: 1px solid var(--border);
         font-size: 0.75rem;
         font-weight: 500;
-        color: var(--lw-text-muted);
+        color: var(--text-2);
+    }
+
+    /* §6 topbar — accent CTA (sky); §7.1 accent hover */
+    .btn-accent {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        font-family: var(--f-body);
+        font-weight: 500;
+        line-height: 1;
+        color: #fff;
+        background-color: var(--brand-500);
+        border: 1px solid var(--brand-500);
+        border-radius: var(--r-md);
+        cursor: pointer;
+        transition: background-color var(--duration-1) var(--ease), border-color var(--duration-1) var(--ease);
+    }
+    .btn-accent:hover {
+        background-color: #0284C7;
+        border-color: #0284C7;
+    }
+    .btn-accent:focus-visible {
+        outline: none;
+        box-shadow: var(--ring);
+    }
+    .btn-accent:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    .btn-sm {
+        padding: 7px 12px;
+        font-size: 13px;
+    }
+
+    /* §7.3 checkbox — native check, brand accent */
+    .lw-checkbox {
+        appearance: none;
+        border: 1px solid var(--border-strong);
+        background: var(--surface);
+        accent-color: var(--brand-500);
+    }
+    .lw-checkbox:checked {
+        background-color: var(--brand-500);
+        border-color: var(--brand-500);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2.5 6L5 8.5L9.5 3.5' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-size: 10px 10px;
+        background-position: center;
+        background-repeat: no-repeat;
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Utility overrides / patches                                        */
-/* ------------------------------------------------------------------ */
+/* Dark mode — select chevron readable on navy surface */
+html[data-theme="dark"] select.lw-input {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23A5AFCB'><path fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z' clip-rule='evenodd'/></svg>");
+}
 
-/* Kill number input spinners globally */
+/* ==================================================================== */
+/*  Utility overrides / patches                                         */
+/* ==================================================================== */
+
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;

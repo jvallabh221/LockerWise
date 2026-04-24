@@ -2,6 +2,7 @@ import React, { useState, useContext } from "react";
 import { Loader, Trash2, AlertTriangle } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "../context/ThemeProvider";
 import { LockerContext } from "../context/LockerProvider";
 import Layout from "./Layout";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,7 @@ import {
 } from "./ui/FormShell";
 
 const CancelLocker = () => {
+    const { effective } = useTheme();
     const { cancelLocker, setCancelSuccess } = useContext(LockerContext);
     const navigate = useNavigate();
 
@@ -108,25 +110,25 @@ const CancelLocker = () => {
 
                 {showConfirm && (
                     <div className="fixed inset-0 bg-ink-900/70 flex items-center justify-center z-50 px-4">
-                        <div className="bg-white border border-ink-100 max-w-md w-full p-8">
+                        <div className="border border-[var(--border)] bg-[var(--surface)] max-w-md w-full p-8">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-error-500 text-white rounded-full flex items-center justify-center">
                                     <AlertTriangle className="w-5 h-5" />
                                 </div>
-                                <h2 className="font-display text-2xl text-ink-900">Confirm cancellation</h2>
+                                <h2 className="font-display text-2xl text-[var(--text)]">Confirm cancellation</h2>
                             </div>
                             <p className="text-slate-600 mb-4">
                                 This will return the locker to the pool and generate a new combination. This cannot be undone.
                             </p>
-                            <div className="border border-ink-100 bg-cream-50 p-4 mb-6">
+                            <div className="border border-[var(--border)] bg-[var(--surface-2)] p-4 mb-6">
                                 <dl className="space-y-1">
                                     <div className="flex justify-between text-sm">
                                         <dt className="lw-label !mb-0">Locker</dt>
-                                        <dd className="font-mono text-ink-900">#{lockerNumber}</dd>
+                                        <dd className="font-mono text-[var(--text)]">#{lockerNumber}</dd>
                                     </div>
                                     <div className="flex justify-between text-sm">
                                         <dt className="lw-label !mb-0">Email</dt>
-                                        <dd className="font-mono text-ink-900 truncate">{lockerEmail}</dd>
+                                        <dd className="font-mono text-[var(--text)] truncate">{lockerEmail}</dd>
                                     </div>
                                 </dl>
                             </div>
@@ -134,7 +136,7 @@ const CancelLocker = () => {
                                 <button
                                     onClick={() => setShowConfirm(false)}
                                     disabled={loading}
-                                    className="flex-1 px-4 py-2.5 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
+                                    className="flex-1 px-4 py-2.5 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium text-sm rounded-md hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] transition-colors"
                                 >
                                     Go back
                                 </button>
@@ -150,7 +152,7 @@ const CancelLocker = () => {
                     </div>
                 )}
             </PageShell>
-            <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+            <ToastContainer position="top-right" autoClose={3000} theme={effective === "dark" ? "dark" : "colored"} />
         </Layout>
     );
 };

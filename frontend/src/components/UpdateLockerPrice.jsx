@@ -8,9 +8,9 @@ const UpdateLockerPrice = () => {
     const { isEditable, lockerPrices, toggleEditable, handleInputChange, saveLockerPrice } = useContext(LockerContext);
 
     const renderRow = (typeKey, label, genderLabel) => (
-        <tr className="border-b border-ink-100">
-            <td className="px-4 py-3 font-mono text-xs text-ink-900">{genderLabel}</td>
-            <td className="px-4 py-3 font-mono text-xs text-ink-900">{label}</td>
+        <tr className="border-b border-[var(--border)]">
+            <td className="px-4 py-3 font-mono text-xs text-[var(--text)]">{genderLabel}</td>
+            <td className="px-4 py-3 font-mono text-xs text-[var(--text)]">{label}</td>
             {["threeMonths", "sixMonths", "twelveMonths"].map((d) => (
                 <td key={d} className="px-4 py-3">
                     <input
@@ -18,7 +18,7 @@ const UpdateLockerPrice = () => {
                         value={lockerPrices[typeKey][d]}
                         readOnly={!isEditable[typeKey]}
                         onChange={(e) => handleInputChange(e, typeKey, d)}
-                        className={`w-full bg-transparent border-b ${isEditable[typeKey] ? "border-brass-400" : "border-ink-200"} text-sm font-mono text-ink-900 py-1 focus:outline-none focus:border-brass-400 transition-colors`}
+                        className={`w-full bg-transparent border-b ${isEditable[typeKey] ? "border-brass-400" : "border-[var(--border-strong)]"} text-sm font-mono text-[var(--text)] py-1 focus:outline-none focus:border-brass-400 transition-colors`}
                     />
                 </td>
             ))}
@@ -31,7 +31,7 @@ const UpdateLockerPrice = () => {
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                         isEditable[typeKey]
                             ? "bg-brass-400 text-white hover:bg-brass-500 shadow-xs"
-                            : "border border-ink-100 text-ink-900 bg-white hover:bg-cream-200 hover:border-ink-200"
+                            : "border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)]"
                     }`}
                 >
                     {isEditable[typeKey] ? <><Save className="w-3.5 h-3.5" /> Save</> : <><Edit2 className="w-3.5 h-3.5" /> Edit</>}
@@ -48,11 +48,11 @@ const UpdateLockerPrice = () => {
                 italicTitle="locker pricing."
                 description="Adjust prices by gender, type, and duration. Changes apply to new assignments."
             >
-                <div className="mt-8 border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
+                <div className="mt-8 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse min-w-[700px]">
                             <thead>
-                                <tr className="border-b border-ink-200 bg-cream-50">
+                                <tr className="border-b border-[var(--border-strong)] bg-[var(--surface-2)]">
                                     {["Gender", "Type", "3 mo", "6 mo", "12 mo", "Action"].map((h) => (
                                         <th key={h} className="px-4 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">
                                             {h}

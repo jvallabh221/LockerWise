@@ -4,12 +4,14 @@ import ReactPaginate from "react-paginate";
 import Layout from "./Layout";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "../context/ThemeProvider";
 import { ChevronLeft, ChevronRight, Search, Calendar, Loader, Trash2, X, Clock } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { parse, format } from "date-fns";
 
 const LockerHistory = () => {
+    const { effective } = useTheme();
     const { lockerHistory, clearHistory, getLockerHistory } = useContext(AdminContext);
     const [searchLocker, setSearchLocker] = useState("");
     const [startDate, setStartDate] = useState("");
@@ -84,11 +86,11 @@ const LockerHistory = () => {
 
     return (
         <Layout>
-            <ToastContainer position="top-right" autoClose={2000} theme="colored" />
+            <ToastContainer position="top-right" autoClose={2000} theme={effective === "dark" ? "dark" : "colored"} />
             <section className="w-full px-6 lg:px-10 py-10">
                 <div className="lw-section-num mb-2">Archive / Ledger</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
-                    <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
+                    <h1 className="font-display text-3xl sm:text-4xl text-[var(--text)] font-semibold leading-tight tracking-tight">
                         Locker <span className="text-brass-500">history.</span>
                     </h1>
                     <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -97,8 +99,8 @@ const LockerHistory = () => {
                 </div>
                 <div className="lw-rule-brass w-16 mt-5 mb-8" />
 
-                <div className="border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
-                    <div className="flex flex-col md:flex-row justify-between gap-3 p-4 border-b border-ink-100">
+                <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+                    <div className="flex flex-col md:flex-row justify-between gap-3 p-4 border-b border-[var(--border)]">
                         <div className="relative w-full md:w-64">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                             <input
@@ -106,7 +108,7 @@ const LockerHistory = () => {
                                 placeholder="Search by locker #"
                                 value={searchLocker}
                                 onChange={(e) => setSearchLocker(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
+                                className="w-full pl-9 pr-3 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-md text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                             />
                         </div>
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -119,7 +121,7 @@ const LockerHistory = () => {
                                     endDate={parseDate(endDate)}
                                     dateFormat="dd-MM-yyyy"
                                     placeholderText="Start date"
-                                    className="w-full sm:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
+                                    className="w-full sm:w-44 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-md text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                                 />
                             </div>
                             <div className="relative">
@@ -132,18 +134,18 @@ const LockerHistory = () => {
                                     minDate={parseDate(startDate)}
                                     dateFormat="dd-MM-yyyy"
                                     placeholderText="End date"
-                                    className="w-full sm:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
+                                    className="w-full sm:w-44 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-md text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                                 />
                             </div>
                             <button
                                 onClick={() => { setStartDate(""); setEndDate(""); }}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] text-xs font-medium rounded-md hover:bg-[var(--surface-2)] hover:text-[var(--text)] hover:border-[var(--border-strong)] transition-colors"
                             >
                                 <X className="w-3.5 h-3.5" /> Reset
                             </button>
                             <button
                                 onClick={scrollToClear}
-                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-error-500/30 text-error-600 bg-white text-xs font-medium rounded-md hover:bg-error-50 hover:border-error-500 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-2 border border-error-500/30 text-error-600 bg-[var(--surface)] text-xs font-medium rounded-md hover:bg-error-50 hover:border-error-500 transition-colors"
                             >
                                 <Trash2 className="w-3.5 h-3.5" /> Clear range
                             </button>
@@ -157,18 +159,18 @@ const LockerHistory = () => {
                         </div>
                     ) : history.length === 0 ? (
                         <div className="py-14 text-center">
-                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-cream-200 text-slate-400">
+                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--text-3)]">
                                 <Clock className="w-4 h-4" />
                             </div>
-                            <div className="font-display text-sm font-semibold text-ink-900">No history yet</div>
+                            <div className="font-display text-sm font-semibold text-[var(--text)]">No history yet</div>
                             <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">Transactions will show up here as lockers are assigned, renewed, or cancelled.</p>
                         </div>
                     ) : (
                         <>
                             <div className="overflow-x-auto max-h-[60vh] overflow-y-auto no-scrollbar">
                                 <table className="w-full border-collapse min-w-[900px]">
-                                    <thead className="sticky top-0 bg-cream-50">
-                                        <tr className="border-b border-ink-200">
+                                    <thead className="sticky top-0 bg-[var(--surface-2)]">
+                                        <tr className="border-b border-[var(--border-strong)]">
                                             {["Locker", "Event", "Holder", "By", "Cost", "Status", "When"].map((h) => (
                                                 <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                             ))}
@@ -176,14 +178,14 @@ const LockerHistory = () => {
                                     </thead>
                                     <tbody>
                                         {currentItems.map((item, index) => (
-                                            <tr key={index} className="border-b border-ink-100 hover:bg-cream-50/60 transition-colors">
-                                                <td className="px-3 py-3 font-mono text-sm text-ink-900">#{item.LockerNumber}</td>
-                                                <td className="px-3 py-3 text-sm text-ink-900 max-w-[280px] truncate" title={item.comment}>{item.comment}</td>
-                                                <td className="px-3 py-3 text-sm text-ink-900 max-w-[160px] truncate">{item.LockerHolder}</td>
-                                                <td className="px-3 py-3 text-sm text-ink-900 max-w-[160px] truncate">{item.InitiatedBy}</td>
-                                                <td className="px-3 py-3 font-mono text-xs text-ink-900">{item.Cost || "—"}</td>
+                                            <tr key={index} className="border-b border-[var(--border)] hover:bg-[var(--surface-2)]/60 transition-colors">
+                                                <td className="px-3 py-3 font-mono text-sm text-[var(--text)]">#{item.LockerNumber}</td>
+                                                <td className="px-3 py-3 text-sm text-[var(--text)] max-w-[280px] truncate" title={item.comment}>{item.comment}</td>
+                                                <td className="px-3 py-3 text-sm text-[var(--text)] max-w-[160px] truncate">{item.LockerHolder}</td>
+                                                <td className="px-3 py-3 text-sm text-[var(--text)] max-w-[160px] truncate">{item.InitiatedBy}</td>
+                                                <td className="px-3 py-3 font-mono text-xs text-[var(--text)]">{item.Cost || "—"}</td>
                                                 <td className="px-3 py-3 font-mono text-xs text-slate-600">{item.LockerStatus}</td>
-                                                <td className="px-3 py-3 font-mono text-xs text-ink-900">
+                                                <td className="px-3 py-3 font-mono text-xs text-[var(--text)]">
                                                     {item.createdAt ? (
                                                         <div className="flex flex-col">
                                                             <span>{new Date(item.createdAt).toLocaleDateString("en-GB")}</span>
@@ -199,20 +201,20 @@ const LockerHistory = () => {
                                     </tbody>
                                 </table>
                             </div>
-                            <div className="p-4 border-t border-ink-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div className="p-4 border-t border-[var(--border)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                     {startRange}–{endRange} of {history.length}
                                 </div>
                                 <ReactPaginate
                                     breakLabel={<span className="mx-1">…</span>}
-                                    previousLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-200"><ChevronLeft className="w-3.5 h-3.5" /></span>}
-                                    nextLabel={<span className="w-8 h-8 flex items-center justify-center border border-ink-200"><ChevronRight className="w-3.5 h-3.5" /></span>}
+                                    previousLabel={<span className="w-8 h-8 flex items-center justify-center border border-[var(--border-strong)]"><ChevronLeft className="w-3.5 h-3.5" /></span>}
+                                    nextLabel={<span className="w-8 h-8 flex items-center justify-center border border-[var(--border-strong)]"><ChevronRight className="w-3.5 h-3.5" /></span>}
                                     pageCount={pageCount}
                                     onPageChange={({ selected }) => setCurrentPage(selected)}
                                     pageRangeDisplayed={3}
                                     marginPagesDisplayed={1}
                                     containerClassName="flex items-center gap-1"
-                                    pageClassName="block border border-ink-100 hover:bg-brass-50 hover:text-brass-600 hover:border-brass-400/40 rounded-md w-8 h-8 flex items-center justify-center text-xs font-medium"
+                                    pageClassName="block border border-[var(--border)] hover:bg-[var(--surface-2)] hover:text-brass-600 hover:border-brass-400/40 rounded-md w-8 h-8 flex items-center justify-center text-xs font-medium"
                                     activeClassName="bg-brass-400 text-white border-brass-400 hover:!bg-brass-500 hover:!text-white"
                                     renderOnZeroPageCount={null}
                                 />
@@ -224,7 +226,7 @@ const LockerHistory = () => {
                 <div ref={clearRef} className={`mt-8 ${showClearSection ? "" : "hidden"}`}>
                     <div className="border border-error-500/25 bg-error-50/40 rounded-xl p-6 md:p-8">
                         <div className="lw-eyebrow mb-1 text-error-600">Danger zone</div>
-                        <h2 className="font-display text-xl text-ink-900 font-semibold mb-1.5">Clear history range</h2>
+                        <h2 className="font-display text-xl text-[var(--text)] font-semibold mb-1.5">Clear history range</h2>
                         <p className="text-sm text-slate-500 mb-6">This permanently removes locker transaction records within the selected dates. Use with care.</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
                             <div>
@@ -251,7 +253,7 @@ const LockerHistory = () => {
                             <div className="flex items-end">
                                 <button
                                     onClick={() => { setClearStart(""); setClearEnd(""); }}
-                                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] text-xs font-medium rounded-md hover:bg-[var(--surface-2)] hover:text-[var(--text)] hover:border-[var(--border-strong)] transition-colors"
                                 >
                                     Reset dates
                                 </button>
@@ -267,7 +269,7 @@ const LockerHistory = () => {
                             </button>
                             <button
                                 onClick={() => { setShowClearSection(false); setClearStart(""); setClearEnd(""); }}
-                                className="inline-flex items-center gap-2 px-6 py-3 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
+                                className="inline-flex items-center gap-2 px-6 py-3 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium text-sm rounded-md hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] transition-colors"
                             >
                                 Cancel
                             </button>

@@ -21,19 +21,22 @@ export const SearchInput = ({
 
     return (
         <div className={`relative ${width} ${className}`}>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--text-3)]"
+                strokeWidth={1.75}
+            />
             <input
                 type="text"
                 value={value}
                 onChange={onChange}
                 placeholder={placeholder}
-                className={`w-full ${sizeCls} bg-white border border-ink-100 rounded-md text-ink-900 placeholder:text-slate-400 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 transition-colors`}
+                className={`w-full ${sizeCls} rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] placeholder:text-[var(--text-3)] transition-colors duration-1 ease-lw focus:border-brass-400 focus:outline-none focus:ring-2 focus:ring-brass-400/20`}
             />
             {value ? (
                 <button
                     type="button"
                     onClick={() => onChange?.({ target: { value: "" } })}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-ink-900 transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--text-3)] transition-colors hover:text-[var(--text)]"
                     aria-label="Clear search"
                 >
                     <X className="w-3.5 h-3.5" />

@@ -2,10 +2,10 @@ import React from "react";
 import DashNav from "./DashNav";
 
 const Clause = ({ num, title, children }) => (
-    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-ink-100 first:border-t-0">
+    <section className="grid md:grid-cols-12 gap-6 py-8 border-t border-[var(--border)] first:border-t-0">
         <div className="md:col-span-3">
             <div className="lw-section-num mb-2">{num}</div>
-            <h2 className="font-display text-2xl text-ink-900 leading-tight">{title}</h2>
+            <h2 className="font-display text-2xl text-[var(--text)] leading-tight">{title}</h2>
         </div>
         <div className="md:col-span-9 text-slate-700 leading-relaxed space-y-4">{children}</div>
     </section>
@@ -29,7 +29,7 @@ const TermsOfService = () => {
             <section className="px-6 sm:px-10 lg:px-16 py-16">
                 <div className="max-w-5xl mx-auto">
                     <div className="lw-eyebrow mb-3">Colophon / Terms</div>
-                    <h1 className="font-display text-5xl sm:text-6xl text-ink-900 leading-[1]">
+                    <h1 className="font-display text-5xl sm:text-6xl text-[var(--text)] leading-[1]">
                         The agreement, <span className="text-brass-500">in writing.</span>
                     </h1>
                     <div className="lw-rule-brass w-20 mt-6" />
@@ -41,7 +41,7 @@ const TermsOfService = () => {
                         .
                     </p>
 
-                    <div className="mt-12 border border-ink-100 bg-white p-8 md:p-12">
+                    <div className="mt-12 border border-[var(--border)] bg-[var(--surface)] p-8 md:p-12">
                         <Clause num="01 / Agreement" title="Agreement to terms">
                             <p>
                                 By accessing and using LockerWise, you agree to these Terms of Service. If you do not
@@ -51,12 +51,12 @@ const TermsOfService = () => {
                         </Clause>
 
                         <Clause num="02 / Use" title="Use of service">
-                            <p className="font-semibold text-ink-900">Eligibility</p>
+                            <p className="font-semibold text-[var(--text)]">Eligibility</p>
                             <p>
                                 You must be authorized by your organization. Provide accurate information and keep your
                                 account up to date.
                             </p>
-                            <p className="font-semibold text-ink-900 mt-4">Account security</p>
+                            <p className="font-semibold text-[var(--text)] mt-4">Account security</p>
                             <List
                                 items={[
                                     "Keep your password confidential",
@@ -82,7 +82,7 @@ const TermsOfService = () => {
                         </Clause>
 
                         <Clause num="04 / Lockers" title="Assignments and usage">
-                            <p className="font-semibold text-ink-900">Assignment terms</p>
+                            <p className="font-semibold text-[var(--text)]">Assignment terms</p>
                             <List
                                 items={[
                                     "Use assigned lockers for their intended purpose",
@@ -91,7 +91,7 @@ const TermsOfService = () => {
                                     "Comply with renewal and cancellation policies",
                                 ]}
                             />
-                            <p className="font-semibold text-ink-900 mt-4">Prohibited items</p>
+                            <p className="font-semibold text-[var(--text)] mt-4">Prohibited items</p>
                             <p>
                                 Illegal, hazardous, or prohibited items are not permitted. Violation may result in
                                 immediate termination of access.
@@ -145,15 +145,15 @@ const TermsOfService = () => {
                             <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-2">
                                 <div>
                                     <dt className="lw-eyebrow">Email</dt>
-                                    <dd className="font-mono text-sm text-ink-900 mt-1">legal@lockerwise.com</dd>
+                                    <dd className="font-mono text-sm text-[var(--text)] mt-1">legal@lockerwise.com</dd>
                                 </div>
                                 <div>
                                     <dt className="lw-eyebrow">Phone</dt>
-                                    <dd className="font-mono text-sm text-ink-900 mt-1">+1 (555) 123-4567</dd>
+                                    <dd className="font-mono text-sm text-[var(--text)] mt-1">+1 (555) 123-4567</dd>
                                 </div>
                                 <div>
                                     <dt className="lw-eyebrow">Address</dt>
-                                    <dd className="font-mono text-sm text-ink-900 mt-1">DraconX LLC · Dover, DE</dd>
+                                    <dd className="font-mono text-sm text-[var(--text)] mt-1">DraconX LLC · Dover, DE</dd>
                                 </div>
                             </dl>
                         </Clause>

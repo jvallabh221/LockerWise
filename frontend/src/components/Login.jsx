@@ -28,12 +28,12 @@ const Login = () => {
 
     return (
         <div className="min-h-screen lw-page flex items-center justify-center py-10 px-4">
-            <div className="w-full max-w-5xl grid lg:grid-cols-12 border border-ink-100 bg-white shadow-paper rounded-2xl overflow-hidden">
+            <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm lg:grid-cols-12">
                 {/* Brand pane (desktop only) */}
                 <aside className="hidden lg:flex lg:col-span-5 bg-ink-900 text-white p-10 lg:p-12 flex-col justify-between relative overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.08] pointer-events-none"
                         style={{
-                            backgroundImage: "radial-gradient(circle at 20% 20%, #0EA5E9 0, transparent 40%), radial-gradient(circle at 80% 80%, #BAE6FD 0, transparent 35%)",
+                            backgroundImage: "radial-gradient(circle at 20% 20%, var(--brand-500) 0, transparent 40%), radial-gradient(circle at 80% 80%, var(--brand-300) 0, transparent 35%)",
                         }}
                     />
                     <div className="relative">
@@ -55,13 +55,13 @@ const Login = () => {
                 </aside>
 
                 {/* Form pane */}
-                <div className="lg:col-span-7 p-6 sm:p-10 lg:p-14 flex flex-col justify-center bg-white">
-                    <Link to="/" className="lg:hidden mb-6 inline-flex text-ink-900 hover:text-brass-500 transition-colors">
+                <div className="flex flex-col justify-center bg-[var(--surface)] p-6 sm:p-10 lg:col-span-7 lg:p-14">
+                    <Link to="/" className="mb-6 inline-flex text-[var(--text)] transition-colors hover:text-brass-500 lg:hidden">
                         <Wordmark size="md" />
                     </Link>
                     <div className="lw-eyebrow mb-2">Welcome back</div>
-                    <h2 className="font-display text-2xl text-ink-900 font-semibold mb-1">Sign in to LockerWise</h2>
-                    <p className="text-sm text-slate-500 mb-8">Use your institutional email and password to continue.</p>
+                    <h2 className="mb-1 font-display text-2xl font-semibold text-[var(--text)]">Sign in to LockerWise</h2>
+                    <p className="mb-8 text-sm text-[var(--text-2)]">Use your institutional email and password to continue.</p>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div>
@@ -98,7 +98,7 @@ const Login = () => {
                                 />
                                 <button
                                     type="button"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-ink-900 hover:bg-cream-200 transition-colors"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-400 hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
                                     onClick={() => setShowPassword(!showPassword)}
                                     aria-label="Toggle password visibility"
                                 >

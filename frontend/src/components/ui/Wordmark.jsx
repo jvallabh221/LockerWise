@@ -1,8 +1,12 @@
 import React from "react";
 
 /**
- * LockerWise wordmark + 2x2 locker-bank mark.
- * v2: navy outline, accent-blue highlight dot.
+ * LockerWise wordmark.
+ *
+ * Mark — 2×2 grid of rounded-square compartments. The top-right
+ * compartment is filled with `--brand-500` (spec §5). The other three
+ * are outlined in currentColor, so the mark picks up its surface color
+ * automatically (navy on light surfaces, white on dark/navy surfaces).
  */
 export const Wordmark = ({ className = "", showMark = true, size = "md" }) => {
     const markSize = size === "sm" ? 20 : size === "lg" ? 32 : 26;
@@ -24,14 +28,14 @@ export const Wordmark = ({ className = "", showMark = true, size = "md" }) => {
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true"
                 >
-                    <rect x="1" y="1" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-                    <rect x="13" y="1" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-                    <rect x="1" y="13" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    {/* Top-left */}
+                    <rect x="1"  y="1"  width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    {/* Top-right — accent, filled rounded square */}
+                    <rect x="13" y="1"  width="10" height="10" rx="1.5" fill="var(--brand-500)" />
+                    {/* Bottom-left */}
+                    <rect x="1"  y="13" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                    {/* Bottom-right */}
                     <rect x="13" y="13" width="10" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
-                    <circle cx="6"  cy="6"  r="1.15" fill="currentColor" />
-                    <circle cx="18" cy="6"  r="1.15" fill="currentColor" />
-                    <circle cx="6"  cy="18" r="1.15" fill="currentColor" />
-                    <circle cx="18" cy="18" r="1.6"  fill="#0EA5E9" />
                 </svg>
             ) : null}
             <span className={`font-display font-semibold tracking-tight ${textSize}`}>LockerWise</span>

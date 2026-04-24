@@ -8,6 +8,7 @@ import { parse, format } from "date-fns";
 import { Link } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "../context/ThemeProvider";
 import { Badge } from "./ui/Badge";
 
 const toneForStatus = (s) => {
@@ -18,6 +19,7 @@ const toneForStatus = (s) => {
 };
 
 const ViewReportStatus = () => {
+    const { effective } = useTheme();
     const [issueType, setIssueType] = useState("locker");
     const { lockerIssue = [], technicalIssue = [], deleteIssue, updateComment } = useContext(AdminContext);
     const [loading, setLoading] = useState(false);
@@ -87,30 +89,30 @@ const ViewReportStatus = () => {
 
     return (
         <Layout>
-            <ToastContainer position="top-right" autoClose={2000} theme="colored" />
+            <ToastContainer position="top-right" autoClose={2000} theme={effective === "dark" ? "dark" : "colored"} />
             <section className="w-full px-6 lg:px-10 py-10">
                 <div className="lw-section-num mb-2">Record / Reports</div>
                 <div className="flex items-end justify-between gap-6 flex-wrap">
-                    <h1 className="font-display text-3xl sm:text-4xl text-ink-900 font-semibold leading-tight tracking-tight">
+                    <h1 className="font-display text-3xl sm:text-4xl text-[var(--text)] font-semibold leading-tight tracking-tight">
                         Report <span className="text-brass-500">status.</span>
                     </h1>
                     <Link
                         to="/issue_reporting"
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium text-sm rounded-md hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] transition-colors"
                     >
                         Report an issue
                     </Link>
                 </div>
                 <div className="lw-rule-brass w-16 mt-5 mb-8" />
 
-                <div className="border border-ink-100 bg-white rounded-xl shadow-paper overflow-hidden">
-                    <div className="flex flex-col md:flex-row gap-3 justify-end p-4 border-b border-ink-100">
+                <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+                    <div className="flex flex-col md:flex-row gap-3 justify-end p-4 border-b border-[var(--border)]">
                         <div className="flex items-center gap-2">
                             <span className="lw-eyebrow">Type</span>
                             <select
                                 value={issueType}
                                 onChange={(e) => setIssueType(e.target.value)}
-                                className="bg-white border border-ink-100 rounded-md px-3 py-2 text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
+                                className="border border-[var(--border)] bg-[var(--surface)] rounded-md px-3 py-2 text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20"
                             >
                                 <option value="locker">Locker</option>
                                 <option value="technical">Technical</option>
@@ -121,11 +123,11 @@ const ViewReportStatus = () => {
                             onChange={(d) => setSelectedDate(d ? format(d, "dd-MM-yyyy") : "")}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Date"
-                            className="w-full md:w-44 px-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
+                            className="w-full md:w-44 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-md text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                         />
                         <button
                             onClick={() => setSelectedDate("")}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] text-xs font-medium rounded-md hover:bg-[var(--surface-2)] hover:text-[var(--text)] hover:border-[var(--border-strong)] transition-colors"
                         >
                             <X className="w-3.5 h-3.5" /> Clear
                         </button>
@@ -136,15 +138,15 @@ const ViewReportStatus = () => {
                                 placeholder="Search by email"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-9 pr-3 py-2 bg-white border border-ink-100 rounded-md text-sm text-ink-900 focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
+                                className="w-full pl-9 pr-3 py-2 border border-[var(--border)] bg-[var(--surface)] rounded-md text-sm text-[var(--text)] focus:outline-none focus:border-brass-400 focus:ring-2 focus:ring-brass-400/20 placeholder:text-slate-400"
                             />
                         </div>
                     </div>
 
                     <div className="overflow-x-auto max-h-[60vh] overflow-y-auto no-scrollbar">
                         <table className="w-full border-collapse min-w-[900px]">
-                            <thead className="sticky top-0 bg-cream-50">
-                                <tr className="border-b border-ink-200">
+                            <thead className="sticky top-0 bg-[var(--surface-2)]">
+                                <tr className="border-b border-[var(--border-strong)]">
                                     {["Issue", "Email", "Subject", "Status", "Created", "Action"].map((h) => (
                                         <th key={h} className="px-3 py-3 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-slate-500">{h}</th>
                                     ))}
@@ -154,10 +156,10 @@ const ViewReportStatus = () => {
                                 {filtered.length === 0 ? (
                                     <tr>
                                         <td colSpan="6" className="px-4 py-14 text-center">
-                                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-cream-200 text-slate-400">
+                                            <div className="mx-auto mb-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--surface-2)] text-[var(--text-3)]">
                                                 <FileText className="w-4 h-4" />
                                             </div>
-                                            <div className="font-display text-sm font-semibold text-ink-900">No reports yet</div>
+                                            <div className="font-display text-sm font-semibold text-[var(--text)]">No reports yet</div>
                                             <p className="mt-1 text-sm text-slate-500 max-w-md mx-auto">When you file an issue, its status will appear here.</p>
                                         </td>
                                     </tr>
@@ -167,30 +169,30 @@ const ViewReportStatus = () => {
                                         const created = item.createdAt ? new Date(item.createdAt).toLocaleDateString("en-GB") : "—";
                                         return (
                                             <React.Fragment key={index}>
-                                                <tr className="border-b border-ink-100 hover:bg-cream-50/60 transition-colors">
-                                                    <td className="px-3 py-3 font-mono text-sm text-ink-900">
+                                                <tr className="border-b border-[var(--border)] hover:bg-[var(--surface-2)]/60 transition-colors">
+                                                    <td className="px-3 py-3 font-mono text-sm text-[var(--text)]">
                                                         {item.type === "technical" ? "Technical" : `#${item.LockerNumber || "—"}`}
                                                     </td>
-                                                    <td className="px-3 py-3 text-sm text-ink-900 truncate max-w-[200px]">{item.email || "—"}</td>
-                                                    <td className="px-3 py-3 text-sm text-ink-900 truncate max-w-[200px]">{item.subject || "—"}</td>
+                                                    <td className="px-3 py-3 text-sm text-[var(--text)] truncate max-w-[200px]">{item.email || "—"}</td>
+                                                    <td className="px-3 py-3 text-sm text-[var(--text)] truncate max-w-[200px]">{item.subject || "—"}</td>
                                                     <td className="px-3 py-3"><Badge tone={toneForStatus(item.status)}>{item.status || "—"}</Badge></td>
-                                                    <td className="px-3 py-3 font-mono text-xs text-ink-900">{created}</td>
+                                                    <td className="px-3 py-3 font-mono text-xs text-[var(--text)]">{created}</td>
                                                     <td className="px-3 py-3">
                                                         <button
                                                             onClick={() => toggleRow(item._id)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] text-xs font-medium rounded-md hover:bg-[var(--surface-2)] hover:text-[var(--text)] hover:border-[var(--border-strong)] transition-colors"
                                                         >
                                                             {isOpen ? <><ChevronUp className="w-3 h-3" /> Hide</> : <><ChevronDown className="w-3 h-3" /> Detail</>}
                                                         </button>
                                                     </td>
                                                 </tr>
                                                 {isOpen && (
-                                                    <tr className="bg-cream-50/60 border-b border-ink-100">
+                                                    <tr className="bg-[var(--surface-2)]/60 border-b border-[var(--border)]">
                                                         <td colSpan="6" className="px-4 py-5">
                                                             <div className="space-y-5">
                                                                 <div>
                                                                     <div className="lw-label">Description</div>
-                                                                    <p className="text-sm text-ink-900">{item.description || "—"}</p>
+                                                                    <p className="text-sm text-[var(--text)]">{item.description || "—"}</p>
                                                                 </div>
                                                                 <div>
                                                                     <div className="flex items-center justify-between">
@@ -198,7 +200,7 @@ const ViewReportStatus = () => {
                                                                         {editableStates[item._id] && (
                                                                             <button
                                                                                 onClick={() => handleCancelEdit(item._id, item)}
-                                                                                className="text-slate-500 hover:text-ink-900"
+                                                                                className="text-slate-500 hover:text-[var(--text)]"
                                                                             >
                                                                                 <X className="w-4 h-4" />
                                                                             </button>
@@ -218,7 +220,7 @@ const ViewReportStatus = () => {
                                                                         {editableStates[item._id] && (
                                                                             <button
                                                                                 onClick={() => handleCommentSubmit(item._id)}
-                                                                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
+                                                                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium text-sm rounded-md hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] transition-colors"
                                                                             >
                                                                                 Update
                                                                             </button>
@@ -227,7 +229,7 @@ const ViewReportStatus = () => {
                                                                 </div>
                                                                 {error && <p className="text-sm text-error-600">{error}</p>}
                                                                 {item.status === "Resolved" && (
-                                                                    <div className="pt-2 border-t border-ink-100">
+                                                                    <div className="pt-2 border-t border-[var(--border)]">
                                                                         <button
                                                                             onClick={() => handleDelete(item._id)}
                                                                             disabled={loading}

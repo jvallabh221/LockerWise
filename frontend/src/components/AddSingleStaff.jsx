@@ -116,7 +116,7 @@ const AddSingleStaff = () => {
                             <button
                                 type="button"
                                 onClick={randomPassGenerator}
-                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-ink-100 text-slate-600 bg-white text-xs font-medium rounded-md hover:bg-cream-200 hover:text-ink-900 hover:border-ink-200 transition-colors"
+                                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] text-xs font-medium rounded-md hover:bg-[var(--surface-2)] hover:text-[var(--text)] hover:border-[var(--border-strong)] transition-colors"
                             >
                                 <Shuffle className="w-3.5 h-3.5" />
                                 Generate

@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "../context/ThemeProvider";
 import { AuthContext } from "../context/AuthProvider";
 import { LockerContext } from "../context/LockerProvider";
 import { AdminContext } from "../context/AdminProvider";
@@ -14,56 +15,25 @@ import {
     Wrench,
     Lock,
     LockOpen,
-    TrendingUp,
     Activity,
 } from "lucide-react";
+import { StatCard } from "./ui/StatCard";
 
 /* ------------------------------- Tokens -------------------------------- */
 
+// Occupied slice uses sky (§7.4) — info / brand-500
 const CHART_COLORS = {
-    available:   "#10B981", // success
-    occupied:    "#F59E0B", // warning
-    maintenance: "#EF4444", // error
-    other:       "#4D5D80", // slate
-    ring:        "#F9FAFC", // card bg
-};
-
-/* ------------------------------- StatCard ------------------------------ */
-
-const StatCard = ({ label, value, Icon, tone = "accent", hint, delta }) => {
-    const toneMap = {
-        accent:  { bg: "bg-brass-50",   text: "text-brass-500",   dot: "bg-brass-400"   },
-        navy:    { bg: "bg-ink-50",     text: "text-ink-700",     dot: "bg-ink-900"     },
-        success: { bg: "bg-success-50", text: "text-success-600", dot: "bg-success-500" },
-        warning: { bg: "bg-warning-50", text: "text-warning-600", dot: "bg-warning-500" },
-        error:   { bg: "bg-error-50",   text: "text-error-600",   dot: "bg-error-500"   },
-    };
-    const t = toneMap[tone] || toneMap.accent;
-
-    return (
-        <div className="bg-white border border-ink-100 rounded-xl p-5 shadow-paper">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</div>
-                    <div className="mt-2 font-display text-3xl text-ink-900 font-semibold leading-none">{value}</div>
-                    {hint ? <div className="mt-1.5 text-xs text-slate-400">{hint}</div> : null}
-                </div>
-                <div className={`w-10 h-10 rounded-lg ${t.bg} ${t.text} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-            </div>
-            {delta != null ? (
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-success-600">
-                    <TrendingUp className="w-3.5 h-3.5" /> {delta}
-                </div>
-            ) : null}
-        </div>
-    );
+    available:   "var(--success)",
+    occupied:    "var(--brand-500)",
+    maintenance: "var(--error)",
+    other:       "var(--text-3)",
+    ring:        "var(--surface-2)",
 };
 
 /* ------------------------------- Dashboard ----------------------------- */
 
 const Dashboard = () => {
+    const { effective } = useTheme();
     const { loginDetails, loginSuccess, setLoginSuccess, updateSuccess, setUpdateSuccess } =
         useContext(AuthContext);
 
@@ -239,42 +209,42 @@ const Dashboard = () => {
 
     return (
         <Layout>
-            <ToastContainer position="top-right" autoClose={2500} theme="light" />
-            <section className="w-full max-w-6xl mx-auto px-6 lg:px-8 py-8 lg:py-10 space-y-8">
+            <ToastContainer position="top-right" autoClose={2500} theme={effective === "dark" ? "dark" : "light"} />
+            <section className="mx-auto w-full max-w-[1600px] space-y-5 px-6 py-8 lg:px-6 lg:py-10">
                 {/* Header */}
-                <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <div className="lw-eyebrow mb-2">Overview</div>
-                        <h1 className="font-display text-3xl lg:text-[2rem] text-ink-900 font-semibold leading-tight">
+                        <h1 className="font-display text-3xl font-semibold leading-tight text-[var(--text)] lg:text-[2rem]">
                             Good day, <span className="text-brass-500">{firstName}.</span>
                         </h1>
-                        <p className="mt-2 text-slate-500 max-w-2xl leading-relaxed text-[0.95rem]">
+                        <p className="mt-2 max-w-2xl text-[0.95rem] leading-relaxed text-[var(--text-2)]">
                             A live view of your locker inventory. Counts below update as assignments change across
                             the organization.
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <Activity className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-2 text-xs text-[var(--text-3)]">
+                        <Activity className="h-3.5 w-3.5" strokeWidth={1.75} />
                         Live ledger
                     </div>
                 </header>
 
                 {/* Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                    <StatCard label="Total lockers"     value={totalLockers}       Icon={KeyRound}       tone="navy"    hint="In ledger" />
-                    <StatCard label="Available"         value={availableLockers}   Icon={CheckCircle}    tone="success" hint="Ready to assign" />
-                    <StatCard label="Occupied"          value={inUseLockers}       Icon={Users}          tone="warning" hint="Currently in use" />
-                    <StatCard label="Maintenance"       value={maintenanceLockers} Icon={AlertTriangle}  tone="error"   hint="Flagged for review" />
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+                    <StatCard label="Total lockers" value={String(totalLockers)} Icon={KeyRound} hint="In ledger" />
+                    <StatCard label="Available" value={String(availableLockers)} Icon={CheckCircle} hint="Ready to assign" />
+                    <StatCard label="Occupied" value={String(inUseLockers)} Icon={Users} hint="Currently in use" />
+                    <StatCard label="Maintenance" value={String(maintenanceLockers)} Icon={AlertTriangle} hint="Flagged for review" />
                 </div>
 
                 {/* Chart + Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-5 lg:gap-6">
                     {/* Donut */}
-                    <div className="lg:col-span-2 bg-white border border-ink-100 rounded-xl shadow-paper p-6">
-                        <div className="flex items-start justify-between mb-2">
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 shadow-none lg:col-span-2">
+                        <div className="mb-2 flex items-start justify-between">
                             <div>
                                 <div className="lw-eyebrow mb-1">Composition</div>
-                                <h2 className="font-display text-lg font-semibold text-ink-900">Locker status</h2>
+                                <h2 className="font-display text-lg font-semibold text-[var(--text)]">Locker status</h2>
                             </div>
                         </div>
                         <div className="flex flex-col items-center mt-4">
@@ -292,11 +262,11 @@ const Dashboard = () => {
                                     {pieChartData.other.path && (
                                         <path d={pieChartData.other.path}       fill={CHART_COLORS.other}       stroke={CHART_COLORS.ring} strokeWidth="2" />
                                     )}
-                                    <circle cx="128" cy="128" r={pieChartData.innerRadius} fill="#FFFFFF" stroke="#DDE3F0" strokeWidth="1" />
+                                    <circle cx="128" cy="128" r={pieChartData.innerRadius} fill="var(--surface)" stroke="var(--border)" strokeWidth="1" />
                                 </svg>
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                    <div className="font-display text-4xl text-ink-900 font-semibold">{totalLockers}</div>
-                                    <div className="text-xs text-slate-500 mt-1">Total lockers</div>
+                                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                                    <div className="font-display text-4xl font-semibold text-[var(--text)]">{totalLockers}</div>
+                                    <div className="mt-1 text-xs text-[var(--text-2)]">Total lockers</div>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full max-w-sm">
@@ -311,39 +281,39 @@ const Dashboard = () => {
                     </div>
 
                     {/* Recent activity */}
-                    <div className="lg:col-span-3 bg-white border border-ink-100 rounded-xl shadow-paper p-6">
-                        <div className="flex items-start justify-between mb-4">
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6 shadow-none lg:col-span-3">
+                        <div className="mb-4 flex items-start justify-between">
                             <div>
                                 <div className="lw-eyebrow mb-1">Activity</div>
-                                <h2 className="font-display text-lg font-semibold text-ink-900">Recent activity</h2>
+                                <h2 className="font-display text-lg font-semibold text-[var(--text)]">Recent activity</h2>
                             </div>
                         </div>
                         {recentActivity.length > 0 ? (
-                            <div className="divide-y divide-ink-100">
+                            <div className="divide-y divide-[var(--border)]">
                                 {recentActivity.map((item, index) => {
                                     const Icon = item.icon;
                                     return (
                                         <div key={index} className="flex items-start gap-3 py-3.5 first:pt-0 last:pb-0">
-                                            <div className="w-9 h-9 bg-brass-50 text-brass-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <Icon className="w-4 h-4" />
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brass-50 text-brass-500 dark:bg-[var(--surface-2)]">
+                                                <Icon className="h-4 w-4" strokeWidth={1.75} />
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-ink-900 text-sm leading-relaxed">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-sm leading-relaxed text-[var(--text)]">
                                                     {formatActivityText(item)}
                                                 </p>
-                                                <p className="text-xs text-slate-400 mt-0.5">{item.timeAgo}</p>
+                                                <p className="mt-0.5 text-xs text-[var(--text-3)]">{item.timeAgo}</p>
                                             </div>
                                         </div>
                                     );
                                 })}
                             </div>
                         ) : (
-                            <div className="text-center py-12">
-                                <div className="inline-flex items-center justify-center w-12 h-12 bg-cream-200 rounded-full mb-3 text-slate-400">
-                                    <LockOpen className="w-5 h-5" />
+                            <div className="py-12 text-center">
+                                <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--text-3)]">
+                                    <LockOpen className="h-5 w-5" strokeWidth={1.75} />
                                 </div>
-                                <p className="font-display text-base font-semibold text-ink-900">No recent activity</p>
-                                <p className="text-slate-500 text-sm mt-1">Assignments and reports will appear here.</p>
+                                <p className="font-display text-base font-semibold text-[var(--text)]">No recent activity</p>
+                                <p className="mt-1 text-sm text-[var(--text-2)]">Assignments and reports will appear here.</p>
                             </div>
                         )}
                     </div>
@@ -354,11 +324,11 @@ const Dashboard = () => {
 };
 
 const LegendRow = ({ color, label, count, percent }) => (
-    <div className="flex items-center gap-2.5 min-w-0">
-        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <div className="flex flex-col min-w-0">
-            <span className="text-sm text-ink-900 font-medium truncate">{label}</span>
-            <span className="text-xs text-slate-400">
+    <div className="flex min-w-0 items-center gap-2.5">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+        <div className="flex min-w-0 flex-col">
+            <span className="truncate text-sm font-medium text-[var(--text)]">{label}</span>
+            <span className="text-xs text-[var(--text-3)]">
                 {count} · {percent.toFixed(1)}%
             </span>
         </div>

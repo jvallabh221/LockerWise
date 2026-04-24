@@ -70,7 +70,7 @@ const AddMultipleLocker = () => {
                     <a
                         href="/multipleLockersTemplate.xlsx"
                         download="Lockers.xlsx"
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-ink-100 text-ink-900 bg-white font-medium text-sm rounded-md hover:bg-cream-200 hover:border-ink-200 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] font-medium text-sm rounded-md hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] transition-colors"
                     >
                         <Download className="w-4 h-4" />
                         Download template
@@ -78,12 +78,12 @@ const AddMultipleLocker = () => {
                 </FormCard>
 
                 <FormCard num="02 / Upload" title="Upload your file">
-                    <label className="block border border-dashed border-ink-200 bg-cream-50 p-8 text-center cursor-pointer hover:border-brass-400 transition-colors">
+                    <label className="block border border-dashed border-[var(--border-strong)] bg-[var(--surface-2)] p-8 text-center cursor-pointer hover:border-brass-400 transition-colors">
                         <FileSpreadsheet className="w-8 h-8 mx-auto text-slate-500 mb-3" />
                         <div className="lw-eyebrow mb-1">Excel file</div>
                         <p className="text-sm text-slate-600">
                             {file ? (
-                                <span className="font-mono text-ink-900">{file.name}</span>
+                                <span className="font-mono text-[var(--text)]">{file.name}</span>
                             ) : (
                                 <>Click to choose a .xlsx or .xls file</>
                             )}

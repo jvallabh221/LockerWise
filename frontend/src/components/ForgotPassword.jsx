@@ -45,16 +45,16 @@ const ForgotPassword = () => {
         <div className="min-h-screen lw-page flex items-center justify-center py-10 px-4">
             <div className="w-full max-w-md">
                 <div className="flex justify-center mb-6">
-                    <Link to="/" className="text-ink-900 hover:text-brass-500 transition-colors">
+                    <Link to="/" className="text-[var(--text)] hover:text-brass-500 transition-colors">
                         <Wordmark size="md" />
                     </Link>
                 </div>
 
-                <div className="bg-white border border-ink-100 rounded-xl shadow-paper p-8">
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm p-8">
                     {step === "email" ? (
                         <>
                             <div className="lw-eyebrow mb-2">Recover account</div>
-                            <h1 className="font-display text-2xl text-ink-900 font-semibold leading-tight">
+                            <h1 className="font-display text-2xl text-[var(--text)] font-semibold leading-tight">
                                 Forgot your password?
                             </h1>
                             <p className="mt-2 text-sm text-slate-500 leading-relaxed">
@@ -107,12 +107,12 @@ const ForgotPassword = () => {
                             <div className="mx-auto w-12 h-12 rounded-full bg-brass-50 text-brass-500 flex items-center justify-center mb-4">
                                 <MailCheck className="w-5 h-5" />
                             </div>
-                            <h1 className="font-display text-2xl text-ink-900 font-semibold leading-tight text-center">
+                            <h1 className="font-display text-2xl text-[var(--text)] font-semibold leading-tight text-center">
                                 Check your inbox
                             </h1>
                             <p className="mt-2 text-sm text-slate-500 leading-relaxed text-center">
                                 We sent a 6-digit code to{" "}
-                                <span className="text-ink-900 font-medium">{checkEmail}</span>.
+                                <span className="text-[var(--text)] font-medium">{checkEmail}</span>.
                                 Enter it below to continue.
                             </p>
 
